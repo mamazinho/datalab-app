@@ -36,7 +36,7 @@ cp .env.example .env
 
 4. Edite o arquivo `.env` com suas configurações:
 ```bash
-DATALAB_API_URL=http://localhost:3000
+VITE_DATALAB_API_URL=http://localhost:3000
 ```
 
 ## Scripts Disponíveis
@@ -58,7 +58,7 @@ A aplicação se comunica com uma API de chat através das seguintes rotas:
 
 | Variável | Descrição | Padrão |
 |----------|-----------|---------|
-| `DATALAB_API_URL` | URL base da API do Datalab | `http://localhost:3000` |
+| `VITE_DATALAB_API_URL` | URL base da API do Datalab |
 
 ## Estrutura do Projeto
 
