@@ -1,5 +1,3 @@
-import axios, { type AxiosResponse } from 'axios';
-
 interface Message {
   role: string;
   content: string;
@@ -10,21 +8,28 @@ class ChatApiService {
   private apiUrl: string;
 
   constructor() {
-    this.apiUrl = import.meta.env.DATALAB_API_URL || 'http://localhost:3000';
+    this.apiUrl = import.meta.env.VITE_DATALAB_API_URL;
   }
 
   /**
-   * Fetch existing messages from the chat API
+   * Fetch existing messages from the chat API using fetch for proper streaming
    */
-  async getMessages(): Promise<ReadableStream<Uint8Array> | null> {
+  async getChatMessages(chatId: string): Promise<ReadableStream<Uint8Array> | null> {
     try {
-      const response: AxiosResponse = await axios.get(
-        `${this.apiUrl}/v1/chats/1/messages/`,
-        {
-          responseType: 'stream'
-        }
-      );
-      return response.data;
+      const response = await fetch(`${this.apiUrl}/v1/chats/${chatId}/messages/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors', // Enable CORS
+        cache: 'no-cache',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.body;
     } catch (error) {
       console.error('Error fetching messages:', error);
       throw error;
@@ -32,24 +37,25 @@ class ChatApiService {
   }
 
   /**
-   * Send a new message to the chat API
+   * Send a new message to the chat API using fetch for proper streaming
    */
   async sendMessage(prompt: string): Promise<ReadableStream<Uint8Array> | null> {
     try {
       const formData = new FormData();
       formData.append('prompt', prompt);
 
-      const response: AxiosResponse = await axios.post(
-        `${this.apiUrl}/v1/chats/1/messages/`,
-        formData,
-        {
-          responseType: 'stream',
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
-      return response.data;
+      const response = await fetch(`${this.apiUrl}/v1/chats/1/messages/`, {
+        method: 'POST',
+        body: formData,
+        mode: 'cors', // Enable CORS
+        cache: 'no-cache',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.body;
     } catch (error) {
       console.error('Error sending message:', error);
       throw error;
