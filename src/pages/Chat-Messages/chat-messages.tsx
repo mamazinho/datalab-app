@@ -1,20 +1,19 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { marked } from 'marked';
+import React, { useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import chatApiService, { type Message } from '../../services/datalab-api/messagesApi';
 import { ChatContainer } from './chat-messages.style';
+import { MessagesHistory } from '../../components/Chat-Messages/messages-history';
+import { DatalabAPI, processStreamResponse, type IMessage } from '../../services/datalab-api';
 
 export const ChatMessages: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { chatId } = useParams<{ chatId: string }>();
+  const [messages, setMessages] = useState<IMessage[]>([]);
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDisabled, setIsDisabled] = useState(false);
-  const conversationRef = useRef<HTMLDivElement>(null);
 
   // Parse response text and update messages state
-  const addMessages = (newMessages: Message[]) => {
+  const addMessages = (newMessages: IMessage[]) => {
     // Update messages using a Map to avoid duplicates based on timestamp
     setMessages(prevMessages => {
       const messageMap = new Map();
@@ -42,7 +41,8 @@ export const ChatMessages: React.FC = () => {
   // Process streaming response using the API service
   const processResponse = useCallback(async (stream: ReadableStream<Uint8Array> | null) => {
     try {
-      await chatApiService.processStreamResponse(
+      // await chatApiService.processStreamResponse(
+      await processStreamResponse(
         stream,
         (messages) => {
           console.log("messagess", messages)
@@ -68,63 +68,22 @@ export const ChatMessages: React.FC = () => {
     setIsDisabled(true);
 
     try {
-      const stream = await chatApiService.sendMessage(currentPrompt);
+      const stream = await DatalabAPI.sendMessage(Number(chatId), currentPrompt);
       await processResponse(stream);
     } catch (error) {
       handleError(error);
     }
   };
 
-  // Load messages on page load
-  useEffect(() => {
-    const loadMessages = async () => {
-      try {
-        console.log("iddddddddddd", id);
-        const stream = await chatApiService.getChatMessages(id ? id : '1');
-        await processResponse(stream);
-      } catch (error) {
-        handleError(error);
-      }
-    };
-
-    loadMessages();
-  }, [processResponse, id]); // Added id dependency to reload when chat changes
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    if (conversationRef.current) {
-      conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   return (
     <ChatContainer>
       <main className="h-100">
         <div className="text-center mb-3">
-          <h2>Chat {id}</h2>
+          <h2>Chat {chatId}</h2>
           <p className="text-muted">Converse com nossa IA e tire suas dúvidas</p>
         </div>
-        
-        <div id="conversation" ref={conversationRef}>
-          {messages.length === 0 ? (
-            <div className="text-center text-muted py-5">
-              <h5>💬 Nenhuma mensagem ainda</h5>
-              <p>Comece uma conversa digitando sua pergunta abaixo!</p>
-            </div>
-          ) : (
-            messages.map((message) => (
-              // <div>{message.role}</div>
-              <div
-                key={message.timestamp}
-                className={`${message.role}`}
-                title={`${message.role} em ${new Date(message.timestamp).toLocaleString('pt-BR')}`}
-                dangerouslySetInnerHTML={{
-                  __html: message.content ? marked.parse(message.content) : ''
-                }}
-              />
-            ))
-          )}
-        </div>
+
+        <MessagesHistory chatId={Number(chatId)} messages={messages} onMessage={addMessages} />
 
         <div className="d-flex justify-content-center mb-3">
           <div className={`spinner ${isLoading ? 'active' : ''}`} />
