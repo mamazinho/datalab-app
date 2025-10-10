@@ -61,7 +61,6 @@ export const ChatMessagesResource = {
         responseType: 'stream'
       },
     )
-    console.log("get chat messages", response.data)
     return response.data;
   },
   async sendMessage(chatId: number, message: string): Promise<ReadableStream<Uint8Array>> {
@@ -77,7 +76,6 @@ export const ChatMessagesResource = {
       }
     );
 
-    console.log("response post", response.data)
     return response.data;
   }
 }
