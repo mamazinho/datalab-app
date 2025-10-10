@@ -17,12 +17,12 @@ export interface ICreateChat {
 
 export const ChatsResource = {
   async getAllChats(): Promise<IRetrieveChat[]> {
-    const response = await axionsInstance.get('v1/chats')
+    const response = await axionsInstance.get('v1/chats/')
     return response.data as IRetrieveChat[];
   },
 
   async createChat(payload: ICreateChat): Promise<IRetrieveChat> {
-    const response = await axionsInstance.post('v1/chats', payload);
+    const response = await axionsInstance.post('v1/chats/', payload);
     return response.data as IRetrieveChat;
   }
 }
