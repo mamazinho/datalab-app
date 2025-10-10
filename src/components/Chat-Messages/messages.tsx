@@ -95,10 +95,7 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
                             key={index}
                             className={`${message.role}`}
                             title={`${message.role} em ${new Date(message.timestamp).toLocaleString('pt-BR')}`}
-                            dangerouslySetInnerHTML={{
-                                __html: message.content ? marked.parse(message.content) : ''
-                            }}
-                        />
+                        >{message.content}</div>
                     ))
                 )}
                 {messagesOnStreaming.length > 0 ?
