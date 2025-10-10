@@ -32,11 +32,9 @@ export async function processStreamResponse(
   const decoder = new TextDecoder();
   const reader = stream.getReader();
 
-  console.log("aaa", reader);
   try {
     while (true) {
       const { done, value } = await reader.read();
-      console.log("vvvvvalue", done, value);
       if (done) break;
 
       text += decoder.decode(value);
@@ -56,7 +54,7 @@ export async function processStreamResponse(
 export const ChatMessagesResource = {
   async getChatMessages(chatId: number): Promise<ReadableStream<Uint8Array>> {
     const response = await axionsInstance.get(
-      `v1/chats/${chatId}/messages`,
+      `v1/chats/${chatId}/messages/`,
       { 
         adapter: 'fetch',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -70,7 +68,7 @@ export const ChatMessagesResource = {
     const formData = new FormData();
     formData.append('prompt', message);
     const response = await axionsInstance.post(
-      `v1/chats/${chatId}/messages`,
+      `v1/chats/${chatId}/messages/`,
       formData,
       {
         adapter: 'fetch',
