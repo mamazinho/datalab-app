@@ -9,42 +9,36 @@ interface IMessagesHistoryProps {
 
 export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
     const conversationRef = useRef<HTMLDivElement>(null);
+    const mapMessagesByRole = useRef(new Map<string, IMessage>());
+
     const [messages, setMessages] = useState<IMessage[]>([]);
     const [messagesOnStreaming, setMessagesOnStreaming] = useState<IMessage[]>([]);
     const [isDisabled, setIsDisabled] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [prompt, setPrompt] = useState('');
 
-    const mapMessagesByRole = new Map<string, IMessage>();
-    const streamingMessage = (newMessages: IMessage[]) => {
+    const streamingMessage = async (newMessages: IMessage[]) => {
         console.log("streamingMessage", newMessages);
 
         const lastRole = newMessages[newMessages.length - 1]?.role;
-        mapMessagesByRole.set(lastRole, newMessages[newMessages.length - 1]);
+        mapMessagesByRole.current.set(lastRole, newMessages[newMessages.length - 1]);
 
-        const allNewMessages = Array.from(mapMessagesByRole.values());
+        const allNewMessages = Array.from(mapMessagesByRole.current.values());
         setMessagesOnStreaming(allNewMessages);
     }
 
-    const streamingCompleted = () => {
-        console.log("streamingCompleted", messagesOnStreaming);
-        setMessages([...messages, ...messagesOnStreaming]);
-        mapMessagesByRole.clear();
-        setMessagesOnStreaming([]);
+    const streamingCompleted = async () => {
+        console.log("streamingCompleted");
+        setMessagesOnStreaming((streamedMessages) => {
+            const combinedMessages = [...messages, ...streamedMessages];
+            setMessages(combinedMessages);
+            return [];
+        })
+        mapMessagesByRole.current.clear();
     }
 
-
-    const addMessages = (newMessages: IMessage[]) => {
-        setMessages(prevMessages => {
-            const messageMap = new Map();
-
-            prevMessages.forEach(msg => messageMap.set(msg.timestamp, msg));
-            newMessages.forEach(msg => messageMap.set(msg.timestamp, msg));
-
-            return Array.from(messageMap.values()).sort((a, b) =>
-                new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-            );
-        });
+    const buildHistory = (newMessages: IMessage[]) => {
+        setMessages([...newMessages])
     };
 
     const handleError = useCallback((error: unknown) => {
@@ -76,7 +70,7 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
         const fetchMessages = () => {
             DatalabAPI.getChatMessages(chatId).
                 then(async stream => {
-                    await processStreamResponse(stream, addMessages)
+                    await processStreamResponse(stream, buildHistory);
                 }).catch(error => {
                     handleError(error);
                 });
@@ -111,7 +105,6 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
                         />
                     ))
                 )}
-
                 {messagesOnStreaming.length > 0 ?
                     messagesOnStreaming.map((message, index) => (
                         <div 
