@@ -95,11 +95,12 @@ export const ChatContainer = styled.div`
     
   /* Área de conversa - ocupa espaço disponível */
   #conversation {
-    flex: 1;
+    flex: 1 1 0%;
     overflow-y: auto;
     padding: 1.5rem;
     background: #fafbfc;
-    min-height: 300px;
+    min-height: 0;
+    height: 100vh
   }
 
   /* Estilos para mensagens do usuário */

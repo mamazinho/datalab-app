@@ -10,14 +10,33 @@ interface IMessagesHistoryProps {
 export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
     const conversationRef = useRef<HTMLDivElement>(null);
     const [messages, setMessages] = useState<IMessage[]>([]);
+    const [messagesOnStreaming, setMessagesOnStreaming] = useState<IMessage[]>([]);
     const [isDisabled, setIsDisabled] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [prompt, setPrompt] = useState('');
 
+    const mapMessagesByRole = new Map<string, IMessage>();
+    const streamingMessage = (newMessages: IMessage[]) => {
+        console.log("streamingMessage", newMessages);
+
+        const lastRole = newMessages[newMessages.length - 1]?.role;
+        mapMessagesByRole.set(lastRole, newMessages[newMessages.length - 1]);
+
+        const allNewMessages = Array.from(mapMessagesByRole.values());
+        setMessagesOnStreaming(allNewMessages);
+    }
+
+    const streamingCompleted = () => {
+        console.log("streamingCompleted", messagesOnStreaming);
+        setMessages([...messages, ...messagesOnStreaming]);
+        mapMessagesByRole.clear();
+        setMessagesOnStreaming([]);
+    }
+
+
     const addMessages = (newMessages: IMessage[]) => {
         setMessages(prevMessages => {
             const messageMap = new Map();
-            console.log("bbbbb", prevMessages, newMessages);
 
             prevMessages.forEach(msg => messageMap.set(msg.timestamp, msg));
             newMessages.forEach(msg => messageMap.set(msg.timestamp, msg));
@@ -45,7 +64,7 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
 
         DatalabAPI.sendMessage(Number(chatId), currentPrompt).
             then(async stream => {
-                await processStreamResponse(stream, addMessages);
+                await processStreamResponse(stream, streamingMessage, streamingCompleted);
                 setIsLoading(false);
                 setIsDisabled(false);
             }).catch(error => {
@@ -57,10 +76,8 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
         const fetchMessages = () => {
             DatalabAPI.getChatMessages(chatId).
                 then(async stream => {
-                    console.log("response", stream);
                     await processStreamResponse(stream, addMessages)
                 }).catch(error => {
-                    console.error("Error fetching messages:", error);
                     handleError(error);
                 });
         };
@@ -72,7 +89,7 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
         if (conversationRef.current) {
             conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
         }
-    }, [messages]);
+    }, [messages, messagesOnStreaming]);
 
     return (
         <div>
@@ -94,15 +111,25 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
                         />
                     ))
                 )}
+
+                {messagesOnStreaming.length > 0 ?
+                    messagesOnStreaming.map((message, index) => (
+                        <div 
+                            key={index}
+                            className={`${message.role}`}
+                            title={`${message.role} em ${new Date(message.timestamp).toLocaleString('pt-BR')}`}
+                            >{message.content}</div>
+                    )) : null
+                }
             </div>
-            <div className="d-flex justify-content-center mb-3">
-                <div className={`spinner ${isLoading ? 'active' : ''}`} />
-                {isLoading && (
-                    <p className="text-muted ms-3 align-self-center">
-                        <em>IA está pensando...</em>
-                    </p>
-                )}
-            </div>
+            {isLoading && (
+                <div className="d-flex justify-content-center mb-3">
+                    <div className={`spinner ${isLoading ? 'active' : ''}`} />
+                        <p className="text-muted ms-3 align-self-center">
+                            <em>IA está pensando...</em>
+                        </p>
+                </div>
+            )}
 
             <form onSubmit={handleSubmit}>
                 <div className="d-flex gap-2 align-items-end">
