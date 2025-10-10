@@ -7,7 +7,6 @@ export const AllChats = () => {
 
     const fetchChats = () => {
         DatalabAPI.getAllChats().then(data => {
-            console.log("data", data);
             setChats(data);
         });
     };
