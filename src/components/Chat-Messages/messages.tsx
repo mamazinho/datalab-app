@@ -37,10 +37,6 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
         mapMessagesByRole.current.clear();
     }
 
-    const buildHistory = (newMessages: IMessage[]) => {
-        setMessages([...newMessages])
-    };
-
     const handleError = useCallback((error: unknown) => {
         console.error(error);
         onError(error);
@@ -70,7 +66,7 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
         const fetchMessages = () => {
             DatalabAPI.getChatMessages(chatId).
                 then(async stream => {
-                    await processStreamResponse(stream, buildHistory);
+                    await processStreamResponse(stream, (newMessages) => {setMessages([...newMessages])});
                 }).catch(error => {
                     handleError(error);
                 });
