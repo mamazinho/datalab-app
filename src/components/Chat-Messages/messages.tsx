@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { marked } from 'marked';
 import { DatalabAPI, processStreamResponse, type IMessage } from '../../services/datalab-api';
 
 interface IMessagesHistoryProps {
