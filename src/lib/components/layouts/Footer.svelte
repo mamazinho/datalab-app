@@ -1,9 +1,11 @@
 <script lang="ts">
+	import favicon from '$lib/assets/favicon.png';
+
     const currentYear = new Date().getFullYear();
 </script>
 
 <div class="container flex flex-col items-center justify-between p-6 mx-auto space-y-4 sm:space-y-0 sm:flex-row">
-    <a href="/"><img class="w-auto h-7" src="favicon.ico" alt="Logo da DataLab" /></a>
+    <a href="/"><img class="w-auto h-7" src={favicon} alt="Logo da DataLab" /></a>
 
     <p class="text-sm text-gray-600 dark:text-gray-300">© Copyright {currentYear}. All Rights Reserved.</p>
 

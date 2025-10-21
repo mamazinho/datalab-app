@@ -1,6 +1,8 @@
 <script lang="ts">
 
     import { page } from '$app/state';
+	import favicon from '$lib/assets/favicon.png';
+    
 
     const menuPages = [
         { label: 'Home', href: '/' },
@@ -11,7 +13,7 @@
 
 <nav class="bg-white shadow dark:bg-gray-800 rounded-2xl">
     <div class="container flex items-center justify-between mx-auto">
-        <a href="/"><img class="w-auto h-6 sm:h-7" src="favicon.ico" alt="Logo da DataLab" /></a>
+        <a href="/"><img class="w-auto h-6 sm:h-7" src={favicon} alt="Logo da DataLab" /></a>
         <div class="container flex items-center justify-center p-6 mx-auto text-gray-600 capitalize dark:text-gray-300">
             {#each menuPages as { label, href }}
                 {#if page.url.pathname === href}
