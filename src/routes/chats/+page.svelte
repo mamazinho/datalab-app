@@ -1,9 +1,9 @@
 <script lang="ts">
-    type Chat = {
-        id: number;
-        title: string;
-    };
-    let chats = $state<Chat[]>([{id: 1, title: "Chat de Exemplo"}]);
+    import type { PageData } from './$types';
+
+    let { data }: { data: PageData } = $props();
+    let { chats } = data;
+
 </script>
 
 <h1>Chats</h1>
