@@ -26,7 +26,6 @@ export async function processStreamResponse(
 ): Promise<void> {
   if (!stream) return;
   
-  console.log("stream", stream);
   let text = '';
   const decoder = new TextDecoder();
   const reader = stream.getReader();
@@ -37,7 +36,6 @@ export async function processStreamResponse(
       if (done) break;
 
       text += decoder.decode(value);
-      console.log("processing data chunk", text);
       const messages = parseMessages(text);
       onMessage(messages);
     }
