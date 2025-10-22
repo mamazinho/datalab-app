@@ -91,16 +91,49 @@
 
 </div>
 
-<hr/>
-
-<form method="post" onsubmit={handleMessageSubmit}>
-    <label for="userInput">
-        <input type="text" name="userInput" placeholder="Digite sua mensagem" required minlength="4" />
-    </label>
-    <button type="submit">Enviar</button>
-</form>
-
-<hr/>
+<div class="max-w-4xl mx-auto px-4 sm:px-6">
+    <form method="post" onsubmit={handleMessageSubmit} class="flex gap-3 items-stretch py-5">
+        <label for="userInput" class="flex-1">
+            <input 
+                type="text" 
+                id="userInput"
+                name="userInput" 
+                placeholder="Digite sua mensagem..." 
+                required 
+                minlength="4"
+                autocomplete="off"
+                class="
+                    w-full px-5 py-3 text-base
+                    border-2 border-gray-200 rounded-full
+                    outline-none transition-all bg-gray-50
+                    focus:border-purple-500 focus:bg-white 
+                    focus:ring-4 focus:ring-purple-100
+                    placeholder:text-gray-400
+                "
+            />
+        </label>
+        <button 
+            type="submit"
+            aria-label="Enviar mensagem"
+            class="
+                flex items-center justify-center
+                w-12 h-12 
+                bg-gradient-to-br from-purple-500 to-purple-700
+                border-none rounded-full text-white
+                cursor-pointer transition-all
+                hover:scale-105 hover:shadow-lg hover:shadow-purple-400/50
+                active:scale-95
+                disabled:opacity-50 disabled:cursor-not-allowed 
+                disabled:hover:scale-100
+            "
+        >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+        </button>
+    </form>
+</div>
 
 <style lang="postcss">
   @reference "tailwindcss";
