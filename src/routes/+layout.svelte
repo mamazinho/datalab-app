@@ -11,7 +11,7 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<header class="bg-orange-300 text-white p-4">
+<header class="text-white p-4">
 	<Navbar />
 </header>
 
@@ -22,4 +22,13 @@
 <footer>
 	<Footer />
 </footer>
+
+<style lang="postcss">
+  @reference "tailwindcss";
+
+  header {
+	background-color: #ffc966; 
+  }
+  
+</style>
 
