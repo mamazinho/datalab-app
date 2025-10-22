@@ -13,7 +13,7 @@
 {:else}
     <ul>
         {#each chats as chat}
-            <li><a href="/chats/{chat.id}">{chat.title}</a></li>
+            <li><a href="/chats/{chat.id}/messages">{chat.title}</a></li>
         {/each}
     </ul>
 {/if}
