@@ -1,6 +1,6 @@
 import { DATALAB_API_URL } from '$env/static/private';
 import { error } from '@sveltejs/kit';
-import type { RouteParams, RequestHandler } from '../$types';
+import type { RouteParams, RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ params }: { params: RouteParams }) => {
 	const API_URL = DATALAB_API_URL;
