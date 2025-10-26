@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { processStreamResponse } from '$lib/processors/stream-processor';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
     import type { PageData, RouteParams } from './$types';
 	import type { IMessage } from '$lib/types/message';
 	import ChatMessages from '$lib/components/messages/ChatMessages.svelte';
@@ -20,6 +20,17 @@
             (historicalMessages: IMessage[]) => { messages.push(...historicalMessages) }
         );
     });
+
+    const scrollToBottom = async () => {
+        await tick();
+        const conversationElement = document.getElementById('conversation-container');
+        if (conversationElement) {
+            conversationElement.scrollTo({
+                top: conversationElement.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    };
 
     const streamingMessages = async (newMessages: IMessage[]) => {
         console.log("streamingMessage", newMessages);
@@ -53,6 +64,7 @@
                 streamingMessages,
                 streamingCompleted
             );
+            await scrollToBottom();
         } catch (e) {
             console.error('There was a problem with the fetch operation:', e);
         }
@@ -66,7 +78,7 @@
 
 <h2>Messages ({messages.length}):</h2>
 
-<div class="conversation">
+<div id="conversation-container" class="conversation">
     {#if messages.length === 0}
         <h5>💬 Nenhuma mensagem ainda</h5>
         <p>Comece uma conversa digitando sua pergunta abaixo!</p>
@@ -142,6 +154,7 @@
     background: linear-gradient(to bottom, #f9fafb, #ffffff);
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    scroll-behavior: smooth;
   }
 
   .conversation::-webkit-scrollbar {
