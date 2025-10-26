@@ -4,17 +4,17 @@
     import type { PageData, RouteParams } from './$types';
 	import type { IMessage } from '$lib/types/message';
 	import ChatMessages from '$lib/components/messages/ChatMessages.svelte';
+	import { DatalabAPI } from '$lib/apis/datalab-api';
+	import { MessageSchema } from '$lib/validators/messages';
 
-    let { data, params }: { data: PageData, params: RouteParams } = $props();
+    let { params }: { data: PageData, params: RouteParams } = $props();
 
-    let { loadInitialMessages } = data;
     let messages = $state<IMessage[]>([]);
     let messagesOnStreaming = $state<IMessage[]>([]);
     let mapMessagesByRole = new Map<string, IMessage>();
 
     onMount(async () => {
-        let historicalMessages = await loadInitialMessages();
-        console.log("Loaded messages:", historicalMessages);
+        const historicalMessages = await DatalabAPI.ChatsResource.getChatMessages(Number(params.chatId));
         processStreamResponse(
             historicalMessages,
             (historicalMessages: IMessage[]) => { messages.push(...historicalMessages) }
@@ -27,10 +27,8 @@
         const lastRole = newMessages[newMessages.length - 1]?.role;
         mapMessagesByRole.set(lastRole, newMessages[newMessages.length - 1]);
 
-        console.log("mapMessagesByRole", Array.from(mapMessagesByRole.values()));
-        const allNewMessages = Array.from(mapMessagesByRole.values());
-        console.log("allNewMessages", allNewMessages);
-        messagesOnStreaming.push(...allNewMessages);
+        let allNewMessages = Array.from(mapMessagesByRole.values());
+        messagesOnStreaming = allNewMessages;
     }
 
     const streamingCompleted = async () => {
@@ -44,19 +42,14 @@
         event.preventDefault();
         const form = event.target as HTMLFormElement;
         const formData = new FormData(form);
-        const userInput = String(formData.get('userInput')).trim();
+        const userPrompt = String(formData.get('userInput')).trim();
+        form.reset();
 
         try {
-            const response = await fetch('', {
-                method: 'POST',
-                body: JSON.stringify({ prompt: userInput }),
-                headers: { 'Content-Type': 'application/json' },
-            })
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+            MessageSchema.parse({ message: userPrompt });
+            const response = await DatalabAPI.ChatsResource.sendMessage(Number(params.chatId), userPrompt);
             await processStreamResponse(
-                response.body,
+                response,
                 streamingMessages,
                 streamingCompleted
             );
