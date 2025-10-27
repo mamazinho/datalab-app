@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { processStreamResponse } from '$lib/processors/stream-processor';
 	import { onMount, tick } from 'svelte';
-    import type { PageData, RouteParams } from './$types';
+    import type { PageData, RouteParams } from '../../../../chats/[chatId]/messages/$types';
 	import type { IMessage } from '$lib/types/message';
 	import ChatMessages from '$lib/components/messages/ChatMessages.svelte';
 	import { DatalabAPI } from '$lib/apis/datalab-api';
