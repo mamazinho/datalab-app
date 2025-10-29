@@ -16,7 +16,10 @@ const config = {
 				assets: 'build',
 				fallback: 'index.html' // importante para SPA client-side routing
 			}
-		)
+		),
+    alias: {
+			$home: 'src/'
+    }
 	}
 };
 

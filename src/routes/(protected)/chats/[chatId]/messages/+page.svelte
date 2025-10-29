@@ -1,13 +1,17 @@
 <script lang="ts">
-	import { processStreamResponse } from '$lib/processors/stream-processor';
+	import { processStreamResponse } from '$lib/processors/streamProcessor';
 	import { onMount, tick } from 'svelte';
-    import type { PageData, RouteParams } from '../../../../chats/[chatId]/messages/$types';
+    import type { RouteParams } from './$types';
 	import type { IMessage } from '$lib/types/message';
 	import ChatMessages from '$lib/components/messages/ChatMessages.svelte';
 	import { DatalabAPI } from '$lib/apis/datalab-api';
-	import { MessageSchema } from '$lib/validators/messages';
+    import { z } from 'zod';
 
-    let { params }: { data: PageData, params: RouteParams } = $props();
+    const MessageSchema = z.object({
+        message: z.string().min(4, 'A mensagem precisa ter pelo menos 4 caracteres')
+    });
+
+    let { params }: { params: RouteParams } = $props();
 
     let messages = $state<IMessage[]>([]);
     let messagesOnStreaming = $state<IMessage[]>([]);
