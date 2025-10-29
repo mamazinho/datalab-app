@@ -74,5 +74,5 @@
 </div>
 
 
-<span>Ainda não possui uma conta?</span>
-<p><a href="/register">Cadastre-se</a></p>
+<span>Já possui uma conta?</span>
+<p><a href="/login">Entrar</a></p>
