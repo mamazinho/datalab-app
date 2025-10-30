@@ -1,30 +1,37 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { DatalabAPI } from '$home/lib/apis/datalab-api';
-	import type { ILoginUserRequest } from '$home/lib/types/auth';
+	import type { IRegisterUserRequest } from '$home/lib/types/users';
 	import FormAutoValidate from '$lib/components/validations/FormAutoValidate.svelte';
 	import InputAutoValidate from '$lib/components/validations/InputAutoValidate.svelte';
 	import { z } from 'zod';
 
-	const LoginFormSchema = z.object({
+	const RegisterFormSchema = z.object({
+		name: z.string().min(3, 'O nome precisa ter pelo menos 3 caracteres'),
 		email: z.email( {message: 'Endereço de e-mail inválido'} ),
 		password: z.string().min(6, 'A senha precisa ter pelo menos 6 caracteres')
 	});
 
-	type LoginUserRequest = z.infer<typeof LoginFormSchema>;
+	type RegisterUserRequest = z.infer<typeof RegisterFormSchema>;
 
-	let userLoginForm = $state<LoginUserRequest>({
+	let userRegisterForm = $state<RegisterUserRequest>({
+		name: '',
 		email: '',
 		password: ''
 	});
 
-	const handleLoginSubmit = async (event: Event) => {
+	let registrationSuccess = $state<boolean>(false);
+
+	const handleRegisterSubmit = async (event: Event) => {
 		event.preventDefault();
 
-		const loginData = userLoginForm as ILoginUserRequest;
+		const registerData = userRegisterForm as IRegisterUserRequest;
 
 		try {
-			const response = await DatalabAPI.AuthResource.login(loginData);
-			console.log('Login bem-sucedido:', response);
+			const response = await DatalabAPI.UsersResource.create(registerData);
+			console.log('Registro bem-sucedido:', response);
+			registrationSuccess = true
+			setTimeout(() => goto('/login'), 2000);
 		} catch (error) {
 			console.error('Erro ao fazer login:', error);
 		}
@@ -35,24 +42,32 @@
 
 <div class="mx-auto max-w-4xl px-4 sm:px-6">
 	<FormAutoValidate
-		schema={LoginFormSchema}
-		data={userLoginForm}
-		onSubmit={handleLoginSubmit}
+		schema={RegisterFormSchema}
+		data={userRegisterForm}
+		onSubmit={handleRegisterSubmit}
 	>
+		<InputAutoValidate
+			id="name"
+			label="Name:"
+			type="text"
+			bind:value={userRegisterForm.name}
+			schema={RegisterFormSchema.shape.name}
+		/>
+
 		<InputAutoValidate
 			id="email"
 			label="Email:"
 			type="email"
-			bind:value={userLoginForm.email}
-			schema={LoginFormSchema.shape.email}
+			bind:value={userRegisterForm.email}
+			schema={RegisterFormSchema.shape.email}
 		/>
 
 		<InputAutoValidate
 			id="password"
 			label="Password:"
 			type="password"
-			bind:value={userLoginForm.password}
-			schema={LoginFormSchema.shape.password}
+			bind:value={userRegisterForm.password}
+			schema={RegisterFormSchema.shape.password}
 		/>
 
 		<button 
@@ -68,9 +83,16 @@
 			" 
 			type="submit"
 		>
-			Login
+			Cadastrar
 		</button>
 	</FormAutoValidate>
+
+	{#if registrationSuccess}
+		<div class="h-4">
+			<h1 class="text-green-500 mt-2">Cadastro bem sucedido!</h1>
+			<p class="text-green-500 mt-2">Redirecionando para a página de login...</p>
+		</div>
+	{/if}
 </div>
 
 
