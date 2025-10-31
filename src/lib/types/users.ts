@@ -4,7 +4,7 @@ export interface IRegisterUserRequest {
   password: string;
 }
 
-export interface IRegisterUserResponse {
+export interface IUserResponse {
   id: number;
   name: string;
   email: string;
