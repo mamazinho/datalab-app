@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { DatalabAPI } from '$home/lib/apis/datalab-api';
+	import { goto } from '$app/navigation';
+	import { auth } from '$home/lib/states/auth.svelte';
 	import type { ILoginUserRequest } from '$home/lib/types/auth';
 	import FormAutoValidate from '$lib/components/validations/FormAutoValidate.svelte';
 	import InputAutoValidate from '$lib/components/validations/InputAutoValidate.svelte';
@@ -23,8 +24,10 @@
 		const loginData = userLoginForm as ILoginUserRequest;
 
 		try {
-			const response = await DatalabAPI.AuthResource.login(loginData);
+			const response = await auth.login(loginData);
+			// const response = await DatalabAPI.AuthResource.login(loginData);
 			console.log('Login bem-sucedido:', response);
+			goto('/');
 		} catch (error) {
 			console.error('Erro ao fazer login:', error);
 		}

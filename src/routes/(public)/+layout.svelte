@@ -1,10 +1,10 @@
 <script lang="ts">
 	import '$home/app.css';
 	import favicon from '$lib/assets/favicon.png';
-	import Navbar from '$lib/components/layouts/Navbar.svelte';
 	import Footer from '$lib/components/layouts/Footer.svelte';
 	
 	let { children } = $props();
+
 </script>
 
 <svelte:head>
@@ -12,7 +12,7 @@
 </svelte:head>
 
 <header class="text-white p-4">
-	<Navbar />
+	<p>Área pública</p>
 </header>
 
 <main>

@@ -1,10 +1,10 @@
 import type { ICreateChat, IRetrieveChat } from "$lib/types/message";
-import { axiosInstance } from "./axios";
+import { axiosPrivateInstance } from "./axios";
 
 
 export const ChatsResource = {
   async getChatMessages(chatId: number): Promise<ReadableStream<Uint8Array>> {
-    const response = await axiosInstance.get(
+    const response = await axiosPrivateInstance.get(
       `chats/${chatId}/messages/`,
       { 
         adapter: 'fetch',
@@ -15,7 +15,7 @@ export const ChatsResource = {
     return response.data;
   },
   async sendMessage(chatId: number, message: string): Promise<ReadableStream<Uint8Array>> {
-    const response = await axiosInstance.post(
+    const response = await axiosPrivateInstance.post(
       `chats/${chatId}/messages/`,
       { prompt: message },
       {
@@ -28,12 +28,12 @@ export const ChatsResource = {
     return response.data;
   },
   async getAllChats(): Promise<IRetrieveChat[]> {
-    const response = await axiosInstance.get('chats/')
+    const response = await axiosPrivateInstance.get('chats/')
     return response.data as IRetrieveChat[];
   },
 
   async createChat(payload: ICreateChat): Promise<IRetrieveChat> {
-    const response = await axiosInstance.post('chats/', payload);
+    const response = await axiosPrivateInstance.post('chats/', payload);
     return response.data as IRetrieveChat;
   }
 }
