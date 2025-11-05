@@ -25,6 +25,10 @@
         );
     });
 
+    onDestroy(async () => {
+        ...
+    });
+
     const scrollToBottom = async () => {
         await tick();
         const conversationElement = document.getElementById('conversation-container');
