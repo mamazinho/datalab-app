@@ -31,7 +31,10 @@ export const ChatsResource = {
     const response = await axiosPrivateInstance.get('chats/')
     return response.data as IRetrieveChat[];
   },
-
+  async getChat(chatId: number): Promise<IRetrieveChat> {
+    const response = await axiosPrivateInstance.get(`chats/${chatId}/`);
+    return response.data as IRetrieveChat;
+  },
   async createChat(payload: ICreateChat): Promise<IRetrieveChat> {
     const response = await axiosPrivateInstance.post('chats/', payload);
     return response.data as IRetrieveChat;

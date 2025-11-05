@@ -12,7 +12,7 @@
     const logout = async () => {
         console.log('User logged out');
         await auth.logout();
-        await goto('/login');
+        goto('/login');
     }
 
 </script>

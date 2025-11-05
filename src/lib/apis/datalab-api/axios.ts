@@ -39,7 +39,7 @@ axiosPrivateInstance.interceptors.response.use(response => response, async (erro
     }
     await auth.logout();
     throw redirect(302, '/login');
-
   }
+
   return Promise.reject(error);
 });

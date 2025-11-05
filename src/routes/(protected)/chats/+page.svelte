@@ -1,5 +1,16 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
     import { DatalabAPI } from '$lib/apis/datalab-api';
+
+    const createChat = async () => {
+        try {
+            const newChat = await DatalabAPI.ChatsResource.createChat({ title: 'New Chat' });
+            console.log('Chat criado com sucesso:', newChat);
+            goto(/`/chats/${newChat.id}/messages`);
+        } catch (error) {
+            console.error('Erro ao criar chat:', error);
+        }
+    };
 </script>
 
 <h1>Chats</h1>
@@ -18,4 +29,7 @@
     {:catch error }
         <p>Erro ao carregar chats: {error.message}</p>
     {/await}
+
+
+    <button onclick={createChat}>Iniciar novo chat</button>
 </ul>
