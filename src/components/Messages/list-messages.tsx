@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { DatalabAPI, processStreamResponse, type IMessage } from '../../services/datalab-api';
+import { DatalabAPI } from '../../services/datalab-api';
+import { processStreamResponse, type IMessage } from '../../utils/process-stream';
 
 interface IMessagesHistoryProps {
     chatId: number;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { ChatContainer } from './chat-messages.style';
-import { Messages } from '../../components/Chat-Messages/messages';
+import { Messages } from '../../components/Messages/list-messages';
 
 export const ChatMessages: React.FC = () => {
   const { chatId } = useParams<{ chatId: string }>();
