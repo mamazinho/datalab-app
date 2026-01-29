@@ -1,20 +1,14 @@
-import React from 'react';
-import { useRoutes, BrowserRouter } from "react-router-dom";
+import { RouterProvider } from "react-router-dom";
 import { routes } from "./routes";
 import { GlobalStyle } from './styles/global-style';
+import { AuthProvider } from "./contexts/auth";
 
 
-function AppRoutes() {
-    return useRoutes(routes);
-}
-
-const App: React.FC = () => {
+export function App() {
     return (
-        <BrowserRouter>
+        <AuthProvider>
             <GlobalStyle />
-            <AppRoutes />
-        </BrowserRouter>
+            <RouterProvider router={routes} />
+        </AuthProvider>
     );
 };
-
-export default App;
