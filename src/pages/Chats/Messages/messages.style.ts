@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-export const ChatContainer = styled.div`
+export const MessageContainer = styled.div`
   .app-container {
     flex: 1;
     display: flex;

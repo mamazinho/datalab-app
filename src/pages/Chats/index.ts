@@ -1,0 +1,1 @@
+export { Chats as ListChats } from './chats';

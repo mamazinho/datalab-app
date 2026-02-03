@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { DatalabAPI } from '../../services/datalab-api';
-import { processStreamResponse, type IMessage } from '../../utils/process-stream';
+import { DatalabAPI } from '../../../../services/datalab-api';
+import { processStreamResponse, type IMessage } from '../../../../utils/process-stream';
 
 interface IMessagesHistoryProps {
     chatId: number;
@@ -52,7 +52,7 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
         setPrompt('');
         setIsDisabled(true);
 
-        DatalabAPI.sendMessage(Number(chatId), currentPrompt).
+        DatalabAPI.ChatMessagesResource.sendMessage(Number(chatId), currentPrompt).
             then(async stream => {
                 await processStreamResponse(stream, streamingMessage, streamingCompleted);
                 setIsLoading(false);
@@ -64,7 +64,7 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
 
     useEffect(() => {
         const fetchMessages = () => {
-            DatalabAPI.getChatMessages(chatId).
+            DatalabAPI.ChatMessagesResource.getChatMessages(chatId).
                 then(async stream => {
                     await processStreamResponse(stream, (newMessages) => {setMessages([...newMessages])});
                 }).catch(error => {
