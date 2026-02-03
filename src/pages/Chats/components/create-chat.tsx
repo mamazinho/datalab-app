@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { DatalabAPI, type ICreateChat } from '../../services/datalab-api';
+import { DatalabAPI } from '../../../services/datalab-api';
+import { type ICreateChat } from '../../../services/datalab-api/chatsResource';
 
 export const CreateChat = () => {
     const [toCreateChat, setToCreateChat] = useState(false);
@@ -7,7 +8,7 @@ export const CreateChat = () => {
 
     const createChat = (payload?: ICreateChat) => {
         if (!payload) throw new Error("Payload is required");
-        DatalabAPI.createChat(payload).then(data => {
+        DatalabAPI.ChatsResource.createChat(payload).then(data => {
             setChatPayload(data);
         });
     };

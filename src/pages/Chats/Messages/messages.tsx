@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ChatContainer } from './chat-messages.style';
-import { Messages } from '../../components/Messages/list-messages';
+import { MessageContainer } from './messages.style';
+import { Messages } from './components/list-messages';
 
 export const ChatMessages: React.FC = () => {
   const { chatId } = useParams<{ chatId: string }>();
@@ -13,7 +13,7 @@ export const ChatMessages: React.FC = () => {
   };
 
   return (
-    <ChatContainer>
+    <MessageContainer>
       <main className="h-100">
         <div className="text-center mb-3">
           <h2>Chat {chatId}</h2>
@@ -28,6 +28,6 @@ export const ChatMessages: React.FC = () => {
           </div>
         )}
       </main>
-    </ChatContainer>
+    </MessageContainer>
   );
 };

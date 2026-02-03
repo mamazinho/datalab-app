@@ -3,7 +3,7 @@ import { axiosInstance } from "./axios";
 export const ChatMessagesResource = {
   async getChatMessages(chatId: number): Promise<ReadableStream<Uint8Array>> {
     const response = await axiosInstance.get(
-      `v1/chats/${chatId}/messages/`,
+      `chats/${chatId}/messages/`,
       { 
         adapter: 'fetch',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -16,7 +16,7 @@ export const ChatMessagesResource = {
     const formData = new FormData();
     formData.append('prompt', message);
     const response = await axiosInstance.post(
-      `v1/chats/${chatId}/messages/`,
+      `chats/${chatId}/messages/`,
       formData,
       {
         adapter: 'fetch',

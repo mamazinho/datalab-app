@@ -1,1 +1,0 @@
-export { authProvider, authProtect } from './auth';

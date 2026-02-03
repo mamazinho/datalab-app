@@ -4,11 +4,11 @@ interface IAuthContextProps {
   email: string | undefined;
   accessToken: string | undefined;
 
-  login: (email: string, password: string) => void;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
-export const AuthContext = createContext<IAuthContextProps | null>(null);
+export const AuthContext = createContext({} as IAuthContextProps);
 
 export const useAuthContext = () => {
   const context = useContext(AuthContext);
