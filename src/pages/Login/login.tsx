@@ -23,20 +23,20 @@ export const Login: React.FC = () => {
 
   return (
     <LoginContainer>
-      <div className="container d-flex justify-content-center align-items-center vh-100">
-        <div className="card shadow p-4" style={{ width: '100%', maxWidth: '400px' }}>
-          <div className="text-center mb-4">
-            <h1 className="h3 mb-3 font-weight-normal">DataLab App</h1>
-            <h2 className="h5 text-muted">Login</h2>
+      <div className="flex items-center justify-center min-h-[80vh] p-4">
+        <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-extrabold text-gray-800 mb-2">DataLab <span className="text-orange-600">App</span></h1>
+            <h2 className="text-gray-500 text-lg font-medium">Benvindo de volta!</h2>
           </div>
           
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label htmlFor="inputEmail" className="form-label">Email</label>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-1">
+              <label htmlFor="inputEmail" className="block text-sm font-semibold text-gray-700 ml-1">Email</label>
               <input 
                 type="email" 
                 id="inputEmail" 
-                className="form-control" 
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50 focus:bg-white" 
                 placeholder="seu@email.com" 
                 required 
                 autoFocus
@@ -45,12 +45,12 @@ export const Login: React.FC = () => {
               />
             </div>
 
-            <div className="mb-3">
-              <label htmlFor="inputPassword" className="form-label">Senha</label>
+            <div className="space-y-1">
+              <label htmlFor="inputPassword" className="block text-sm font-semibold text-gray-700 ml-1">Senha</label>
               <input 
                 type="password" 
                 id="inputPassword" 
-                className="form-control" 
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50 focus:bg-white" 
                 placeholder="Sua senha" 
                 required
                 value={password}
@@ -58,14 +58,14 @@ export const Login: React.FC = () => {
               />
             </div>
 
-            <button className="btn btn-lg btn-primary w-100 btn-block" type="submit">Entrar</button>
+            <button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] mt-4" type="submit">Entrar</button>
             
-            <div className="mt-4 text-center">
-              <div className="mb-2">
-                <Link to="/register" className="text-decoration-none">Não possui conta? Cadastra-se</Link>
+            <div className="text-center space-y-3 pt-4 border-t border-gray-100 mt-6">
+              <div className="">
+                <Link to="/register" className="text-orange-600 hover:text-orange-800 font-medium transition-colors hover:underline">Não possui conta? Cadastre-se</Link>
               </div>
               <div>
-                <Link to="/forgot-password" style={{ fontSize: '0.9rem' }} className="text-muted text-decoration-none">Esqueci minha senha</Link>
+                <Link to="/forgot-password" style={{ fontSize: '0.9rem' }} className="text-gray-400 hover:text-gray-600 transition-colors">Esqueci minha senha</Link>
               </div>
             </div>
           </form>
