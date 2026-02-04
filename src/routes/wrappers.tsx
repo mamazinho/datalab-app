@@ -1,5 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuthContext } from "../contexts/auth";
+import { PrivateLayout } from "../components/UI/Layout/private-layout/layout";
+
 
 export const PrivateRoutes = () => {
     const { accessToken } = useAuthContext();
@@ -8,7 +10,7 @@ export const PrivateRoutes = () => {
     console.log("PrivateRoutes accessToken:", accessToken);
 
     return accessToken 
-        ? <Outlet /> 
+        ? <PrivateLayout><Outlet /></PrivateLayout>
         : <Navigate to="/login" state={{ from: location }} replace />;
 };
 

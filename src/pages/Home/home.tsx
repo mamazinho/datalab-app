@@ -1,10 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { HomeContainer } from './home.style';
+import { useAuthContext } from '../../contexts/auth';
 
 export const Home: React.FC = () => {
+  const { logout } = useAuthContext();
+
   return (
     <HomeContainer>
+      <button className="btn btn-primary" onClick={logout}>Logout</button>
       <div className="container-fluid h-100">
         <div className="row justify-content-center h-100">
           <div className="col-lg-10 col-xl-8 d-flex flex-column">
