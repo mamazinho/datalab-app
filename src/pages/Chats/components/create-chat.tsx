@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { DatalabAPI } from '../../../services/datalab-api';
-import { type ICreateChat } from '../../../services/datalab-api/chatsResource';
+import { type ICreateChat, type IRetrieveChat } from '../../../services/datalab-api/chatsResource';
 
 interface ICreateChatProps {
-    onCreateChat: () => void;
+    onCreateChat: (chat: IRetrieveChat) => void;
 }
 
 export const CreateChat = ({ onCreateChat }: ICreateChatProps) => {
     const [toCreateChat, setToCreateChat] = useState(false);
     const [chatPayload, setChatPayload] = useState<ICreateChat>();
 
-    const handleCreateChat = async (payload?: ICreateChat) => {
-        if (!payload) throw new Error("Payload is required");
+    const handleSubmit = async () => {
+        if (!chatPayload) throw new Error("Payload is required");
         try {
-            await DatalabAPI.ChatsResource.createChat(payload);
-            onCreateChat();
+            const data = await DatalabAPI.ChatsResource.createChat(chatPayload);
+            onCreateChat(data);
             setToCreateChat(false);
             setChatPayload(undefined);
         } catch (error) {
@@ -38,11 +38,16 @@ export const CreateChat = ({ onCreateChat }: ICreateChatProps) => {
                         value={chatPayload?.title}
                         onChange={e => setChatPayload({ title: e.target.value })}
                         placeholder="Chat Title"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                handleSubmit();
+                            }
+                        }}
                     />
                     <button
                         type="submit"
                         className="w-full bg-orange-600 text-white px-3 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium cursor-pointer shadow-sm"
-                        onClick={() => handleCreateChat(chatPayload)}
+                        onClick={handleSubmit}
                     >
                         Create
                     </button>

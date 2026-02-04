@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { AsyncResource } from '../../components/Tools/async-resource';
 import { DatalabAPI } from '../../services/datalab-api';
+import { type IRetrieveChat } from '../../services/datalab-api/chatsResource';
 import { ChatContainer } from './chats.style';
 import { CreateChat } from './components/create-chat';
-import { ChatList } from './components/chat-list';
+import { ChatList } from './components/list-chats';
 
 export const Chats = () => {
-  const [needUpdateChats, setNeedUpdateChats] = useState<number>(0);
+  const [newChats, setNewChats] = useState<IRetrieveChat[]>([]);
 
   return (
     <ChatContainer>
@@ -16,7 +17,7 @@ export const Chats = () => {
                 <h1 className="text-2xl font-bold text-gray-800">Gerenciador de Chats</h1>
                 <p className="text-gray-500 text-sm">Inicie novas conversas ou continue de onde parou</p>
             </div>
-            <CreateChat onCreateChat={() => setNeedUpdateChats(needUpdateChats + 1)} />
+            <CreateChat onCreateChat={(chat) => setNewChats([chat, ...newChats])} />
         </div>
         
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
@@ -25,12 +26,8 @@ export const Chats = () => {
                     <span className="p-2 bg-orange-100 rounded-lg text-orange-600 text-sm">📋</span>
                     Chats Disponíveis
                 </h3>
-                <AsyncResource 
-                  fetcher={DatalabAPI.ChatsResource.getAllChats}
-                  loadingFallback={needUpdateChats > 0 ? <></> : null}
-                  dependencies={[needUpdateChats]}
-                >
-                    {(data) => <ChatList chats={data} />}
+                <AsyncResource fetcher={DatalabAPI.ChatsResource.getAllChats}>
+                    {(data) => <ChatList chats={[...newChats, ...data]} />}
                 </AsyncResource>
             </div>
         </div>
