@@ -1,8 +1,8 @@
-import { axiosInstance } from "./axios";
+import { axiosPrivateInstance } from "./axios";
 
 export const ChatMessagesResource = {
   async getChatMessages(chatId: number): Promise<ReadableStream<Uint8Array>> {
-    const response = await axiosInstance.get(
+    const response = await axiosPrivateInstance.get(
       `chats/${chatId}/messages/`,
       { 
         adapter: 'fetch',
@@ -13,14 +13,12 @@ export const ChatMessagesResource = {
     return response.data;
   },
   async sendMessage(chatId: number, message: string): Promise<ReadableStream<Uint8Array>> {
-    const formData = new FormData();
-    formData.append('prompt', message);
-    const response = await axiosInstance.post(
+    const response = await axiosPrivateInstance.post(
       `chats/${chatId}/messages/`,
-      formData,
+      {'prompt': message.trim()},
       {
         adapter: 'fetch',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/x-www-form-urlencoded' },
         responseType: 'stream'
       }
     );

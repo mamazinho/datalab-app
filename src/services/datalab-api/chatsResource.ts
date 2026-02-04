@@ -1,4 +1,4 @@
-import { axiosInstance } from "./axios";
+import { axiosPrivateInstance } from "./axios";
 
 export interface IRetrieveChat {
   id: number;
@@ -17,12 +17,12 @@ export interface ICreateChat {
 
 export const ChatsResource = {
   async getAllChats(): Promise<IRetrieveChat[]> {
-    const response = await axiosInstance.get('chats/')
+    const response = await axiosPrivateInstance.get('chats/')
     return response.data as IRetrieveChat[];
   },
 
   async createChat(payload: ICreateChat): Promise<IRetrieveChat> {
-    const response = await axiosInstance.post('chats/', payload);
+    const response = await axiosPrivateInstance.post('chats/', payload);
     return response.data as IRetrieveChat;
   }
 }
