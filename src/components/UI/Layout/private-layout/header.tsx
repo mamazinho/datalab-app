@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuthContext } from "../../../../contexts/auth";
+import favicon from '../../../../assets/favicon.png';
 
 export const Header = () => {
 
@@ -13,21 +14,22 @@ export const Header = () => {
 
     return (
         <nav className="bg-white shadow dark:bg-gray-800 rounded-2xl">
-            <div className="container flex items-center justify-between mx-auto">
-                <Link to="/">
-                    <span className="text-xl font-bold dark:text-white px-4">DataLab</span>
-                </Link>
-                <div className="container flex items-center justify-center p-6 mx-auto text-gray-600 capitalize dark:text-gray-300">
+            <div className="container flex items-center justify-between mx-auto px-6 py-3">
+                <a href="/" className="flex items-center gap-2">
+                    <img className="w-auto h-8" src={favicon} alt="Logo da DataLab" />
+                    <span className="text-xl font-bold text-gray-800 dark:text-white">DataLab</span>
+                </a>
+                <div className="flex items-center justify-center space-x-6 text-gray-600 capitalize dark:text-gray-300">
                     {menuPages.map(({ label, href }) => {
                         const isActive = location.pathname === href;
                         return (
                             <Link 
                                 key={href}
                                 to={href} 
-                                className={`border-b-2 transition-colors duration-300 transform mx-1.5 sm:mx-6 ${
+                                className={`border-b-2 transition-colors duration-300 transform mx-1.5 sm:mx-6 hover:no-underline! ${
                                     isActive 
-                                    ? "border-blue-500 text-gray-800 dark:text-gray-200" 
-                                    : "border-transparent hover:text-gray-800 dark:hover:text-gray-200 hover:border-blue-500"
+                                    ? "border-orange-600 text-gray-800 dark:text-gray-200" 
+                                    : "border-transparent hover:text-gray-800 dark:hover:text-gray-200 hover:border-orange-600"
                                 }`}
                             >
                                 {label}

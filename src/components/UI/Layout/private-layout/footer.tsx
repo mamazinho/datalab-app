@@ -1,10 +1,12 @@
+import favicon from '../../../../assets/favicon.png';
+
 export const Footer = () => {
 
     const currentYear = new Date().getFullYear();
 
     return (
         <div className="container flex flex-col items-center justify-between p-6 mx-auto space-y-4 sm:space-y-0 sm:flex-row">
-            <a href="/"><img className="w-auto h-7" src="../../../../assets/favicon.png" alt="Logo da DataLab" /></a>
+            <a href="/"><img className="w-auto h-7" src={favicon} alt="Logo da DataLab" /></a>
 
             <p className="text-sm text-gray-600 dark:text-gray-300">© Copyright {currentYear}. All Rights Reserved.</p>
 

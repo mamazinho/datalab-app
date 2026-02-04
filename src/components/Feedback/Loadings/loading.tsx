@@ -1,8 +1,8 @@
 export const LoadingPiece = () => {
     return (
-        <div className="flex flex-col items-center justify-center h-full">
-            <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16 mb-4"></div>
-            <h2 className="text-center text-xl font-semibold">Loading...</h2>
+        <div className="flex flex-col items-center justify-center p-8">
+            <div className="w-10 h-10 border-4 border-gray-200 border-t-orange-500 rounded-full animate-spin"></div>
+            <h2 className="mt-3 text-orange-500 font-medium text-sm tracking-wider uppercase animate-pulse">Loading...</h2>
         </div>
     );
 }

@@ -14,17 +14,19 @@ export const ChatMessages: React.FC = () => {
 
   return (
     <MessageContainer>
-      <main className="h-100">
-        <div className="text-center mb-3">
-          <h2>Chat {chatId}</h2>
-          <p className="text-muted">Converse com nossa IA e tire suas dúvidas</p>
+      <main className="flex flex-col h-full w-full max-w-5xl mx-auto p-4 md:p-6 bg-white rounded-2xl shadow-sm border border-gray-100 my-4">
+        <div className="mb-6 pb-4 border-b border-gray-100 text-center sm:text-left">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Chat <span className="text-orange-600">#{chatId}</span></h2>
+          <p className="text-gray-500 text-sm md:text-base">Converse com nossa IA e tire suas dúvidas</p>
         </div>
 
-        <Messages chatId={Number(chatId)} onError={handleError} />
+        <div className="flex-1 min-h-0 overflow-hidden">
+            <Messages chatId={Number(chatId)} onError={handleError} />
+        </div>
 
         {error && (
-          <div className="text-danger mt-3">
-            {error}
+          <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-xl border border-red-200 flex items-center gap-2 animate-pulse">
+            <span className="font-bold">Error:</span> {error}
           </div>
         )}
       </main>

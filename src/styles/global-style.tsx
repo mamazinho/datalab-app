@@ -43,7 +43,8 @@ a {
 }
 
 a:hover {
-  text-decoration: underline;
+  // text-decoration: underline;
+  filter: brightness(0.9);
 }
 
 ul, ol {

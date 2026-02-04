@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { DatalabAPI } from '../../../../services/datalab-api';
 import { processStreamResponse, type IMessage } from '../../../../utils/process-stream';
+import { MessageBubble } from './message-bubble';
 
 interface IMessagesHistoryProps {
     chatId: number;
@@ -82,48 +83,41 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
     }, [messages, messagesOnStreaming]);
 
     return (
-        <div>
-            <div id="conversation" ref={conversationRef}>
+        <div className="flex flex-col h-full max-h-[calc(100vh-14rem)]">
+            <div id="conversation" ref={conversationRef} className="flex-1 overflow-y-auto p-4 bg-gray-50 rounded-xl border border-gray-200 mb-4 space-y-4 shadow-inner">
                 {messages.length === 0 ? (
-                    <div className="text-center text-muted py-5">
-                        <h5>💬 Nenhuma mensagem ainda</h5>
-                        <p>Comece uma conversa digitando sua pergunta abaixo!</p>
+                    <div className="flex flex-col items-center justify-center h-full text-gray-400 text-center animate-fade-in">
+                        <p className="text-4xl mb-4">💬</p>
+                        <p className="text-lg font-medium text-gray-500">Nenhuma mensagem ainda</p>
+                        <p className="text-sm">Comece uma conversa digitando sua pergunta abaixo!</p>
                     </div>
                 ) : (
                     messages.map((message, index) => (
-                        <div
-                            key={index}
-                            className={`${message.role}`}
-                            title={`${message.role} em ${new Date(message.timestamp).toLocaleString('pt-BR')}`}
-                        >{message.content}</div>
+                        <MessageBubble key={`hist-${index}`} message={message} />
                     ))
                 )}
                 {messagesOnStreaming.length > 0 ?
                     messagesOnStreaming.map((message, index) => (
-                        <div 
-                            key={index}
-                            className={`${message.role}`}
-                            title={`${message.role} em ${new Date(message.timestamp).toLocaleString('pt-BR')}`}
-                            >{message.content}</div>
+                        <MessageBubble key={`hist-${index}`} message={message} />
                     )) : null
                 }
             </div>
             {isLoading && (
-                <div className="d-flex justify-content-center mb-3">
-                    <div className={`spinner ${isLoading ? 'active' : ''}`} />
-                        <p className="text-muted ms-3 align-self-center">
+                <div className="flex items-center gap-2 text-orange-600 text-sm font-medium mb-2 px-2 animate-pulse">
+                    <div className="animate-spin h-4 w-4 border-2 border-orange-600 border-t-transparent rounded-full" />
+                        <p>
                             <em>IA está pensando...</em>
                         </p>
                 </div>
             )}
 
-            <form onSubmit={handleSubmit}>
-                <div className="d-flex gap-2 align-items-end">
-                    <div className="flex-grow-1">
+            <form onSubmit={handleSubmit} className="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+                <div className="flex gap-2">
+                    <div className="flex-1">
                         <input
                             id="prompt-input"
                             name="prompt"
-                            className="form-control"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all placeholder-gray-400 text-gray-700 disabled:bg-gray-100 disabled:text-gray-400"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             disabled={isDisabled}
@@ -141,18 +135,18 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
                         />
                     </div>
                     <button
-                        className="btn btn-primary"
+                        className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-xl hover:bg-orange-700 disabled:bg-orange-300 disabled:cursor-not-allowed transition-all shadow-md active:scale-95 flex items-center justify-center min-w-30"
                         type="submit"
                         disabled={isDisabled || !prompt.trim()}
                     >
                         {isLoading ? (
                             <>
-                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" role="status" aria-hidden="true"></span>
                                 Enviando...
                             </>
                         ) : (
                             <>
-                                <i className="bi bi-send me-1"></i>
+                                <span className="mr-2">➤</span>
                                 Enviar
                             </>
                         )}
