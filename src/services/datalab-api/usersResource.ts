@@ -16,6 +16,11 @@ export interface IUserResponse {
   updated_at: string;
 }
 
+export interface IConfirmAccountRequest {
+  code: string;
+}
+
+
 export interface IForgotPasswordRequest {
   user_email: string;
 }
@@ -31,6 +36,19 @@ export const UsersResource = {
     const response = await axiosInstance.post(
       `users`,
       userData
+    )
+    return response.data as IUserResponse;
+  },
+  async resendConfirmationCode(userId: number): Promise<IUserResponse> {
+    const response = await axiosInstance.post(
+      `users/${userId}/resend-confirmation`
+    )
+    return response.data as IUserResponse;
+  },
+  async confirmAccount(userId: number, confirmAccountData: IConfirmAccountRequest): Promise<IUserResponse> {
+    const response = await axiosInstance.post(
+      `users/${userId}/confirm-account`,
+      confirmAccountData
     )
     return response.data as IUserResponse;
   },
