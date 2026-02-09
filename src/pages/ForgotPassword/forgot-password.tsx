@@ -1,41 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ForgotPasswordContainer } from './forgot-password.style';
 import { DatalabAPI } from '../../services/datalab-api';
+import { TimedButton } from '../../components/UI/Buttons/timed-button';
 
 export const ForgotPassword: React.FC = () => {
     const [email, setEmail] = useState('');
-    const [timer, setTimer] = useState(0);
-    const [hasSent, setHasSent] = useState(false);
 
-    useEffect(() => {
-        let interval: number;
-        if (timer > 0) {
-            interval = setInterval(() => {
-                setTimer((prev) => prev - 1);
-            }, 1000);
-        }
-        return () => clearInterval(interval);
-    }, [timer]);
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         try {
             await DatalabAPI.UsersResource.forgotPassword({ user_email: email })
             alert("Um link de recuperação foi enviado para o seu email.");
-            setTimer(120);
-            setHasSent(true);
         } catch (error) {
             console.log("Falha ao enviar o link de recuperação. Tente novamente.", error);
             return;
         }
     };
-    
-    const formatTime = (seconds: number) => {
-        const m = Math.floor(seconds / 60);
-        const s = seconds % 60;
-        return `${m}:${s.toString().padStart(2, '0')}`;
-    };  
 
     return (
         <ForgotPasswordContainer>
@@ -64,13 +45,13 @@ export const ForgotPassword: React.FC = () => {
                             />
                         </div>
 
-                        <button
-                            className="w-full bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-orange-600 disabled:shadow-none disabled:active:scale-100 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] mt-4"
-                            type="submit"
-                            disabled={timer > 0}
-                        >
-                            {timer > 0 ? `Reenviar em ${formatTime(timer)}` : (hasSent ? "Reenviar Link" : "Enviar Link")}
-                        </button>
+                        <TimedButton
+                            cooldown={120}
+                            disabled={false}
+                            onClick={handleSubmit}
+                            textWhenClicked="Reenviar Link"
+                            textWhenNoClicked="Enviar Link"
+                        />
 
                         <div className="text-center pt-4 border-t border-gray-100 mt-6 flex flex-col gap-2">
                             <Link to="/login" className="text-gray-500 hover:text-orange-600 font-medium transition-colors hover:underline">Voltar para Login</Link>
