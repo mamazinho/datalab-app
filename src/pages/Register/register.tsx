@@ -75,7 +75,7 @@ export const Register: React.FC = () => {
         <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
           <StepsController ref={stepsRef}>
             {/* STEP 1: Register Form */}
-            <Step canGoForward={true}>
+            <Step canGoForward={false}>
               <div className="text-center mb-8">
                 <h1 className="text-3xl font-extrabold text-gray-800 mb-2">DataLab <span className="text-orange-600">App</span></h1>
                 <h2 className="text-gray-500 text-lg font-medium">Crie sua conta</h2>
