@@ -1,6 +1,7 @@
 import { type ReactNode, type ReactElement, forwardRef, useImperativeHandle, useState } from "react";
 import React from "react";
 import type { IStepProps } from "./step";
+import { StepsProgressBar } from "./steps-progress-bar";
 
 interface IStepsControllerProps {
   initialStep?: number;
@@ -43,51 +44,25 @@ export const StepsController = forwardRef<StepsRef, IStepsControllerProps>(({ ch
 
   const { canGoBack = false, canGoForward = false } = currentChild.props;
   
+  // Navigation Logic for Progress Bar
+  const isStepClickable = (stepNumber: number) => {
+      // Can go back to previous steps if current step allows going back
+      if (stepNumber < currentStep && canGoBack) return true;
+      // Can go to immediate next step if current step allows going forward
+      if (stepNumber === currentStep + 1 && canGoForward) return true;
+      return false;
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Progress Bar / Stepper */}
       {showProgress && (
-          <div className="flex items-center justify-between px-2 mb-2">
-            {steps.map((_, index) => {
-              const stepNumber = index + 1;
-              const isActive = stepNumber <= currentStep;
-              
-              // Navigation Logic via Progress Bar
-              let isClickable = false;
-              // Can go back to previous steps if current step allows going back
-              if (stepNumber < currentStep && canGoBack) isClickable = true;
-              // Can go to immediate next step if current step allows going forward
-              if (stepNumber === currentStep + 1 && canGoForward) isClickable = true;
-
-              return (
-                <div key={index} className="flex-1 flex flex-col items-center relative">
-                    <button
-                        type="button"
-                        onClick={() => isClickable && setCurrentStep(stepNumber)}
-                        disabled={!isClickable} 
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all duration-300 z-10 outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500/50
-                            ${isActive 
-                                ? 'bg-orange-600 border-orange-600 text-white' 
-                                : 'bg-white border-gray-300 text-gray-400'
-                            }
-                            ${isClickable 
-                                ? isActive 
-                                    ? 'cursor-pointer hover:bg-orange-700 hover:border-orange-700' 
-                                    : 'cursor-pointer hover:border-orange-500 hover:text-orange-500 hover:bg-orange-50'
-                                : 'cursor-default'
-                            }
-                        `}
-                    >
-                        {stepNumber}
-                    </button>
-                    {/* Line connector */}
-                    {index < steps.length - 1 && (
-                        <div className={`absolute top-4 left-1/2 w-full h-0.5 z-0 transition-all duration-300 ${stepNumber < currentStep ? 'bg-orange-600' : 'bg-gray-200'}`} />
-                    )}
-                </div>
-              );
-            })}
-          </div>
+        <StepsProgressBar
+          totalSteps={totalSteps}
+          currentStep={currentStep}
+          onStepClick={setCurrentStep}
+          isStepClickable={isStepClickable}
+        />
       )}
 
       {/* Navigation & Content Wrapper */}
