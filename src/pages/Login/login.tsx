@@ -5,7 +5,12 @@ import { useAuthContext } from '../../contexts/auth';
 import { toast } from 'react-toastify';
 import { GoogleButton } from '../../components/UI/Buttons/google-button';
 import { DatalabAPI } from '../../services/datalab-api';
-import type { ILoginUserRequest } from '../../services/datalab-api/authResource';
+import type { ILoginUserRequest, ILoginUserResponse } from '../../services/datalab-api/authResource';
+
+export interface ISocialLoginCallbackEvent {
+  type: string;
+  response: ILoginUserResponse;
+}
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -17,17 +22,15 @@ export const Login: React.FC = () => {
   useEffect(() => {
     const authChannel = new BroadcastChannel('auth_channel');
 
-    authChannel.onmessage = (event) => {
-      if (event.data?.type === 'GOOGLE_LOGIN_SUCCESS' && event.data.response?.access_token) {
-        
+    authChannel.onmessage = (event: MessageEvent<ISocialLoginCallbackEvent>) => {
+      const validAuthEventTypes = ['GOOGLE_LOGIN_SUCCESS'];
+
+      if (validAuthEventTypes.includes(event.data.type) && event.data.response.access_token) {
         login(event.data.response);
-        toast.success("Login com Google realizado com sucesso!");
-        
         if (popupRef.current) {
           popupRef.current.close();
           popupRef.current = null;
         }
-
         navigate('/');
       }
     };
@@ -40,23 +43,18 @@ export const Login: React.FC = () => {
   const handleGoogleLogin = () => {
     const datalabUrl = import.meta.env.VITE_DATALAB_API_URL;
     const googleAuthUrl = `${datalabUrl}/auth/google/login/`;
-    
-    if (googleAuthUrl) {
-      const width = 500;
-      const height = 600;
-      const left = window.screenLeft + (window.innerWidth - width) / 2;
-      const top = window.screenTop + (window.innerHeight - height) / 2;
-      
-      const popup = window.open(
-        googleAuthUrl,
-        'google_login_popup',
-        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,status=yes,resizable=yes`
-      );
-      
-      popupRef.current = popup;
-    } else {
-      toast.error("Integração com Google não configurada.");
-    }
+
+    const width = 500;
+    const height = 600;
+    const left = window.screenLeft + (window.innerWidth - width) / 2;
+    const top = window.screenTop + (window.innerHeight - height) / 2;
+
+    const popup = window.open(
+      googleAuthUrl,
+      'google_login_popup',
+      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,status=yes,resizable=yes`
+    );
+    popupRef.current = popup;
   };
 
   const handleSubmit = async (e: React.SubmitEvent) => {
@@ -68,7 +66,6 @@ export const Login: React.FC = () => {
     try {
       const response = await DatalabAPI.AuthResource.login(loginData)
       login(response);
-      console.log("Login submitted:", { email, password });
       navigate('/')
     } catch (error) {
       toast.error(`Falha no login: ${error}`);
@@ -83,16 +80,16 @@ export const Login: React.FC = () => {
             <h1 className="text-3xl font-extrabold text-gray-800 mb-2">DataLab <span className="text-orange-600">App</span></h1>
             <h2 className="text-gray-500 text-lg font-medium">Benvindo de volta!</h2>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1">
               <label htmlFor="inputEmail" className="block text-sm font-semibold text-gray-700 ml-1">Email</label>
-              <input 
-                type="email" 
-                id="inputEmail" 
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50 focus:bg-white" 
-                placeholder="seu@email.com" 
-                required 
+              <input
+                type="email"
+                id="inputEmail"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50 focus:bg-white"
+                placeholder="seu@email.com"
+                required
                 autoFocus
                 value={email}
                 autoComplete="email"
@@ -102,11 +99,11 @@ export const Login: React.FC = () => {
 
             <div className="space-y-1">
               <label htmlFor="inputPassword" className="block text-sm font-semibold text-gray-700 ml-1">Senha</label>
-              <input 
-                type="password" 
-                id="inputPassword" 
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50 focus:bg-white" 
-                placeholder="Sua senha" 
+              <input
+                type="password"
+                id="inputPassword"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50 focus:bg-white"
+                placeholder="Sua senha"
                 required
                 value={password}
                 autoComplete="current-password"
@@ -126,7 +123,7 @@ export const Login: React.FC = () => {
             </div>
 
             <GoogleButton onClick={handleGoogleLogin} />
-            
+
             <div className="text-center space-y-3 pt-4 mt-2">
               <div className="">
                 <Link to="/register" className="text-orange-600 hover:text-orange-800 font-medium transition-colors hover:underline">Não possui conta? Cadastre-se</Link>
