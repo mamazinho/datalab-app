@@ -105,6 +105,7 @@ export const Register: React.FC = () => {
                     placeholder="seu@email.com" 
                     required 
                     value={email}
+                    autoComplete="email"
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
@@ -118,6 +119,7 @@ export const Register: React.FC = () => {
                     placeholder="Sua senha" 
                     required
                     value={password}
+                    autoComplete="new-password"
                     onChange={(e) => setPassword(e.target.value)}
                   />
                 </div>
@@ -130,6 +132,7 @@ export const Register: React.FC = () => {
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50 focus:bg-white" 
                     placeholder="Confirme sua senha" 
                     required
+                    autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                   />
@@ -165,6 +168,7 @@ export const Register: React.FC = () => {
                     required 
                     autoFocus
                     maxLength={6}
+                    autoComplete="one-time-code"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
                   />

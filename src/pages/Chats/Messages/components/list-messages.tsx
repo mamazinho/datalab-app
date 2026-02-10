@@ -121,6 +121,7 @@ export const Messages = ({ chatId, onError }: IMessagesHistoryProps) => {
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             disabled={isDisabled}
+                            autoComplete="off"
                             placeholder="Digite sua mensagem aqui..."
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey && !isDisabled && prompt.trim()) {
