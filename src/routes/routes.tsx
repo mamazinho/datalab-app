@@ -6,6 +6,7 @@ import { Login } from "../pages/Login";
 import { Register } from "../pages/Register";
 import { ForgotPassword } from "../pages/ForgotPassword";
 import { ChangePassword } from "../pages/ChangePassword";
+import { GoogleCallback } from "../pages/AuthCallback/google-callback";
 import { PrivateRoutes, PublicRoutes } from "./wrappers";
 
 
@@ -29,6 +30,10 @@ export const routes = createBrowserRouter([
             {
                 path: "/change-password",
                 element: <ChangePassword />,
+            },
+            {
+                path: "/auth/google/callback",
+                element: <GoogleCallback />,
             },
         ],
     },
