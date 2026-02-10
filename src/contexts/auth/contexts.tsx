@@ -1,10 +1,10 @@
 import { createContext, useContext } from "react";
+import type { ILoginUserResponse } from "../../services/datalab-api/authResource";
 
 interface IAuthContextProps {
-  email: string | undefined;
   accessToken: string | undefined;
 
-  login: (email: string, password: string) => Promise<void>;
+  login: (loginResponse: ILoginUserResponse) => void;
   logout: () => void;
 }
 

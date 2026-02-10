@@ -1,20 +1,73 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LoginContainer } from './login.style';
 import { useAuthContext } from '../../contexts/auth';
 import { toast } from 'react-toastify';
+import { GoogleButton } from '../../components/UI/Buttons/google-button';
+import { DatalabAPI } from '../../services/datalab-api';
+import type { ILoginUserRequest } from '../../services/datalab-api/authResource';
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { login } = useAuthContext();
   const navigate = useNavigate();
-  // const { login, logout, accessToken, email} = useAuthContext();
+  const popupRef = useRef<Window | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    const authChannel = new BroadcastChannel('auth_channel');
+
+    authChannel.onmessage = (event) => {
+      if (event.data?.type === 'GOOGLE_LOGIN_SUCCESS' && event.data.response?.access_token) {
+        
+        login(event.data.response);
+        toast.success("Login com Google realizado com sucesso!");
+        
+        if (popupRef.current) {
+          popupRef.current.close();
+          popupRef.current = null;
+        }
+
+        navigate('/');
+      }
+    };
+
+    return () => {
+      authChannel.close();
+    };
+  }, [login, navigate]);
+
+  const handleGoogleLogin = () => {
+    const datalabUrl = import.meta.env.VITE_DATALAB_API_URL;
+    const googleAuthUrl = `${datalabUrl}/auth/google/login/`;
+    
+    if (googleAuthUrl) {
+      const width = 500;
+      const height = 600;
+      const left = window.screenLeft + (window.innerWidth - width) / 2;
+      const top = window.screenTop + (window.innerHeight - height) / 2;
+      
+      const popup = window.open(
+        googleAuthUrl,
+        'google_login_popup',
+        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,status=yes,resizable=yes`
+      );
+      
+      popupRef.current = popup;
+    } else {
+      toast.error("Integração com Google não configurada.");
+    }
+  };
+
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
+    const loginData: ILoginUserRequest = {
+      email: email,
+      password: password,
+    };
     try {
-      await login(email, password);
+      const response = await DatalabAPI.AuthResource.login(loginData)
+      login(response);
       console.log("Login submitted:", { email, password });
       navigate('/')
     } catch (error) {
@@ -42,6 +95,7 @@ export const Login: React.FC = () => {
                 required 
                 autoFocus
                 value={email}
+                autoComplete="email"
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
@@ -55,13 +109,25 @@ export const Login: React.FC = () => {
                 placeholder="Sua senha" 
                 required
                 value={password}
+                autoComplete="current-password"
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
 
             <button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] mt-4" type="submit">Entrar</button>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Ou continue com</span>
+              </div>
+            </div>
+
+            <GoogleButton onClick={handleGoogleLogin} />
             
-            <div className="text-center space-y-3 pt-4 border-t border-gray-100 mt-6">
+            <div className="text-center space-y-3 pt-4 mt-2">
               <div className="">
                 <Link to="/register" className="text-orange-600 hover:text-orange-800 font-medium transition-colors hover:underline">Não possui conta? Cadastre-se</Link>
               </div>

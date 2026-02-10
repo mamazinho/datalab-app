@@ -41,6 +41,7 @@ export const ForgotPassword: React.FC = () => {
                                 required
                                 autoFocus
                                 value={email}
+                                autoComplete="email"
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>

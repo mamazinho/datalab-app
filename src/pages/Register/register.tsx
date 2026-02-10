@@ -91,6 +91,7 @@ export const Register: React.FC = () => {
                     required 
                     autoFocus
                     value={name}
+                    autoComplete="name"
                     onChange={(e) => setName(e.target.value)}
                   />
                 </div>
