@@ -37,6 +37,7 @@ export const CreateChat = ({ onCreateChat }: ICreateChatProps) => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 bg-gray-50 focus:bg-white transition-all"
                         value={chatPayload?.title}
                         onChange={e => setChatPayload({ title: e.target.value })}
+                        autoComplete="off"
                         placeholder="Chat Title"
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
