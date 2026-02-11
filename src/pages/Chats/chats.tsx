@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { AsyncResource } from '../../components/Tools/async-resource';
 import { DatalabAPI } from '../../services/datalab-api';
 import { type IRetrieveChat } from '../../services/datalab-api/chatsResource';
@@ -9,6 +9,10 @@ import { ChatList } from './components/list-chats';
 export const Chats = () => {
   const [newChats, setNewChats] = useState<IRetrieveChat[]>([]);
 
+  const handleNewChat = useCallback((chat: IRetrieveChat) => {
+    setNewChats((prevChats) => [chat, ...prevChats]);
+  }, []);
+
   return (
     <ChatContainer>
       <div className="max-w-5xl mx-auto px-4 py-8 w-full">
@@ -17,7 +21,8 @@ export const Chats = () => {
                 <h1 className="text-2xl font-bold text-gray-800">Gerenciador de Chats</h1>
                 <p className="text-gray-500 text-sm">Inicie novas conversas ou continue de onde parou</p>
             </div>
-            <CreateChat onCreateChat={(chat) => setNewChats([chat, ...newChats])} />
+            {/* <CreateChat onCreateChat={(chat) => setNewChats([chat, ...newChats])} /> */}
+            <CreateChat onCreateChat={handleNewChat} />
         </div>
         
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
