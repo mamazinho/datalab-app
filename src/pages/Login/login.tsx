@@ -11,7 +11,7 @@ import { INITIAL_ACTION_STATE, type ActionState } from '../../types/actions';
 import { PasswordInput } from '../../components/UI/Inputs/password-input';
 
 export const Login: React.FC = () => {
-  const [loginState, formAction, isPending] = useActionState(loginAction, INITIAL_ACTION_STATE);
+  const [loginState, loginFormAction, isLoginPending] = useActionState(loginAction, INITIAL_ACTION_STATE);
   const { login } = useAuthContext();
   const navigate = useNavigate();
   const popupRef = useRef<Window | null>(null);
@@ -80,8 +80,8 @@ export const Login: React.FC = () => {
             <h2 className="text-gray-500 text-lg font-medium">Benvindo de volta!</h2>
           </div>
 
-          <form action={formAction} className="space-y-5">
-            <fieldset disabled={isPending} className="space-y-5">
+          <form action={loginFormAction} className="space-y-5">
+            <fieldset disabled={isLoginPending} className="space-y-5">
               <div className="space-y-1">
                 <label htmlFor="inputEmail" className="block text-sm font-semibold text-gray-700 ml-1">Email</label>
                 <input
@@ -112,7 +112,7 @@ export const Login: React.FC = () => {
                 className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
                 type="submit"
               >
-                {isPending ? 'Entrando...' : 'Entrar'}
+                {isLoginPending ? 'Entrando...' : 'Entrar'}
               </button>
             </fieldset>
 

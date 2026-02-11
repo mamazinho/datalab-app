@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useEffect, useActionState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RegisterContainer } from './register.style';
 import { DatalabAPI } from '../../services/datalab-api';
@@ -8,57 +8,60 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { RegisterForm } from './components/register-form';
 import { ConfirmAccountForm } from './components/confirm-account-form';
-import type { IRegisterUserRequest } from '../../services/datalab-api/usersResource';
+import { confirmUserAction, registerUserAction } from './actions';
+import { INITIAL_ACTION_STATE, type ActionState } from '../../types/actions';
+import type { IUserResponse } from '../../services/datalab-api/usersResource';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
   const stepsRef = useRef<StepsRef>(null);
-  const [userId, setUserId] = useState<number | null>(null);
-  const [userEmail, setUserEmail] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleRegister = async (data: IRegisterUserRequest) => {
-    setIsLoading(true);
-    try {
-      const response = await DatalabAPI.UsersResource.create({
-        name: data.name,
-        email: data.email,
-        password: data.password
-      });
-      setUserId(response.id);
-      setUserEmail(data.email);
+  const [registerState, registerFormAction, isRegisterPending] = useActionState(registerUserAction, INITIAL_ACTION_STATE);
+  const [confirmState, confirmFormAction, isConfirmPending] = useActionState(confirmUserAction, INITIAL_ACTION_STATE);
+
+  const handleRegisterActionResult = useCallback((formState: ActionState<IUserResponse>) => {
+    if (formState.success) {
       stepsRef.current?.next();
-    } catch (error) {
-      console.error("Cadastro falhou:", error);
-      toast.error("Erro ao realizar cadastro.");
-    } finally {
-      setIsLoading(false);
+    } else if (formState.error) {
+      toast.error(formState.error);
     }
-  };
+  }, [stepsRef]);
 
-  const handleConfirm = async (code: string) => {
-    if (!userId) return;
-
-    setIsLoading(true);
-    try {
-      await DatalabAPI.UsersResource.confirmAccount(userId, { code });
+  const handleConfirmActionResult = useCallback((formState: ActionState) => {
+    if (formState.success) {
       toast.success("Conta confirmada com sucesso!");
       navigate('/login');
-    } catch (error) {
-      console.error("Confirmação falhou:", error);
-      toast.error("Código inválido ou erro na confirmação.");
-    } finally {
-      setIsLoading(false);
+    } else if (formState.error) {
+      toast.error(formState.error);
     }
-  };
+  }, [navigate]);
+
   const handleResendCode = async () => {
+     const userId = registerState.data?.id;
+     const userEmail = registerState.data?.email;
+
      if (!userId) {
       toast.error("Usuário não encontrado para reenviar código.");
       return;
      }
-     await DatalabAPI.UsersResource.resendConfirmationCode(userId);
-     toast.success(`Novo código enviado para ${userEmail}`);
+
+     try {
+       await DatalabAPI.UsersResource.resendConfirmationCode(userId);
+       toast.success(`Novo código enviado para ${userEmail}`);
+     } catch (error) {
+       console.error("Erro ao reenviar código:", error);
+       toast.error("Falha ao reenviar código de confirmação.");
+     }
   };
+
+  useEffect(() => {
+    handleRegisterActionResult(registerState);
+  }, [registerState, handleRegisterActionResult]);
+
+  useEffect(() => {
+    handleConfirmActionResult(confirmState);
+  }, [confirmState, handleConfirmActionResult]);
+
   return (
     <RegisterContainer>
       <div className="flex items-center justify-center min-h-[80vh] p-4">
@@ -67,17 +70,18 @@ export const Register: React.FC = () => {
             {/* STEP 1: Register Form */}
             <Step canGoForward={false}>
               <RegisterForm 
-                onSubmit={handleRegister}
-                isLoading={isLoading}
+                action={registerFormAction}
+                isPending={isRegisterPending}
               />
             </Step>
 
             {/* STEP 2: Confirm Account */}
             <Step canGoBack={true}>
               <ConfirmAccountForm 
-                onSubmit={handleConfirm}
-                isLoading={isLoading}
-                email={userEmail}
+                action={confirmFormAction}
+                isPending={isConfirmPending}
+                userId={registerState.data?.id || null}
+                email={registerState.data?.email || ''}
                 onResendCode={handleResendCode}
               />
             </Step>

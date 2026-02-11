@@ -11,7 +11,7 @@ export const ChangePassword: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const [state, formAction, isPending] = useActionState(changePasswordAction, INITIAL_ACTION_STATE);
+  const [changePasswordState, changePasswordFormAction, isChangePasswordPending] = useActionState(changePasswordAction, INITIAL_ACTION_STATE);
 
   const email = searchParams.get('email') || '';
   const code = searchParams.get('code') || '';
@@ -27,8 +27,8 @@ export const ChangePassword: React.FC = () => {
   }, [navigate]);
 
   useEffect(() => {
-    handleChangePasswordResult(state);
-  }, [state, handleChangePasswordResult]);
+    handleChangePasswordResult(changePasswordState);
+  }, [changePasswordState, handleChangePasswordResult]);
 
   return (
     <ChangePasswordContainer>
@@ -40,11 +40,11 @@ export const ChangePassword: React.FC = () => {
             <p className="text-gray-400 text-sm mt-2">Crie uma nova senha para sua conta.</p>
           </div>
           
-          <form action={formAction} className="space-y-5">
+          <form action={changePasswordFormAction} className="space-y-5">
             <input type="hidden" name="email" value={email} />
             <input type="hidden" name="code" value={code} />
             
-            <fieldset disabled={isPending} className="space-y-5">
+            <fieldset disabled={isChangePasswordPending} className="space-y-5">
               <div className="space-y-1">
                 <label htmlFor="inputPassword" className="block text-sm font-semibold text-gray-700 ml-1">Nova Senha</label>
                 <PasswordInput
@@ -62,15 +62,15 @@ export const ChangePassword: React.FC = () => {
                 <PasswordInput
                     id="inputConfirmPassword" 
                     name="confirmPassword"
-                    className={`w-full px-4 py-3 rounded-xl border ${state.error ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500/20'} focus:ring-2 outline-none transition-all bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-500 pr-12`}
+                    className={`w-full px-4 py-3 rounded-xl border ${changePasswordState.error ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-gray-200 focus:border-orange-500 focus:ring-orange-500/20'} focus:ring-2 outline-none transition-all bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-500 pr-12`}
                     required 
                     autoComplete="new-password"
                 />
-                {state.error && <p className="text-red-500 text-xs ml-1 mt-1">{state.error}</p>}
+                {changePasswordState.error && <p className="text-red-500 text-xs ml-1 mt-1">{changePasswordState.error}</p>}
               </div>
 
               <button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] mt-4 disabled:opacity-70 disabled:cursor-not-allowed" type="submit">
-                  {isPending ? 'Alterando...' : 'Alterar Senha'}
+                  {isChangePasswordPending ? 'Alterando...' : 'Alterar Senha'}
               </button>
             </fieldset>
             

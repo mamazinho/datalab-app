@@ -6,7 +6,7 @@ import { forgotPasswordAction } from './actions';
 import { INITIAL_ACTION_STATE, type ActionState } from '../../types/actions';
 
 export const ForgotPassword: React.FC = () => {
-    const [forgotPasswordState, formAction, isPending] = useActionState(forgotPasswordAction, INITIAL_ACTION_STATE);
+    const [forgotPasswordState, forgotPasswordFormAction, isForgotPasswordPending] = useActionState(forgotPasswordAction, INITIAL_ACTION_STATE);
 
     const handleForgotPasswordResult = useCallback((formState: ActionState) => {
         if (formState.timestamp === 0) return;
@@ -33,8 +33,8 @@ export const ForgotPassword: React.FC = () => {
                         </p>
                     </div>
 
-                    <form action={formAction} className="space-y-5">
-                        <fieldset disabled={isPending} className="space-y-5">
+                    <form action={forgotPasswordFormAction} className="space-y-5">
+                        <fieldset disabled={isForgotPasswordPending} className="space-y-5">
                             <div className="space-y-1">
                                 <label htmlFor="inputEmail" className="block text-sm font-semibold text-gray-700 ml-1">Email</label>
                                 <input
@@ -51,7 +51,7 @@ export const ForgotPassword: React.FC = () => {
 
                             <TimedButton
                                 cooldown={120}
-                                disabled={isPending}
+                                disabled={isForgotPasswordPending}
                                 type="submit"
                                 textWhenClicked="Reenviar Link"
                                 textWhenNoClicked="Enviar Link"

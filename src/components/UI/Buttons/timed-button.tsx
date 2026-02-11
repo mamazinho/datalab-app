@@ -34,8 +34,6 @@ export const TimedButton = ({
         return `${m}:${s.toString().padStart(2, '0')}`;
     }; 
     
-    const displayTime = `Aguarde ${defaultFormatTime(timer)}`;
-
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         setClicked(true);
         if (onClick) onClick(e);
@@ -56,7 +54,7 @@ export const TimedButton = ({
             onClick={handleClick}
             {...rest}
         >
-            {timer > 0 ? `Reenviar em ${displayTime}` : (clicked ? textWhenClicked : textWhenNoClicked)}
+            {timer > 0 ? `Reenviar em ${defaultFormatTime(timer)}` : (clicked ? textWhenClicked : textWhenNoClicked)}
         </button>
     )
 }
