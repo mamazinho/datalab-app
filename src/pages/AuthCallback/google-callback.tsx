@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { ILoginUserResponse } from '../../services/datalab-api/authResource';
-import type { ISocialLoginCallbackEvent } from '../Login/login';
+import { SOCIAL_AUTH_CHANNEL, type ISocialLoginCallbackEvent } from '../../types/auth';
 
 
 export const GoogleCallback: React.FC = () => {
@@ -17,7 +17,7 @@ export const GoogleCallback: React.FC = () => {
         const scope = searchParams.get('scope');
         const tokenType = searchParams.get('token_type');
 
-        const authChannel = new BroadcastChannel('auth_channel');
+        const authChannel = new BroadcastChannel(SOCIAL_AUTH_CHANNEL);
         const message: ISocialLoginCallbackEvent = {
             type: 'GOOGLE_LOGIN_SUCCESS',
             response: {

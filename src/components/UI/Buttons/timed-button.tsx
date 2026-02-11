@@ -10,7 +10,10 @@ export const TimedButton = ({
     cooldown, 
     onClick,
     textWhenNoClicked,
-    textWhenClicked
+    textWhenClicked,
+    type = "button",
+    disabled,
+    ...rest
 }: ITimedButtonProps) => {
     const [timer, setTimer] = useState(0);
     const [clicked, setClicked] = useState(false);
@@ -36,7 +39,11 @@ export const TimedButton = ({
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         setClicked(true);
         if (onClick) onClick(e);
-        setTimer(cooldown);
+        
+        // Delay timer set to allow form submission to trigger first if this is a submit button
+        setTimeout(() => {
+            setTimer(cooldown);
+        }, 0);
     };
 
     const styleClasses = "w-full bg-orange-600 hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-orange-600 disabled:shadow-none disabled:active:scale-100 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98]";
@@ -44,9 +51,10 @@ export const TimedButton = ({
     return (
         <button
             className={styleClasses}
-            type="button"
-            disabled={timer > 0}
+            type={type}
+            disabled={timer > 0 || disabled}
             onClick={handleClick}
+            {...rest}
         >
             {timer > 0 ? `Reenviar em ${displayTime}` : (clicked ? textWhenClicked : textWhenNoClicked)}
         </button>

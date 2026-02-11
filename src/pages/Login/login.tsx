@@ -1,43 +1,42 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useActionState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LoginContainer } from './login.style';
 import { useAuthContext } from '../../contexts/auth';
 import { toast } from 'react-toastify';
 import { GoogleButton } from '../../components/UI/Buttons/google-button';
-import { DatalabAPI } from '../../services/datalab-api';
-import type { ILoginUserRequest, ILoginUserResponse } from '../../services/datalab-api/authResource';
-
-export interface ISocialLoginCallbackEvent {
-  type: string;
-  response: ILoginUserResponse;
-}
+import { loginAction } from './actions';
+import { SOCIAL_AUTH_CHANNEL, type ISocialLoginCallbackEvent } from '../../types/auth';
+import type { ILoginUserResponse } from '../../services/datalab-api/authResource';
+import { INITIAL_ACTION_STATE, type ActionState } from '../../types/actions';
+import { PasswordInput } from '../../components/UI/Inputs/password-input';
 
 export const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [loginState, formAction, isPending] = useActionState(loginAction, INITIAL_ACTION_STATE);
   const { login } = useAuthContext();
   const navigate = useNavigate();
   const popupRef = useRef<Window | null>(null);
 
-  useEffect(() => {
-    const authChannel = new BroadcastChannel('auth_channel');
+  const handleLoginActionResult = useCallback((formState: ActionState<ILoginUserResponse>) => {
+    if (formState.timestamp === 0) return;
+    if (formState.success && formState.data) {
+      login(formState.data);
+      navigate('/');
+    } else if (formState.error) {
+      toast.error(formState.error);
+    }
+  }, [login, navigate]);
 
-    authChannel.onmessage = (event: MessageEvent<ISocialLoginCallbackEvent>) => {
-      const validAuthEventTypes = ['GOOGLE_LOGIN_SUCCESS'];
+  const handleSocialLoginSuccessMessage = useCallback((event: MessageEvent<ISocialLoginCallbackEvent>) => {
+    const validAuthEventTypes = ['GOOGLE_LOGIN_SUCCESS'];
 
-      if (validAuthEventTypes.includes(event.data.type) && event.data.response.access_token) {
-        login(event.data.response);
-        if (popupRef.current) {
-          popupRef.current.close();
-          popupRef.current = null;
-        }
-        navigate('/');
+    if (validAuthEventTypes.includes(event.data.type) && event.data.response.access_token) {
+      login(event.data.response);
+      if (popupRef.current) {
+        popupRef.current.close();
+        popupRef.current = null;
       }
-    };
-
-    return () => {
-      authChannel.close();
-    };
+      navigate('/');
+    }
   }, [login, navigate]);
 
   const handleGoogleLogin = () => {
@@ -57,20 +56,20 @@ export const Login: React.FC = () => {
     popupRef.current = popup;
   };
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
-    e.preventDefault();
-    const loginData: ILoginUserRequest = {
-      email: email,
-      password: password,
+  // Form submission result effect
+  useEffect(() => {
+    handleLoginActionResult(loginState);
+  }, [loginState, handleLoginActionResult]);
+
+  // Google login popup message effect
+  useEffect(() => {
+    const authChannel = new BroadcastChannel(SOCIAL_AUTH_CHANNEL);
+    authChannel.onmessage = handleSocialLoginSuccessMessage;
+
+    return () => {
+      authChannel.close();
     };
-    try {
-      const response = await DatalabAPI.AuthResource.login(loginData)
-      login(response);
-      navigate('/')
-    } catch (error) {
-      toast.error(`Falha no login: ${error}`);
-    }
-  };
+  }, [handleSocialLoginSuccessMessage]);
 
   return (
     <LoginContainer>
@@ -81,37 +80,41 @@ export const Login: React.FC = () => {
             <h2 className="text-gray-500 text-lg font-medium">Benvindo de volta!</h2>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-1">
-              <label htmlFor="inputEmail" className="block text-sm font-semibold text-gray-700 ml-1">Email</label>
-              <input
-                type="email"
-                id="inputEmail"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50 focus:bg-white"
-                placeholder="seu@email.com"
-                required
-                autoFocus
-                value={email}
-                autoComplete="email"
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+          <form action={formAction} className="space-y-5">
+            <fieldset disabled={isPending} className="space-y-5">
+              <div className="space-y-1">
+                <label htmlFor="inputEmail" className="block text-sm font-semibold text-gray-700 ml-1">Email</label>
+                <input
+                  type="email"
+                  id="inputEmail"
+                  name="email"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                  placeholder="seu@email.com"
+                  required
+                  autoFocus
+                  autoComplete="email"
+                />
+              </div>
 
-            <div className="space-y-1">
-              <label htmlFor="inputPassword" className="block text-sm font-semibold text-gray-700 ml-1">Senha</label>
-              <input
-                type="password"
-                id="inputPassword"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50 focus:bg-white"
-                placeholder="Sua senha"
-                required
-                value={password}
-                autoComplete="current-password"
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+              <div className="space-y-1">
+                <label htmlFor="inputPassword" className="block text-sm font-semibold text-gray-700 ml-1">Senha</label>
+                <PasswordInput
+                  id="inputPassword"
+                  name="password"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                  placeholder="Sua senha"
+                  required
+                  autoComplete="current-password"
+                />
+              </div>
 
-            <button className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] mt-4" type="submit">Entrar</button>
+              <button
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
+                type="submit"
+              >
+                {isPending ? 'Entrando...' : 'Entrar'}
+              </button>
+            </fieldset>
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
