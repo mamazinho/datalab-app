@@ -37,7 +37,7 @@ export const ChatMessages: React.FC = () => {
 
     const streamingCompleted = useCallback(async () => {
         setStreamingMessages((streamedMessages) => {
-            setAppendedMessages((current) => [...current, ...streamedMessages]);
+            setAppendedMessages([...streamedMessages]);
             return [];
         });
         mapMessagesByRole.current.clear();
@@ -58,7 +58,6 @@ export const ChatMessages: React.FC = () => {
 
     const handleSendMessage = async () => {
         if (!prompt.trim() || !chatId) return;
-
         setIsLoading(true);
         setIsDisabled(true);
         setError(null);
