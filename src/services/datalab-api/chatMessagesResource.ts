@@ -2,6 +2,7 @@ import { axiosPrivateInstance } from "./axios";
 
 export const ChatMessagesResource = {
   async getChatMessages(chatId: number): Promise<ReadableStream<Uint8Array>> {
+    console.log("PASSA POR AQUI")
     const response = await axiosPrivateInstance.get(
       `chats/${chatId}/messages/`,
       { 

@@ -1,4 +1,4 @@
-import { use, useState, Suspense, type ReactNode, useEffect } from "react";
+import { use, useState, Suspense, type ReactNode, useEffect, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { ServerErrorComponent } from "../Feedback/ErrorBoundaries/server-error";
 import { LoadingPiece } from "../Feedback/Loadings/loading";
@@ -27,16 +27,27 @@ export const AsyncResource = <T,>({
   loadingFallback,
   dependencies = []
 }: AsyncResourceProps<T>) => {
-  const [promise, setPromise] = useState<Promise<T>>(() => fetcher());
-
-  const refresh = () => {
-    setPromise(fetcher());
-  };
+  const [promise, setPromise] = useState<Promise<T> | null>(null);
+  const fetchingRef = useRef(false);
 
   useEffect(() => {
+    if (fetchingRef.current) return;
+    
+    fetchingRef.current = true;
     setPromise(fetcher());
+    
+    return () => {
+      fetchingRef.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetcher, ...dependencies])
+  }, [fetcher, ...dependencies]);
+
+  if (!promise) return <>{loadingFallback || <LoadingPiece />}</>;
+  
+  const refresh = () => {
+    fetchingRef.current = true;
+    setPromise(fetcher());
+  };
 
   return (
     <ErrorBoundary 
