@@ -46,6 +46,10 @@ export const ChatMessages: React.FC = () => {
     const fetchMessages = useCallback(async (): Promise<IMessage[]> => {
         if (!chatId) return [];
 
+        setAppendedMessages([]);
+        setStreamingMessages([]);
+        mapMessagesByRole.current.clear();
+
         const stream = await DatalabAPI.ChatMessagesResource.getChatMessages(Number(chatId));
         let finalMessages: IMessage[] = [];
 
