@@ -7,8 +7,81 @@ interface IMessageListProps {
     streamingMessages: IMessage[];
 }
 
+interface IGroupedMessage {
+    message: IMessage;
+    internalMessages: IMessage[];
+}
+
+const isInternalMessage = (message: IMessage) => message.message_type !== 'chat';
+
+const createInternalOnlyGroup = (internalMessages: IMessage[]): IGroupedMessage => {
+    const lastInternalMessage = internalMessages[internalMessages.length - 1];
+
+    return {
+        message: {
+            role: 'agent',
+            actor_role: 'supervisor',
+            message_type: 'chat',
+            content: '',
+            timestamp: lastInternalMessage.timestamp,
+        },
+        internalMessages,
+    };
+};
+
+const groupMessages = (allMessages: IMessage[]): IGroupedMessage[] => {
+    const groupedMessages: IGroupedMessage[] = [];
+    let pendingInternalMessages: IMessage[] = [];
+
+    for (const message of allMessages) {
+        if (isInternalMessage(message)) {
+            pendingInternalMessages.push(message);
+            continue;
+        }
+
+        if (message.role === 'agent' && message.message_type === 'chat') {
+            const lastGroupedMessage = groupedMessages[groupedMessages.length - 1];
+            const canMergeWithPreviousAgentChat =
+                !!lastGroupedMessage &&
+                pendingInternalMessages.length === 0 &&
+                lastGroupedMessage.message.role === 'agent' &&
+                lastGroupedMessage.message.message_type === 'chat';
+
+            if (canMergeWithPreviousAgentChat) {
+                lastGroupedMessage.message = {
+                    ...message,
+                    content: `${lastGroupedMessage.message.content}${message.content}`,
+                };
+                continue;
+            }
+
+            groupedMessages.push({
+                message,
+                internalMessages: pendingInternalMessages,
+            });
+            pendingInternalMessages = [];
+            continue;
+        }
+
+        if (pendingInternalMessages.length > 0) {
+            groupedMessages.push(createInternalOnlyGroup(pendingInternalMessages));
+            pendingInternalMessages = [];
+        }
+
+        groupedMessages.push({ message, internalMessages: [] });
+    }
+
+    if (pendingInternalMessages.length > 0) {
+        groupedMessages.push(createInternalOnlyGroup(pendingInternalMessages));
+    }
+
+    return groupedMessages;
+};
+
 export const MessageList = ({ messages, streamingMessages }: IMessageListProps) => {
     const conversationRef = useRef<HTMLDivElement>(null);
+    const groupedMessages = groupMessages(messages);
+    const groupedStreamingMessages = groupMessages(streamingMessages);
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
@@ -27,11 +100,11 @@ export const MessageList = ({ messages, streamingMessages }: IMessageListProps) 
                 </div>
             ) : (
                 <>
-                    {messages.map((message, index) => (
-                        <MessageBubble key={`hist-${index}`} message={message} />
+                    {groupedMessages.map(({ message, internalMessages }, index) => (
+                        <MessageBubble key={`hist-${index}`} message={message} internalMessages={internalMessages} />
                     ))}
-                    {streamingMessages.map((message, index) => (
-                        <MessageBubble key={`stream-${index}`} message={message} />
+                    {groupedStreamingMessages.map(({ message, internalMessages }, index) => (
+                        <MessageBubble key={`stream-${index}`} message={message} internalMessages={internalMessages} />
                     ))}
                 </>
             )}

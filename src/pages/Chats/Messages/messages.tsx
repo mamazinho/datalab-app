@@ -8,7 +8,7 @@ import { processStreamResponse, type IMessage } from '../../../utils/process-str
 
 export const ChatMessages: React.FC = () => {
     const { chatId } = useParams<{ chatId: string }>();
-    const mapMessagesByRole = useRef(new Map<string, IMessage>());
+    const latestStreamMessagesRef = useRef<IMessage[]>([]);
 
     const [error, setError] = useState<string | null>(null);
     const [appendedMessages, setAppendedMessages] = useState<IMessage[]>([]);
@@ -28,20 +28,17 @@ export const ChatMessages: React.FC = () => {
         if (!newMessages.length) return;
 
         const lastMessage = newMessages[newMessages.length - 1];
-        if (lastMessage?.role) {
-            mapMessagesByRole.current.set(lastMessage.role, lastMessage);
-        }
-
         console.log("Streaming completed, lastMessage:", lastMessage);
-        setStreamingMessages(Array.from(mapMessagesByRole.current.values()));
+        latestStreamMessagesRef.current = newMessages;
+        setStreamingMessages(newMessages);
     }, []);
 
     const streamingCompleted = useCallback(async () => {
-        const consolidatedMessages = Array.from(mapMessagesByRole.current.values());
+        const consolidatedMessages = latestStreamMessagesRef.current;
         console.log("Streaming completed, final messages:", consolidatedMessages);
         setAppendedMessages((prevAppendedMessages) => [...prevAppendedMessages, ...consolidatedMessages]);
         setStreamingMessages([]);
-        mapMessagesByRole.current.clear();
+        latestStreamMessagesRef.current = [];
     }, []);
 
     const fetchMessages = useCallback(async (): Promise<IMessage[]> => {
@@ -49,7 +46,7 @@ export const ChatMessages: React.FC = () => {
 
         setAppendedMessages([]);
         setStreamingMessages([]);
-        mapMessagesByRole.current.clear();
+        latestStreamMessagesRef.current = [];
 
         const stream = await DatalabAPI.ChatMessagesResource.getChatMessages(Number(chatId));
         let finalMessages: IMessage[] = [];

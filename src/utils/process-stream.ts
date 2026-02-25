@@ -2,6 +2,8 @@ export interface IMessage {
   role: string;
   content: string;
   timestamp: string;
+  actor_role: string;
+  message_type: string;
 }
 
 const parseMessages = (responseText: string): IMessage[] => {
