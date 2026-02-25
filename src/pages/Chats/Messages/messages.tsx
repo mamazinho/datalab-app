@@ -32,14 +32,15 @@ export const ChatMessages: React.FC = () => {
             mapMessagesByRole.current.set(lastMessage.role, lastMessage);
         }
 
+        console.log("Streaming completed, lastMessage:", lastMessage);
         setStreamingMessages(Array.from(mapMessagesByRole.current.values()));
     }, []);
 
     const streamingCompleted = useCallback(async () => {
-        setStreamingMessages((streamedMessages) => {
-            setAppendedMessages([...streamedMessages]);
-            return [];
-        });
+        const consolidatedMessages = Array.from(mapMessagesByRole.current.values());
+        console.log("Streaming completed, final messages:", consolidatedMessages);
+        setAppendedMessages((prevAppendedMessages) => [...prevAppendedMessages, ...consolidatedMessages]);
+        setStreamingMessages([]);
         mapMessagesByRole.current.clear();
     }, []);
 
