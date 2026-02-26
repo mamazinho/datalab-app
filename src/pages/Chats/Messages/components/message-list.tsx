@@ -29,6 +29,12 @@ const createInternalOnlyGroup = (internalMessages: IMessage[]): IGroupedMessage 
     };
 };
 
+const mergeStreamContent = (previousContent: string, nextContent: string): string => {
+    if (!previousContent) return nextContent;
+    if (!nextContent) return previousContent;
+    return nextContent.startsWith(previousContent) ? nextContent : `${previousContent}${nextContent}`;
+};
+
 const groupMessages = (allMessages: IMessage[]): IGroupedMessage[] => {
     const groupedMessages: IGroupedMessage[] = [];
     let pendingInternalMessages: IMessage[] = [];
@@ -39,36 +45,37 @@ const groupMessages = (allMessages: IMessage[]): IGroupedMessage[] => {
             continue;
         }
 
-        if (message.role === 'agent' && message.message_type === 'chat') {
-            const lastGroupedMessage = groupedMessages[groupedMessages.length - 1];
-            const canMergeWithPreviousAgentChat =
-                !!lastGroupedMessage &&
-                pendingInternalMessages.length === 0 &&
-                lastGroupedMessage.message.role === 'agent' &&
-                lastGroupedMessage.message.message_type === 'chat';
+        const lastGroupedMessage = groupedMessages[groupedMessages.length - 1];
+        const canMergeWithPreviousChat =
+            !!lastGroupedMessage &&
+            lastGroupedMessage.message.message_type === 'chat' &&
+            lastGroupedMessage.message.role === message.role &&
+            (
+                message.role === 'agent' ||
+                lastGroupedMessage.message.actor_role === message.actor_role
+            );
 
-            if (canMergeWithPreviousAgentChat) {
-                lastGroupedMessage.message = {
-                    ...message,
-                    content: `${lastGroupedMessage.message.content}${message.content}`,
-                };
-                continue;
+        if (canMergeWithPreviousChat) {
+            if (pendingInternalMessages.length > 0) {
+                lastGroupedMessage.internalMessages = [
+                    ...lastGroupedMessage.internalMessages,
+                    ...pendingInternalMessages,
+                ];
+                pendingInternalMessages = [];
             }
 
-            groupedMessages.push({
-                message,
-                internalMessages: pendingInternalMessages,
-            });
-            pendingInternalMessages = [];
+            lastGroupedMessage.message = {
+                ...message,
+                content: mergeStreamContent(lastGroupedMessage.message.content, message.content),
+            };
             continue;
         }
 
-        if (pendingInternalMessages.length > 0) {
-            groupedMessages.push(createInternalOnlyGroup(pendingInternalMessages));
-            pendingInternalMessages = [];
-        }
-
-        groupedMessages.push({ message, internalMessages: [] });
+        groupedMessages.push({
+            message,
+            internalMessages: pendingInternalMessages,
+        });
+        pendingInternalMessages = [];
     }
 
     if (pendingInternalMessages.length > 0) {

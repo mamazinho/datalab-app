@@ -15,21 +15,21 @@ export const MessageBubble = ({ message, internalMessages = [] }: MessageBubbleP
         <div className={`flex w-full mb-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] px-4 py-3 shadow-sm ${
                 isUser 
-                ? 'bg-blue-600 text-white rounded-2xl rounded-br-none' 
-                : 'bg-white border border-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100 rounded-2xl rounded-bl-none'
+                ? 'bg-zinc-800 text-zinc-100 rounded-2xl rounded-br-none border border-zinc-700/80' 
+                : 'bg-linear-to-br from-orange-500 via-orange-400 to-amber-300 text-zinc-900 rounded-2xl rounded-bl-none border border-amber-400/70'
             }`}>
                 {hasInternalMessages && (
-                    <details className="mt-3 border border-gray-200 rounded-lg bg-gray-50">
-                        <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-gray-600">
+                    <details className="mb-3 border border-zinc-300/70 rounded-lg bg-white/65 backdrop-blur-sm">
+                        <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-zinc-700">
                             Conversa interna do agente ({internalMessages.length})
                         </summary>
                         <div className="px-3 pb-3 space-y-2">
                             {internalMessages.map((internalMessage, index) => (
-                                <div key={`${internalMessage.timestamp}-${index}`} className="rounded-md border border-gray-200 bg-white p-2">
-                                    <div className="text-[10px] font-semibold text-gray-500 mb-1">
+                                <div key={`${internalMessage.timestamp}-${index}`} className="rounded-md border border-zinc-200 bg-white/90 p-2">
+                                    <div className="text-[10px] font-semibold text-zinc-500 mb-1">
                                         {internalMessage.role} → {internalMessage.actor_role}
                                     </div>
-                                    <div className="text-xs leading-relaxed text-gray-700 whitespace-pre-wrap">
+                                    <div className="text-xs leading-snug text-zinc-700 whitespace-pre-wrap [&_p]:my-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0">
                                         <ReactMarkdown>{internalMessage.content}</ReactMarkdown>
                                     </div>
                                 </div>
@@ -38,11 +38,11 @@ export const MessageBubble = ({ message, internalMessages = [] }: MessageBubbleP
                     </details>
                 )}
                 {hasMainContent && (
-                    <div className="text-sm leading-relaxed whitespace-pre-wrap mt-3">
+                    <div className="text-sm leading-snug whitespace-pre-wrap [&_p]:my-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0">
                         <ReactMarkdown>{message.content}</ReactMarkdown>
                     </div>
                 )}
-                <div className={`text-[10px] mt-1 opacity-70 font-medium ${isUser ? 'text-blue-100 text-right' : 'text-gray-400 text-left'}`}>
+                <div className={`text-[10px] mt-2 opacity-75 font-medium ${isUser ? 'text-zinc-300 text-right' : 'text-zinc-700 text-left'}`}>
                     {new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                 </div>
             </div>
