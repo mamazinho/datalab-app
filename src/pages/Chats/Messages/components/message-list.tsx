@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { type IMessage } from '../../../../utils/process-stream';
 import { MessageBubble } from './message-bubble';
 
@@ -13,6 +13,7 @@ interface IGroupedMessage {
 }
 
 const isInternalMessage = (message: IMessage) => message.message_type !== 'chat';
+const isChatMessage = (message: IMessage) => message.message_type === 'chat';
 
 const createInternalOnlyGroup = (internalMessages: IMessage[]): IGroupedMessage => {
     const lastInternalMessage = internalMessages[internalMessages.length - 1];
@@ -35,6 +36,21 @@ const mergeStreamContent = (previousContent: string, nextContent: string): strin
     return nextContent.startsWith(previousContent) ? nextContent : `${previousContent}${nextContent}`;
 };
 
+const shouldMergeWithPreviousChat = (
+    lastGroupedMessage: IGroupedMessage | undefined,
+    currentMessage: IMessage,
+): boolean => {
+    if (!lastGroupedMessage || !isChatMessage(currentMessage)) return false;
+
+    if (!isChatMessage(lastGroupedMessage.message)) return false;
+    if (lastGroupedMessage.message.role !== currentMessage.role) return false;
+
+    return (
+        currentMessage.role === 'agent' ||
+        lastGroupedMessage.message.actor_role === currentMessage.actor_role
+    );
+};
+
 const groupMessages = (allMessages: IMessage[]): IGroupedMessage[] => {
     const groupedMessages: IGroupedMessage[] = [];
     let pendingInternalMessages: IMessage[] = [];
@@ -46,16 +62,9 @@ const groupMessages = (allMessages: IMessage[]): IGroupedMessage[] => {
         }
 
         const lastGroupedMessage = groupedMessages[groupedMessages.length - 1];
-        const canMergeWithPreviousChat =
-            !!lastGroupedMessage &&
-            lastGroupedMessage.message.message_type === 'chat' &&
-            lastGroupedMessage.message.role === message.role &&
-            (
-                message.role === 'agent' ||
-                lastGroupedMessage.message.actor_role === message.actor_role
-            );
+        const canMergeWithPreviousChat = shouldMergeWithPreviousChat(lastGroupedMessage, message);
 
-        if (canMergeWithPreviousChat) {
+        if (canMergeWithPreviousChat && lastGroupedMessage) {
             if (pendingInternalMessages.length > 0) {
                 lastGroupedMessage.internalMessages = [
                     ...lastGroupedMessage.internalMessages,
@@ -87,8 +96,8 @@ const groupMessages = (allMessages: IMessage[]): IGroupedMessage[] => {
 
 export const MessageList = ({ messages, streamingMessages }: IMessageListProps) => {
     const conversationRef = useRef<HTMLDivElement>(null);
-    const groupedMessages = groupMessages(messages);
-    const groupedStreamingMessages = groupMessages(streamingMessages);
+    const groupedMessages = useMemo(() => groupMessages(messages), [messages]);
+    const groupedStreamingMessages = useMemo(() => groupMessages(streamingMessages), [streamingMessages]);
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
