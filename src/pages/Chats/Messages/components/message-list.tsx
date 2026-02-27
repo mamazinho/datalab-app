@@ -14,17 +14,19 @@ interface IGroupedMessage {
 
 const isInternalMessage = (message: IMessage) => message.message_type !== 'chat';
 const isChatMessage = (message: IMessage) => message.message_type === 'chat';
+const isUserSender = (message: IMessage) => message.sender === 'user';
 
 const createInternalOnlyGroup = (internalMessages: IMessage[]): IGroupedMessage => {
     const lastInternalMessage = internalMessages[internalMessages.length - 1];
 
     return {
         message: {
-            role: 'agent',
-            actor_role: 'supervisor',
+            sender: 'supervisor',
+            receiver: 'user',
             message_type: 'chat',
             content: '',
             timestamp: lastInternalMessage.timestamp,
+            specialist_key: lastInternalMessage.specialist_key,
         },
         internalMessages,
     };
@@ -43,11 +45,11 @@ const shouldMergeWithPreviousChat = (
     if (!lastGroupedMessage || !isChatMessage(currentMessage)) return false;
 
     if (!isChatMessage(lastGroupedMessage.message)) return false;
-    if (lastGroupedMessage.message.role !== currentMessage.role) return false;
+    if (lastGroupedMessage.message.sender !== currentMessage.sender) return false;
 
     return (
-        currentMessage.role === 'agent' ||
-        lastGroupedMessage.message.actor_role === currentMessage.actor_role
+        !isUserSender(currentMessage) ||
+        lastGroupedMessage.message.receiver === currentMessage.receiver
     );
 };
 

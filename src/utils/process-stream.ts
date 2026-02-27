@@ -1,8 +1,9 @@
 export interface IMessage {
-  role: string;
-  content: string;
+  sender: string;
+  receiver: string;
   timestamp: string;
-  actor_role: string;
+  content: string;
+  specialist_key: string;
   message_type: string;
 }
 

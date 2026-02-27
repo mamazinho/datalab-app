@@ -7,7 +7,7 @@ interface MessageBubbleProps {
 }
 
 export const MessageBubble = ({ message, internalMessages = [] }: MessageBubbleProps) => {
-    const isUser = message.role === 'user';
+    const isUser = message.sender === 'user';
     const hasInternalMessages = internalMessages.length > 0;
     const hasMainContent = message.content.trim().length > 0;
     
@@ -27,7 +27,7 @@ export const MessageBubble = ({ message, internalMessages = [] }: MessageBubbleP
                             {internalMessages.map((internalMessage, index) => (
                                 <div key={`${internalMessage.timestamp}-${index}`} className="rounded-md border border-zinc-200 bg-white/90 p-2">
                                     <div className="text-[10px] font-semibold text-zinc-500 mb-1">
-                                        {internalMessage.role} → {internalMessage.actor_role}
+                                        {internalMessage.sender} → {internalMessage.receiver}
                                     </div>
                                     <div className="text-xs leading-snug text-zinc-700 whitespace-pre-wrap [&_p]:my-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0">
                                         <ReactMarkdown>{internalMessage.content}</ReactMarkdown>
