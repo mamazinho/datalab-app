@@ -15,6 +15,7 @@ interface IGroupedMessage {
 const isInternalMessage = (message: IMessage) => message.message_type !== 'chat';
 const isChatMessage = (message: IMessage) => message.message_type === 'chat';
 const isUserSender = (message: IMessage) => message.sender === 'user';
+const getLastGroup = (groupedMessages: IGroupedMessage[]) => groupedMessages[groupedMessages.length - 1];
 
 const createInternalOnlyGroup = (internalMessages: IMessage[]): IGroupedMessage => {
     const lastInternalMessage = internalMessages[internalMessages.length - 1];
@@ -38,7 +39,33 @@ const mergeStreamContent = (previousContent: string, nextContent: string): strin
     return nextContent.startsWith(previousContent) ? nextContent : `${previousContent}${nextContent}`;
 };
 
-const shouldMergeWithPreviousChat = (
+const canMergeInternalMessage = (lastInternalMessage: IMessage | undefined, currentMessage: IMessage): boolean => {
+    if (!lastInternalMessage) return false;
+
+    return (
+        lastInternalMessage.sender === currentMessage.sender &&
+        lastInternalMessage.receiver === currentMessage.receiver &&
+        lastInternalMessage.message_type === currentMessage.message_type
+    );
+};
+
+const pushOrMergeInternalMessage = (pendingInternalMessages: IMessage[], currentMessage: IMessage): IMessage[] => {
+    const lastInternalMessage = pendingInternalMessages[pendingInternalMessages.length - 1];
+
+    if (!canMergeInternalMessage(lastInternalMessage, currentMessage)) {
+        return [...pendingInternalMessages, currentMessage];
+    }
+
+    return [
+        ...pendingInternalMessages.slice(0, -1),
+        {
+            ...currentMessage,
+            content: mergeStreamContent(lastInternalMessage.content, currentMessage.content),
+        },
+    ];
+};
+
+const canMergeWithLastChatGroup = (
     lastGroupedMessage: IGroupedMessage | undefined,
     currentMessage: IMessage,
 ): boolean => {
@@ -53,39 +80,49 @@ const shouldMergeWithPreviousChat = (
     );
 };
 
+const mergeIntoLastGroup = (
+    lastGroupedMessage: IGroupedMessage,
+    currentMessage: IMessage,
+    pendingInternalMessages: IMessage[],
+) => {
+    if (pendingInternalMessages.length > 0) {
+        lastGroupedMessage.internalMessages = [
+            ...lastGroupedMessage.internalMessages,
+            ...pendingInternalMessages,
+        ];
+    }
+
+    lastGroupedMessage.message = {
+        ...currentMessage,
+        content: mergeStreamContent(lastGroupedMessage.message.content, currentMessage.content),
+    };
+};
+
+const createChatGroup = (message: IMessage, pendingInternalMessages: IMessage[]): IGroupedMessage => ({
+    message,
+    internalMessages: pendingInternalMessages,
+});
+
 const groupMessages = (allMessages: IMessage[]): IGroupedMessage[] => {
     const groupedMessages: IGroupedMessage[] = [];
     let pendingInternalMessages: IMessage[] = [];
 
     for (const message of allMessages) {
         if (isInternalMessage(message)) {
-            pendingInternalMessages.push(message);
+            pendingInternalMessages = pushOrMergeInternalMessage(pendingInternalMessages, message);
             continue;
         }
 
-        const lastGroupedMessage = groupedMessages[groupedMessages.length - 1];
-        const canMergeWithPreviousChat = shouldMergeWithPreviousChat(lastGroupedMessage, message);
+        const lastGroupedMessage = getLastGroup(groupedMessages);
+        const canMergeWithPreviousChat = canMergeWithLastChatGroup(lastGroupedMessage, message);
 
         if (canMergeWithPreviousChat && lastGroupedMessage) {
-            if (pendingInternalMessages.length > 0) {
-                lastGroupedMessage.internalMessages = [
-                    ...lastGroupedMessage.internalMessages,
-                    ...pendingInternalMessages,
-                ];
-                pendingInternalMessages = [];
-            }
-
-            lastGroupedMessage.message = {
-                ...message,
-                content: mergeStreamContent(lastGroupedMessage.message.content, message.content),
-            };
+            mergeIntoLastGroup(lastGroupedMessage, message, pendingInternalMessages);
+            pendingInternalMessages = [];
             continue;
         }
 
-        groupedMessages.push({
-            message,
-            internalMessages: pendingInternalMessages,
-        });
+        groupedMessages.push(createChatGroup(message, pendingInternalMessages));
         pendingInternalMessages = [];
     }
 
