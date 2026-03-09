@@ -2,16 +2,14 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { HomeContainer } from './home.style';
 import { useAuthContext } from '../../contexts/auth';
+import { extractFirstName } from '../../utils/extractors';
 
 export const Home: React.FC = () => {
-  const { logout } = useAuthContext();
+  const { me } = useAuthContext();
 
   return (
     <HomeContainer>
       <div className="relative min-h-[80vh] w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="absolute top-0 right-4">
-            <button className="text-gray-500 hover:text-orange-600 font-medium transition-colors px-4 py-2 rounded-lg hover:bg-orange-50" onClick={logout}>Logout</button>
-        </div>
         
         <div className="text-center max-w-3xl mx-auto mb-16 mt-8">
           <div className="mb-8">
@@ -22,7 +20,7 @@ export const Home: React.FC = () => {
               DataLab <span className="text-orange-600">App</span>
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed">
-              Bem-vindo ao DataLab! Escolha uma das opções abaixo para começar a explorar nossos recursos de inteligência.
+              Bem-vindo a DataLab, {extractFirstName(me.name)}! Escolha uma das opções abaixo para começar a explorar nossos recursos de inteligência.
             </p>
           </div>
         </div>

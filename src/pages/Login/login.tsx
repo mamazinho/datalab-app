@@ -16,21 +16,21 @@ export const Login: React.FC = () => {
   const navigate = useNavigate();
   const popupRef = useRef<Window | null>(null);
 
-  const handleLoginActionResult = useCallback((formState: ActionState<ILoginUserResponse>) => {
+  const handleLoginActionResult = useCallback(async (formState: ActionState<ILoginUserResponse>) => {
     if (formState.timestamp === 0) return;
     if (formState.success && formState.data) {
-      login(formState.data);
+      await login(formState.data);
       navigate('/');
     } else if (formState.error) {
       toast.error(formState.error);
     }
   }, [login, navigate]);
 
-  const handleSocialLoginSuccessMessage = useCallback((event: MessageEvent<ISocialLoginCallbackEvent>) => {
+  const handleSocialLoginSuccessMessage = useCallback(async (event: MessageEvent<ISocialLoginCallbackEvent>) => {
     const validAuthEventTypes = ['GOOGLE_LOGIN_SUCCESS'];
 
     if (validAuthEventTypes.includes(event.data.type) && event.data.response.access_token) {
-      login(event.data.response);
+      await login(event.data.response);
       if (popupRef.current) {
         popupRef.current.close();
         popupRef.current = null;
