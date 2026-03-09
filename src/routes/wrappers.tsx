@@ -1,11 +1,17 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuthContext } from "../contexts/auth";
 import { PrivateLayout } from "../components/UI/Layout/private-layout/layout";
+import { useEffect } from 'react';
 
 
 export const PrivateRoutes = () => {
-    const { accessToken } = useAuthContext();
+    const { accessToken, getMe } = useAuthContext();
     const location = useLocation();
+    
+    useEffect(() => {
+        const fetchData = async () => await getMe();
+        fetchData();
+    }, [getMe]);
 
     console.log("PrivateRoutes accessToken:", accessToken);
 
