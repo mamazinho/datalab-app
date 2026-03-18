@@ -1,91 +1,91 @@
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import {
+  AuthCard,
+  AuthForm,
+  AuthHeader,
+  AuthShell,
+  BrandHighlight,
+  BrandTitle,
+  Description,
+  DividerLine,
+  DividerText,
+  Field,
+  FieldsWrapper,
+  FooterLinks,
+  FormDivider,
+  Input,
+  Label,
+  PrimaryButton,
+  Subtitle,
+} from '../../styles/design-system.style';
 
 export const LoginContainer = styled.div`
-  .home-container {
-    flex: 1;
-    width: 100%;
-    overflow-y: auto;
-    padding: 20px 0;
-  }
+  width: 100%;
+  min-height: 100%;
+`;
 
-  .home-container .container-fluid {
-    padding: 0 15px;
-  }
+export const LoginShell = styled(AuthShell)``;
+export const LoginCard = styled(AuthCard)``;
+export const LoginHeader = styled(AuthHeader)``;
+export const LoginTitle = styled(BrandTitle)``;
+export const LoginHighlight = styled(BrandHighlight)``;
+export const LoginSubtitle = styled(Subtitle)``;
+export const LoginDescription = styled(Description)``;
+export const LoginForm = styled(AuthForm)``;
+export const LoginFieldset = styled(FieldsWrapper)``;
+export const LoginField = styled(Field)``;
+export const LoginLabel = styled(Label)``;
+export const LoginInput = styled(Input)``;
+export const LoginButton = styled(PrimaryButton)`
+  margin-top: 0.35rem;
+`;
 
-  .home-container .display-4 {
-    font-weight: 700;
-    color: #2c3e50;
-  }
+export const LoginDivider = styled(FormDivider)``;
+export const LoginDividerLine = styled(DividerLine)``;
+export const LoginDividerText = styled(DividerText)``;
 
-  .home-container .lead {
-    font-size: 1.1rem;
-    margin-bottom: 2rem;
-  }
+export const LoginFooterLinks = styled(FooterLinks)`
+  margin-top: 1.25rem;
+`;
 
-  /* Cards da home */
-  .home-container .card {
-    border: 1px solid #e9ecef;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
+export const LoginRegisterLink = styled(Link)`
+  color: ${({ theme }) => theme.colors.primary};
+  font-weight: 700;
+  font-size: 0.92rem;
+  transition: color 0.18s ease;
 
-  .home-container .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  &:hover {
+    color: ${({ theme }) => theme.colors.text};
   }
+`;
 
-  .home-container .card-title {
-    color: #495057;
-    font-weight: 600;
-  }
+export const LoginForgotLink = styled(Link)`
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-weight: 600;
+  font-size: 0.84rem;
+  transition: color 0.18s ease;
 
-  .home-container .card-text {
-    color: #6c757d;
-    line-height: 1.5;
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary};
   }
+`;
 
-  /* Lista de chats */
-  .home-container .list-group-item {
-    border: 1px solid #e9ecef;
-    transition: all 0.2s ease;
-  }
+export const LoginSocialDescription = styled(Description)`
+  margin-top: 0;
+`;
 
-  .home-container .list-group-item:hover {
-    background-color: #f8f9fa;
-    border-color: #007bff;
-  }
+export const LoginSocialWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+`;
 
-  .home-container .list-group-item h5 {
-    color: #495057;
-    font-weight: 600;
-  }
+export const LoginFormTitle = styled.div`
+  display: flex;
+  justify-content: center;
+`;
 
-  .home-container .list-group-item p {
-    color: #6c757d;
-    margin-bottom: 0;
-  }
-
-  .home-container .list-group-item small {
-    color: #28a745;
-    font-weight: 500;
-  }
-
-  /* Responsividade para mobile */
-  @media (max-width: 768px) {
-    .home-container {
-      padding: 10px 0;
-    }
-    
-    .home-container .container-fluid {
-      padding: 0 10px;
-    }
-    
-    .home-container .display-4 {
-      font-size: 2rem;
-    }
-    
-    .home-container .card {
-      margin-bottom: 1rem;
-    }
-  }
+export const LoginInlineBrand = styled.span`
+  color: ${({ theme }) => theme.colors.primary};
 `;

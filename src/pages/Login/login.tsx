@@ -1,6 +1,25 @@
 import React, { useEffect, useRef, useActionState, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { LoginContainer } from './login.style';
+import { useNavigate } from 'react-router-dom';
+import {
+  LoginButton,
+  LoginCard,
+  LoginContainer,
+  LoginDivider,
+  LoginDividerLine,
+  LoginDividerText,
+  LoginField,
+  LoginFieldset,
+  LoginFooterLinks,
+  LoginForgotLink,
+  LoginForm,
+  LoginHeader,
+  LoginInput,
+  LoginLabel,
+  LoginRegisterLink,
+  LoginShell,
+  LoginSubtitle,
+  LoginTitle,
+} from './login.style';
 import { useAuthContext } from '../../contexts/auth';
 import { toast } from 'react-toastify';
 import { GoogleButton } from '../../components/UI/Buttons/google-button';
@@ -73,71 +92,58 @@ export const Login: React.FC = () => {
 
   return (
     <LoginContainer>
-      <div className="flex items-center justify-center min-h-[80vh] p-4">
-        <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-extrabold text-gray-800 mb-2">DataLab <span className="text-orange-600">App</span></h1>
-            <h2 className="text-gray-500 text-lg font-medium">Benvindo de volta!</h2>
-          </div>
+      <LoginShell>
+        <LoginCard>
+          <LoginHeader>
+            <LoginTitle>DataLab <span>App</span></LoginTitle>
+            <LoginSubtitle>Benvindo de volta!</LoginSubtitle>
+          </LoginHeader>
 
-          <form action={loginFormAction} className="space-y-5">
-            <fieldset disabled={isLoginPending} className="space-y-5">
-              <div className="space-y-1">
-                <label htmlFor="inputEmail" className="block text-sm font-semibold text-gray-700 ml-1">Email</label>
-                <input
+          <LoginForm action={loginFormAction}>
+            <LoginFieldset disabled={isLoginPending}>
+              <LoginField>
+                <LoginLabel htmlFor="inputEmail">Email</LoginLabel>
+                <LoginInput
                   type="email"
                   id="inputEmail"
                   name="email"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-500"
                   placeholder="seu@email.com"
                   required
                   autoFocus
                   autoComplete="email"
                 />
-              </div>
+              </LoginField>
 
-              <div className="space-y-1">
-                <label htmlFor="inputPassword" className="block text-sm font-semibold text-gray-700 ml-1">Senha</label>
+              <LoginField>
+                <LoginLabel htmlFor="inputPassword">Senha</LoginLabel>
                 <PasswordInput
                   id="inputPassword"
                   name="password"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 outline-none transition-all bg-gray-50 focus:bg-white disabled:bg-gray-100 disabled:text-gray-500"
                   placeholder="Sua senha"
                   required
                   autoComplete="current-password"
                 />
-              </div>
+              </LoginField>
 
-              <button
-                className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
-                type="submit"
-              >
+              <LoginButton type="submit">
                 {isLoginPending ? 'Entrando...' : 'Entrar'}
-              </button>
-            </fieldset>
+              </LoginButton>
+            </LoginFieldset>
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Ou continue com</span>
-              </div>
-            </div>
+            <LoginDivider>
+              <LoginDividerLine />
+              <LoginDividerText>Ou continue com</LoginDividerText>
+            </LoginDivider>
 
             <GoogleButton onClick={handleGoogleLogin} />
 
-            <div className="text-center space-y-3 pt-4 mt-2">
-              <div className="">
-                <Link to="/register" className="text-orange-600 hover:text-orange-800 font-medium transition-colors hover:underline">Não possui conta? Cadastre-se</Link>
-              </div>
-              <div>
-                <Link to="/forgot-password" style={{ fontSize: '0.9rem' }} className="text-gray-400 hover:text-gray-600 transition-colors">Esqueci minha senha</Link>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
+            <LoginFooterLinks>
+              <LoginRegisterLink to="/register">Não possui conta? Cadastre-se</LoginRegisterLink>
+              <LoginForgotLink to="/forgot-password">Esqueci minha senha</LoginForgotLink>
+            </LoginFooterLinks>
+          </LoginForm>
+        </LoginCard>
+      </LoginShell>
     </LoginContainer>
   );
 };

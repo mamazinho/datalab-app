@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { AuthContext } from "./contexts";
 import { type ILoginUserResponse } from '../../services/datalab-api/authResource';
 import { DatalabAPI } from "../../services/datalab-api";
@@ -11,25 +11,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
   const [me, setMe] = useState({} as IUserResponse);
 
-  const login = async (loginResponse: ILoginUserResponse) => {
-    try {
-      setAccessToken(loginResponse.access_token)
-      if (loginResponse.access_token) localStorage.setItem("accessToken", loginResponse.access_token);
-      await getMe();
-    } catch (error) {
-      console.error("Login error:", error);
-      throw error;
-    }
-  };
-
-  const logout = () => {
-    setAccessToken(undefined)
-    setMe({} as IUserResponse);
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("myData");
-  };
-
-  const getMe = async (): Promise<IUserResponse> => {
+  const getMe = useCallback(async (): Promise<IUserResponse> => {
     try {
       const storedUser = localStorage.getItem("myData");
       if (storedUser) {
@@ -37,6 +19,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setMe(user);
         return user;
       }
+
       const user = await DatalabAPI.UsersResource.me() as IUserResponse;
       setMe(user);
       if (user) localStorage.setItem("myData", JSON.stringify(user));
@@ -45,10 +28,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("Get me error:", error);
       throw error;
     }
-  };
+  }, []);
+
+  const login = useCallback(async (loginResponse: ILoginUserResponse) => {
+    try {
+      setAccessToken(loginResponse.access_token)
+      if (loginResponse.access_token) localStorage.setItem("accessToken", loginResponse.access_token);
+      await getMe();
+    } catch (error) {
+      console.error("Login error:", error);
+      throw error;
+    }
+  }, [getMe]);
+
+  const logout = useCallback(() => {
+    setAccessToken(undefined)
+    setMe({} as IUserResponse);
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("myData");
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({ accessToken, me, login, logout, getMe }),
+    [accessToken, me, login, logout, getMe],
+  );
 
   return (
-    <AuthContext.Provider value={{ accessToken, me, login, logout, getMe }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

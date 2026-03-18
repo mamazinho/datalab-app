@@ -2,6 +2,7 @@ import { type ReactNode, type ReactElement, forwardRef, useImperativeHandle, use
 import React from "react";
 import type { IStepProps } from "./step";
 import { StepsProgressBar } from "./steps-progress-bar";
+import { StepNavButton, StepNavIcon, StepsContainer, StepsContentWrapper, StepsNavigation } from "./steps.style";
 
 interface IStepsControllerProps {
   initialStep?: number;
@@ -54,7 +55,7 @@ export const StepsController = forwardRef<StepsRef, IStepsControllerProps>(({ ch
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <StepsContainer>
       {/* Progress Bar / Stepper */}
       {showProgress && (
         <StepsProgressBar
@@ -66,40 +67,38 @@ export const StepsController = forwardRef<StepsRef, IStepsControllerProps>(({ ch
       )}
 
       {/* Navigation & Content Wrapper */}
-      <div className="relative">
-        <div className="flex justify-between items-center mb-4 min-h-6">
+      <StepsContentWrapper>
+        <StepsNavigation>
              {/* Back Button */}
             {canGoBack && currentStep > 1 ? (
-                <button 
+                <StepNavButton 
                   onClick={prev}
                   type="button"
-                  className="flex items-center text-gray-500 hover:text-orange-600 transition-colors font-medium text-sm group"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 mr-1 transition-transform group-hover:-translate-x-1">
+                    <StepNavIcon $direction="left" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                    </svg>
+                    </StepNavIcon>
                     Voltar
-                </button>
-            ) : <div />}
+                </StepNavButton>
+            ) : <span />}
 
             {/* Forward Button (if explicitly enabled) */}
             {canGoForward && currentStep < totalSteps && (
-                <button 
+                <StepNavButton 
                   onClick={next}
                   type="button"
-                  className="flex items-center text-gray-500 hover:text-orange-600 transition-colors font-medium text-sm group"
                 >
                     Avançar
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1">
+                    <StepNavIcon $direction="right" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                    </svg>
-                </button>
+                    </StepNavIcon>
+                </StepNavButton>
             )}
-        </div>
+        </StepsNavigation>
         
         {/* Step Content */}
         {currentChild}
-      </div>
-    </div>
+      </StepsContentWrapper>
+    </StepsContainer>
   );
 });

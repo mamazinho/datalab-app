@@ -6,24 +6,30 @@ export const GlobalStyle = createGlobalStyle`
 }
 
 html, body {
-  height: 100vh;
-  width: 100vw;
+  min-height: 100vh;
+  width: 100%;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: ${({ theme }) => theme.fonts.main};
   line-height: 1.5;
+  background: ${({ theme }) => theme.colors.background};
+  color: ${({ theme }) => theme.colors.text};
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
-  height: 100vh;
-  width: 100vw;
+  min-height: 100vh;
+  width: 100%;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
+  background:
+    radial-gradient(circle at 15% 5%, rgba(255, 190, 0, 0.2), transparent 30%),
+    radial-gradient(circle at 85% 95%, rgba(255, 190, 0, 0.14), transparent 34%),
+    ${({ theme }) => theme.colors.background};
 }
 
 /* Reset de elementos padrões */
@@ -43,7 +49,6 @@ a {
 }
 
 a:hover {
-  // text-decoration: underline;
   filter: brightness(0.9);
 }
 
@@ -54,22 +59,22 @@ ul, ol {
 
 /* Scroll customizado global */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
+  background: ${({ theme }) => theme.colors.surface};
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: rgba(255, 190, 0, 0.65);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: ${({ theme }) => theme.colors.primary};
 }
 
 /* Utilitários globais */
@@ -83,5 +88,28 @@ ul, ol {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 `;

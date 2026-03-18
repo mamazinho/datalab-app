@@ -6,6 +6,10 @@ export interface IRegisterUserRequest {
   password: string;
 }
 
+export interface IUserConfig {
+  theme: 'light' | 'dark' | 'system';
+}
+
 export interface IUserResponse {
   id: number;
   name: string;
@@ -14,6 +18,7 @@ export interface IUserResponse {
   role: string;
   created_at: string;
   updated_at: string;
+  config: IUserConfig;
 }
 
 export interface IConfirmAccountRequest {

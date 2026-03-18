@@ -5,6 +5,7 @@ import { MessageInput } from './components/message-input';
 import { AsyncResource } from '../../../components/Tools/async-resource';
 import { DatalabAPI } from '../../../services/datalab-api';
 import { processStreamResponse, type IMessage } from '../../../utils/process-stream';
+import { ErrorBanner, ErrorLabel, MessagesBody, MessagesContainer, MessagesHeader, MessagesSubtitle, MessagesTitle, MessagesTitleHighlight } from './messages.style';
 
 export const ChatMessages: React.FC = () => {
     const { chatId } = useParams<{ chatId: string }>();
@@ -79,13 +80,13 @@ export const ChatMessages: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col h-full w-full max-w-5xl mx-auto p-4 md:p-6 bg-white rounded-2xl shadow-sm border border-gray-100 my-4 message-container">
-            <div className="mb-6 pb-4 border-b border-gray-100 text-center sm:text-left">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Chat <span className="text-orange-600">#{chatId}</span></h2>
-                <p className="text-gray-500 text-sm md:text-base">Converse com nossa IA e tire suas dúvidas</p>
-            </div>
+        <MessagesContainer>
+            <MessagesHeader>
+                <MessagesTitle>Chat <MessagesTitleHighlight>#{chatId}</MessagesTitleHighlight></MessagesTitle>
+                <MessagesSubtitle>Converse com nossa IA e tire suas dúvidas</MessagesSubtitle>
+            </MessagesHeader>
 
-            <div className="flex-1 min-h-0 overflow-hidden relative flex flex-col">
+            <MessagesBody>
                 <AsyncResource fetcher={fetchMessages} dependencies={[chatId]}>
                     {(initialMessages) => (
                         <MessageList
@@ -94,12 +95,12 @@ export const ChatMessages: React.FC = () => {
                         />
                     )}
                 </AsyncResource>
-            </div>
+            </MessagesBody>
 
             {error && (
-                <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-xl border border-red-200 flex items-center gap-2 animate-pulse mb-4">
-                    <span className="font-bold">Error:</span> {error}
-                </div>
+                <ErrorBanner>
+                    <ErrorLabel>Error:</ErrorLabel> {error}
+                </ErrorBanner>
             )}
 
             <MessageInput
@@ -109,7 +110,7 @@ export const ChatMessages: React.FC = () => {
                 isLoading={isLoading}
                 isDisabled={isDisabled}
             />
-        </div>
+        </MessagesContainer>
     );
 };
 
