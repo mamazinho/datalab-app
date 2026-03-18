@@ -80,6 +80,15 @@ export const StyledLabel = styled(Label)``;
 
 export const StyledInput = styled(Input)``;
 
+export const SectionTitle = styled.h3`
+  margin-top: 0.95rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textSecondary};
+`;
+
 export const StyledSelect = styled.select`
   width: 100%;
   padding: 0.82rem 1rem;

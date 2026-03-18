@@ -51,6 +51,18 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, ...props
                     </Field>
 
                     <Field>
+                        <Label htmlFor="inputPhoneNumber">Telefone</Label>
+                        <Input
+                            type="tel"
+                            id="inputPhoneNumber"
+                            name="phone_number"
+                            placeholder="+5541999999999"
+                            required
+                            autoComplete="tel"
+                        />
+                    </Field>
+
+                    <Field>
                         <Label htmlFor="inputPassword">Senha</Label>
                         <Input
                             type="password"

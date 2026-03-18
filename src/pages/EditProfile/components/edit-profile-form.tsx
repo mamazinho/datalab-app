@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   AvatarRow,
   Footer,
@@ -6,6 +6,7 @@ import {
   FormError,
   PhoneNumberWrapper,
   SaveButton,
+  SectionTitle,
   StyledField,
   StyledFieldset,
   StyledInput,
@@ -16,8 +17,8 @@ import { ProfileAvatarUploader } from './profile-avatar-uploader';
 import type { IUserResponse } from '../../../services/datalab-api/usersResource';
 import PhoneInput, { getCountries } from 'react-phone-number-input';
 import ptBR from 'react-phone-number-input/locale/pt';
-
-const AVAILABLE_COUNTRIES = getCountries();
+import { PasswordInput } from '../../../components/UI/Inputs/password-input';
+import { PasswordRequirements } from '../../../components/UI/Inputs/password-requirements';
 
 interface IEditProfileFormProps {
   user: IUserResponse;
@@ -25,16 +26,6 @@ interface IEditProfileFormProps {
   isPending: boolean;
   error?: string;
 }
-
-const toE164Phone = (value: string | null | undefined): string | undefined => {
-  const raw = (value || '').trim();
-  if (!raw) return undefined;
-
-  const digits = raw.replace(/\D/g, '');
-  if (!digits) return undefined;
-
-  return `+${digits}`;
-};
 
 const toAvatarFallbackUrl = (name: string) => {
   const firstName = name.trim().split(' ')[0] || 'U';
@@ -69,10 +60,14 @@ const uploadImageToTemporaryHost = async (file: File): Promise<string> => {
 };
 
 export const EditProfileForm = ({ user, action, isPending, error }: IEditProfileFormProps) => {
+  const phoneCountries = useMemo(() => getCountries(), []);
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url || '');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [uploadError, setUploadError] = useState<string | undefined>(undefined);
-  const [phoneNumber, setPhoneNumber] = useState<string | undefined>(toE164Phone(user.phone_number));
+  const [phoneNumber, setPhoneNumber] = useState<string | undefined>(user.phone_number || undefined);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
   const firstName = user.name.trim().split(' ')[0] || 'Usuário';
   const displayAvatarUrl = avatarUrl || toAvatarFallbackUrl(user.name);
@@ -92,8 +87,14 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
     }
   };
 
+  const customAction = async (formData: FormData): Promise<void> => {
+    setPassword('');
+    setConfirmPassword('');
+    action(formData);
+  };
+
   return (
-    <Form action={action}>
+    <Form action={customAction}>
       <AvatarRow>
         <ProfileAvatarUploader
           avatarUrl={displayAvatarUrl}
@@ -108,6 +109,8 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
       <input type="hidden" name="phone_number" value={phoneNumber || ''} readOnly />
 
       <StyledFieldset disabled={isPending || isUploadingAvatar}>
+
+        <SectionTitle>Perfil</SectionTitle>
 
         <StyledField>
           <StyledLabel htmlFor="inputName">Nome</StyledLabel>
@@ -124,18 +127,20 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
           <PhoneNumberWrapper>
             <PhoneInput
               id="inputPhoneNumber"
-              countries={AVAILABLE_COUNTRIES}
+              countries={phoneCountries}
               labels={ptBR}
               international
               countryCallingCodeEditable={false}
               defaultCountry="BR"
               value={phoneNumber}
-              onChange={(value) => setPhoneNumber(toE164Phone(value))}
+              onChange={(value) => setPhoneNumber(value || undefined)}
               placeholder="Digite seu telefone"
               autoComplete="tel"
             />
           </PhoneNumberWrapper>
         </StyledField>
+
+        <SectionTitle>Configurações</SectionTitle>
 
         <StyledField>
           <StyledLabel htmlFor="inputTheme">Tema</StyledLabel>
@@ -144,6 +149,35 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
             <option value="dark">Escuro</option>
             <option value="system">Sistema</option>
           </StyledSelect>
+        </StyledField>
+
+        <SectionTitle>Senhas</SectionTitle>
+
+        <StyledField>
+          <StyledLabel htmlFor="inputPassword">Nova senha</StyledLabel>
+          <PasswordInput
+            id="inputPassword"
+            name="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            onFocus={() => setIsPasswordFocused(true)}
+            onBlur={() => setIsPasswordFocused(false)}
+            placeholder="Digite a nova senha"
+            autoComplete="new-password"
+          />
+          {isPasswordFocused && <PasswordRequirements password={password} />}
+        </StyledField>
+
+        <StyledField>
+          <StyledLabel htmlFor="inputConfirmPassword">Confirmar nova senha</StyledLabel>
+          <PasswordInput
+            id="inputConfirmPassword"
+            name="confirmPassword"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            placeholder="Confirme a nova senha"
+            autoComplete="new-password"
+          />
         </StyledField>
 
         {(error || uploadError) && <FormError>{error || uploadError}</FormError>}

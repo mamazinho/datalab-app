@@ -1,34 +1,48 @@
 import { DatalabAPI } from '../../services/datalab-api';
-import type { IUserConfig, IUserResponse } from '../../services/datalab-api/usersResource';
+import type { IUserResponse } from '../../services/datalab-api/usersResource';
 import type { ActionState } from '../../types/actions';
+import { editProfileFormSchema } from './schemas';
 
 export const updateProfileAction = async (
   _prevState: ActionState<IUserResponse>,
   formData: FormData,
 ): Promise<ActionState<IUserResponse>> => {
-  const name = (formData.get('name') as string | null)?.trim() ?? '';
-  const phoneNumber = (formData.get('phone_number') as string | null)?.trim() ?? '';
-  const avatarUrl = (formData.get('avatar_url') as string | null)?.trim() ?? '';
-  const theme = ((formData.get('theme') as string | null) ?? 'light') as IUserConfig['theme'];
+  const parsedData = editProfileFormSchema.safeParse({
+    name: formData.get('name') ?? undefined,
+    phone_number: formData.get('phone_number') ?? undefined,
+    avatar_url: formData.get('avatar_url') ?? undefined,
+    theme: formData.get('theme') ?? undefined,
+    password: formData.get('password') ?? undefined,
+    confirmPassword: formData.get('confirmPassword') ?? undefined,
+  });
 
-  if (!phoneNumber || !/^\+\d+$/.test(phoneNumber)) {
-    console.log("Phone number", phoneNumber);
+  if (!parsedData.success) {
+    const firstError = parsedData.error.issues[0]?.message || 'Dados invalidos no formulario.';
     return {
       success: false,
-      error: 'Telefone é obrigatório e deve estar no formato +<codigo><numero>.',
+      error: firstError,
       timestamp: Date.now(),
     };
   }
 
+  const {
+    name,
+    phone_number: phoneNumber,
+    avatar_url: avatarUrl,
+    password,
+    theme,
+  } = parsedData.data;
+
   try {
-    const updatedUser = await DatalabAPI.UsersResource.updateMe({
+    const updatePayload = {
       name,
       phone_number: phoneNumber,
       avatar_url: avatarUrl || null,
-      config: {
-        theme,
-      },
-    });
+      config: theme ? { theme } : null,
+      ...(password ? { password } : {}),
+    };
+
+    const updatedUser = await DatalabAPI.UsersResource.updateMe(updatePayload);
 
     return {
       success: true,
