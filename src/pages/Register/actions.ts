@@ -8,8 +8,17 @@ export async function registerUserAction(
 ): Promise<ActionState<IUserResponse>> {
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
+  const phoneNumber = (formData.get("phone_number") as string | null)?.trim() ?? '';
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
+
+  if (!phoneNumber || !/^\+\d+$/.test(phoneNumber)) {
+    return {
+      success: false,
+      error: "Telefone é obrigatório e deve estar no formato +<codigo><numero>.",
+      timestamp: Date.now(),
+    };
+  }
 
   if (password !== confirmPassword) {
     return {
@@ -23,6 +32,7 @@ export async function registerUserAction(
     const response: IUserResponse = await DatalabAPI.UsersResource.create({
       name,
       email,
+      phone_number: phoneNumber,
       password,
     });
 

@@ -3,6 +3,7 @@ import { axiosInstance, axiosPrivateInstance } from "./axios";
 export interface IRegisterUserRequest {
   name: string;
   email: string;
+  phone_number: string;
   password: string;
 }
 
@@ -20,14 +21,15 @@ export interface IUserResponse {
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
-  config: IUserConfig;
+  config: IUserConfig | null;
 }
 
 export interface IUpdateUserRequest {
-  name: string;
+  name: string | null;
   phone_number: string | null;
   avatar_url: string | null;
-  config: IUserConfig;
+  config: IUserConfig | null;
+  password?: string | null;
 }
 
 export interface IConfirmAccountRequest {
