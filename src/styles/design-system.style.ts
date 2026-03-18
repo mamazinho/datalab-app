@@ -122,6 +122,7 @@ const baseButtonStyles = css`
   padding: 0.88rem 1rem;
   font-weight: 700;
   transition: transform 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
+  pointer:cursor;
 
   &:disabled {
     opacity: 0.72;

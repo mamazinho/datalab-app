@@ -16,6 +16,8 @@ export interface IUserResponse {
   email: string;
   status: string;
   role: string;
+  phone_number: string | null;
+  avatar_url: string | null;
   created_at: string;
   updated_at: string;
   config: IUserConfig;
@@ -60,6 +62,13 @@ export const UsersResource = {
   async me(): Promise<IUserResponse> {
     const response = await axiosPrivateInstance.get(
       `users/me`
+    )
+    return response.data as IUserResponse;
+  },
+  async updateMe(updateData: Partial<IUserResponse>): Promise<IUserResponse> {
+    const response = await axiosPrivateInstance.patch(
+      `users/me`,
+      updateData
     )
     return response.data as IUserResponse;
   },
