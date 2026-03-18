@@ -21,15 +21,15 @@ export const routes = createBrowserRouter([
                 element: <Login />,
             },
             {
-                path: "/register",
+                path: "/cadastro",
                 element: <Register />,
             },
             {
-                path: "/forgot-password",
+                path: "/esqueci-senha",
                 element: <ForgotPassword />,
             },
             {
-                path: "/change-password",
+                path: "/alterar-senha",
                 element: <ChangePassword />,
             },
             {
@@ -47,14 +47,14 @@ export const routes = createBrowserRouter([
                 element: <Home />,
             },
             {
-                path: "/chats",
+                path: "/conversas",
                 children: [
                     {
                         index: true,
                         element: <ListChats />,
                     },
                     {
-                        path: ":chatId/messages",
+                        path: ":chatId/mensagens",
                         element: <ChatMessages />,
                     },
                 ],
