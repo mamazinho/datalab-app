@@ -1,17 +1,11 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuthContext } from "../contexts/auth";
 import { PrivateLayout } from "../components/UI/Layout/private-layout/layout";
-import { useEffect } from 'react';
 
 
 export const PrivateRoutes = () => {
-    const { accessToken, getMe } = useAuthContext();
+    const { accessToken } = useAuthContext();
     const location = useLocation();
-    
-    useEffect(() => {
-        if (!accessToken) return;
-        void getMe();
-    }, [accessToken, getMe]);
 
     return accessToken 
         ? <PrivateLayout><Outlet /></PrivateLayout>
@@ -21,7 +15,6 @@ export const PrivateRoutes = () => {
 export const PublicRoutes = () => {
     const { accessToken } = useAuthContext();
     const location = useLocation();
-    console.log("PublicRoutes accessToken:", accessToken, location);
 
     const from = location.state?.from?.pathname || "/";
 

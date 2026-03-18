@@ -18,7 +18,6 @@ export const EditProfile = () => {
     if (state.timestamp === 0) return;
 
     if (state.success && state.data) {
-      localStorage.setItem('myData', JSON.stringify(state.data));
       await getMe();
       toast.success('Perfil atualizado com sucesso!');
       return;
