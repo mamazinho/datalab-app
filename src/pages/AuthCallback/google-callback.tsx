@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { ILoginUserResponse } from '../../services/datalab-api/authResource';
 import { SOCIAL_AUTH_CHANNEL, type ISocialLoginCallbackEvent } from '../../types/auth';
+import { CallbackCard, CallbackContainer, CallbackSpinner, CallbackText, CallbackTitle } from './google-callback.style';
 
 
 export const GoogleCallback: React.FC = () => {
@@ -42,12 +43,12 @@ export const GoogleCallback: React.FC = () => {
     }, [searchParams]);
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-            <div className="p-8 text-center bg-white rounded-xl shadow-lg">
-                <div className="w-12 h-12 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mx-auto mb-4"></div>
-                <h2 className="text-gray-800 font-semibold text-lg">Processando login...</h2>
-                <p className="text-gray-500 text-sm mt-2">Por favor, aguarde um momento.</p>
-            </div>
-        </div>
+        <CallbackContainer>
+            <CallbackCard>
+                <CallbackSpinner />
+                <CallbackTitle>Processando login...</CallbackTitle>
+                <CallbackText>Por favor, aguarde um momento.</CallbackText>
+            </CallbackCard>
+        </CallbackContainer>
     );
 };

@@ -1,5 +1,6 @@
 import { Footer } from "./footer";
 import { Header } from "./header";
+import { MainContent, Shell } from "./layout.style";
 
 interface IPrivateLayoutProps {
     children: React.ReactNode;
@@ -7,10 +8,10 @@ interface IPrivateLayoutProps {
 
 export const PrivateLayout = ({ children }: IPrivateLayoutProps) => {
    return (
-        <>
+        <Shell>
             <Header />
-                {children}
+            <MainContent>{children}</MainContent>
             <Footer />
-        </>
+        </Shell>
     );
 }

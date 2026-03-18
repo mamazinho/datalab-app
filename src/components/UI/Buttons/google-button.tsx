@@ -1,27 +1,48 @@
 import React from 'react';
+import styled from 'styled-components';
 
 interface GoogleButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   label?: string;
 }
 
+const Button = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  font-weight: 600;
+  padding: 0.78rem 1rem;
+  box-shadow: 0 8px 14px ${({ theme }) => theme.colors.shadow};
+  transition: transform 0.16s ease, box-shadow 0.16s ease, filter 0.16s ease;
+
+  &:hover {
+    filter: brightness(0.98);
+    box-shadow: 0 12px 18px ${({ theme }) => theme.colors.shadow};
+  }
+
+  &:active {
+    transform: scale(0.985);
+  }
+`;
+
+const GoogleIcon = styled.svg`
+  width: 1.25rem;
+  height: 1.25rem;
+`;
+
 export const GoogleButton: React.FC<GoogleButtonProps> = ({ label = "Entrar com Google", className = "", ...props }) => {
   return (
-    <button
+    <Button
       type="button"
-      className={`
-        w-full flex items-center justify-center gap-3
-        bg-white hover:bg-gray-50
-        border border-gray-200 hover:border-gray-300
-        text-gray-700 font-medium
-        px-4 py-3 rounded-xl
-        transition-all duration-200
-        shadow-sm hover:shadow-md
-        active:scale-[0.98]
-        ${className}
-      `}
+      className={className}
       {...props}
     >
-      <svg className="w-5 h-5" viewBox="0 0 24 24">
+      <GoogleIcon viewBox="0 0 24 24">
         <path
           d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
           fill="#4285F4"
@@ -38,8 +59,8 @@ export const GoogleButton: React.FC<GoogleButtonProps> = ({ label = "Entrar com 
           d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
           fill="#EA4335"
         />
-      </svg>
+      </GoogleIcon>
       {label}
-    </button>
+    </Button>
   );
 };

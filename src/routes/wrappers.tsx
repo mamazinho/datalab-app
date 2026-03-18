@@ -9,11 +9,9 @@ export const PrivateRoutes = () => {
     const location = useLocation();
     
     useEffect(() => {
-        const fetchData = async () => await getMe();
-        fetchData();
-    }, [getMe]);
-
-    console.log("PrivateRoutes accessToken:", accessToken);
+        if (!accessToken) return;
+        void getMe();
+    }, [accessToken, getMe]);
 
     return accessToken 
         ? <PrivateLayout><Outlet /></PrivateLayout>

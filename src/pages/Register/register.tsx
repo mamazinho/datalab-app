@@ -1,10 +1,9 @@
 import React, { useRef, useEffect, useActionState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RegisterContainer } from './register.style';
+import { RegisterCard, RegisterContainer, RegisterFooter, RegisterFooterLink, RegisterShell } from './register.style';
 import { DatalabAPI } from '../../services/datalab-api';
 import { StepsController, type StepsRef } from '../../components/UI/Steps/steps-controller';
 import { Step } from '../../components/UI/Steps/step';
-import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { RegisterForm } from './components/register-form';
 import { ConfirmAccountForm } from './components/confirm-account-form';
@@ -64,8 +63,8 @@ export const Register: React.FC = () => {
 
   return (
     <RegisterContainer>
-      <div className="flex items-center justify-center min-h-[80vh] p-4">
-        <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+      <RegisterShell>
+        <RegisterCard>
           <StepsController ref={stepsRef}>
             {/* STEP 1: Register Form */}
             <Step canGoForward={false}>
@@ -86,11 +85,11 @@ export const Register: React.FC = () => {
               />
             </Step>
           </StepsController>
-          <div className={`text-center pt-4 border-t border-gray-100 mt-6 flex flex-col gap-2`}>
-            <Link to="/login" className="text-orange-600 hover:text-orange-800 font-medium transition-colors hover:underline">Já possui conta? Faça Login</Link>
-          </div>
-        </div>
-      </div>
+          <RegisterFooter>
+            <RegisterFooterLink to="/login">Já possui conta? Faça Login</RegisterFooterLink>
+          </RegisterFooter>
+        </RegisterCard>
+      </RegisterShell>
     </RegisterContainer>
   );
 };
