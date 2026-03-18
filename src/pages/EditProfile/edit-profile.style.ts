@@ -1,8 +1,14 @@
 import styled from 'styled-components';
 
+export const EditProfileShell = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+`;
+
 export const EditProfileContainer = styled.section`
   width: min(100%, 44rem);
-  margin: 0 auto;
+  margin: 0.5rem 0 1.5rem;
   border-radius: 1rem;
   border: 1px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.surface};
@@ -21,10 +27,3 @@ export const EditProfileSubtitle = styled.p`
   color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
-export const EditProfileInfo = styled.div`
-  border-radius: 0.8rem;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.inputBackground};
-  padding: 0.95rem;
-  color: ${({ theme }) => theme.colors.text};
-`;

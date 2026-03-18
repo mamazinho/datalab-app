@@ -23,6 +23,13 @@ export interface IUserResponse {
   config: IUserConfig;
 }
 
+export interface IUpdateUserRequest {
+  name: string;
+  phone_number: string | null;
+  avatar_url: string | null;
+  config: IUserConfig;
+}
+
 export interface IConfirmAccountRequest {
   code: string;
 }
@@ -65,7 +72,7 @@ export const UsersResource = {
     )
     return response.data as IUserResponse;
   },
-  async updateMe(updateData: Partial<IUserResponse>): Promise<IUserResponse> {
+  async updateMe(updateData: Partial<IUpdateUserRequest>): Promise<IUserResponse> {
     const response = await axiosPrivateInstance.patch(
       `users/me`,
       updateData
@@ -73,14 +80,14 @@ export const UsersResource = {
     return response.data as IUserResponse;
   },
   async forgotPassword(forgotPasswordData: IForgotPasswordRequest): Promise<void> {
-    const response = await axiosPrivateInstance.post(
+    const response = await axiosInstance.post(
       `users/forgot-password`,
       forgotPasswordData
     )
     if (response.status !== 204) throw new Error("Failed to send forgot password request");
   },
   async changePassword(changePasswordData: IChangePasswordRequest): Promise<IUserResponse> {
-    const response = await axiosPrivateInstance.post(
+    const response = await axiosInstance.post(
       `users/change-password`,
       changePasswordData
     )
