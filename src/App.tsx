@@ -11,7 +11,7 @@ const ThemeBootstrap = () => {
     const { setThemeMode } = useTheme();
 
     useEffect(() => {
-        const userTheme = me?.config?.theme;
+        const userTheme = String(me?.config?.theme || '').trim().toLowerCase();
 
         if (userTheme === 'dark' || userTheme === 'light') {
             setThemeMode(userTheme);

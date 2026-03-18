@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { AuthContext } from "./contexts";
 import { type ILoginUserResponse } from '../../services/datalab-api/authResource';
 import { DatalabAPI } from "../../services/datalab-api";
@@ -13,22 +13,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const getMe = useCallback(async (): Promise<IUserResponse> => {
     try {
-      const storedUser = localStorage.getItem("myData");
-      if (storedUser) {
-        const user = JSON.parse(storedUser) as IUserResponse;
-        setMe(user);
-        return user;
-      }
-
       const user = await DatalabAPI.UsersResource.me() as IUserResponse;
       setMe(user);
-      if (user) localStorage.setItem("myData", JSON.stringify(user));
       return user;
     } catch (error) {
       console.error("Get me error:", error);
       throw error;
     }
   }, []);
+
+  useEffect(() => {
+    if (!accessToken) {
+      setMe({} as IUserResponse);
+      return;
+    }
+
+    if (me?.id) return;
+
+    void getMe();
+  }, [accessToken, me, getMe]);
 
   const login = useCallback(async (loginResponse: ILoginUserResponse) => {
     try {
@@ -45,7 +48,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAccessToken(undefined)
     setMe({} as IUserResponse);
     localStorage.removeItem("accessToken");
-    localStorage.removeItem("myData");
   }, []);
 
   const contextValue = useMemo(
