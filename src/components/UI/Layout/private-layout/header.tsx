@@ -29,22 +29,16 @@ export const Header = () => {
     const menuRef = useRef<HTMLDivElement | null>(null);
 
     const menuPages = [
-        { label: 'Home', href: '/' },
-        { label: 'Chats', href: '/chats' }
+        { label: 'Página inicial', href: '/' },
+        { label: 'Conversas', href: '/chats' }
     ];
-
-    const firstName = useMemo(() => {
-        const fullName = me?.name || '';
-        if (!fullName.trim()) return 'Perfil';
-        return fullName.trim().split(' ')[0];
-    }, [me]);
 
     const profileAvatarUrl = useMemo(() => {
         if (me?.avatar_url) return me.avatar_url;
 
-        const seedName = firstName || 'U';
+        const seedName = me?.name ? me.name.trim()[0] : 'U';
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(seedName)}&background=FFBE00&color=00001F&bold=true&format=png&size=128`;
-    }, [me, firstName]);
+    }, [me]);
 
     useEffect(() => {
         const handleOutsideClick = (event: MouseEvent) => {
@@ -90,7 +84,7 @@ export const Header = () => {
                         title="Abrir menu de perfil"
                         onClick={() => setIsMenuOpen((prev) => !prev)}
                     >
-                        <ProfileAvatar src={profileAvatarUrl} alt={`Foto de perfil de ${firstName}`} />
+                        <ProfileAvatar src={profileAvatarUrl} alt={`Foto de perfil de ${me?.name}`} />
                     </ProfileButton>
 
                     {isMenuOpen && (

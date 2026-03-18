@@ -44,19 +44,19 @@ export const CreateChat = ({ onCreateChat }: ICreateChatProps) => {
                 <CreateChatIcon fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                 </CreateChatIcon>
-                Criar novo chat
+                Criar nova conversa
             </CreateChatButton>
 
             <Modal
                 isOpen={isOpen}
                 onClose={() => setIsOpen(false)}
-                title="Novo Chat"
+                title="Nova Conversa"
             >
                 <CreateChatForm action={createChatFormAction}>
                     <CreateChatFieldset disabled={isCreateChatPending}>
                         <CreateChatField>
                             <CreateChatLabel htmlFor="chatTitle">
-                                Título do Chat
+                                Título da Conversa
                             </CreateChatLabel>
                             <CreateChatInput
                                 id="chatTitle"

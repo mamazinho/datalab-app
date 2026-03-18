@@ -27,7 +27,7 @@ export const Chats = () => {
       <ChatPageContent>
       <ChatHeaderCard>
         <div>
-          <ChatHeaderTitle>Gerenciador de Chats</ChatHeaderTitle>
+          <ChatHeaderTitle>Gerenciador de conversas</ChatHeaderTitle>
           <ChatHeaderText>Inicie novas conversas ou continue de onde parou</ChatHeaderText>
             </div>
             {/* <CreateChat onCreateChat={(chat) => setNewChats([chat, ...newChats])} /> */}
@@ -38,7 +38,7 @@ export const Chats = () => {
         <div>
           <ChatListTitle>
             <ChatListTitleBadge>📋</ChatListTitleBadge>
-                    Chats Disponíveis
+                    Conversas Disponíveis
           </ChatListTitle>
                 <AsyncResource fetcher={DatalabAPI.ChatsResource.getAllChats}>
                     {(data) => <ChatList chats={[...newChats, ...data]} />}

@@ -51,7 +51,7 @@ export const BrandText = styled.span`
 export const Menu = styled.div`
   display: inline-flex;
   align-items: center;
-  gap: 1rem;
+  gap: 2rem;
 `;
 
 export const RightActions = styled.div`
