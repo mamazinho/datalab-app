@@ -7,6 +7,7 @@ import { Register } from "../pages/Register";
 import { ForgotPassword } from "../pages/ForgotPassword";
 import { ChangePassword } from "../pages/ChangePassword";
 import { GoogleCallback } from "../pages/AuthCallback/google-callback";
+import { EditProfile } from "../pages/EditProfile";
 import { PrivateRoutes, PublicRoutes } from "./wrappers";
 
 
@@ -57,6 +58,10 @@ export const routes = createBrowserRouter([
                         element: <ChatMessages />,
                     },
                 ],
+            },
+            {
+                path: "/perfil/editar",
+                element: <EditProfile />,
             }
         ]
     }

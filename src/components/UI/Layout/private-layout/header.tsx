@@ -1,17 +1,68 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthContext } from "../../../../contexts/auth";
 import favicon from '../../../../assets/favicon.png';
-import { BrandImage, BrandLink, BrandText, HeaderContent, HeaderNav, LogoutButton, Menu, MenuItem } from "./layout.style";
+import {
+    BrandImage,
+    BrandLink,
+    BrandText,
+    HeaderContent,
+    HeaderNav,
+    Menu,
+    MenuItem,
+    ProfileAvatar,
+    ProfileButton,
+    ProfileEmail,
+    ProfileMenu,
+    ProfileMenuHeader,
+    ProfileMenuItem,
+    ProfileMenuLink,
+    ProfileName,
+    RightActions,
+} from "./layout.style";
 
 export const Header = () => {
 
-    const { logout } = useAuthContext();
+    const { logout, me } = useAuthContext();
     const location = useLocation();
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement | null>(null);
 
     const menuPages = [
         { label: 'Home', href: '/' },
         { label: 'Chats', href: '/chats' }
     ];
+
+    const firstName = useMemo(() => {
+        const fullName = me?.name || '';
+        if (!fullName.trim()) return 'Perfil';
+        return fullName.trim().split(' ')[0];
+    }, [me]);
+
+    const profileAvatarUrl = useMemo(() => {
+        if (me?.avatar_url) return me.avatar_url;
+
+        const seedName = firstName || 'U';
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(seedName)}&background=FFBE00&color=00001F&bold=true&format=png&size=128`;
+    }, [me, firstName]);
+
+    useEffect(() => {
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (!menuRef.current) return;
+            if (!menuRef.current.contains(event.target as Node)) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+        };
+    }, []);
+
+    useEffect(() => {
+        setIsMenuOpen(false);
+    }, [location.pathname]);
 
     return (
         <HeaderNav>
@@ -34,25 +85,26 @@ export const Header = () => {
                         );
                     })}
                 </Menu>
-                <LogoutButton 
-                    title="Logout"
-                    onClick={logout}
-                >
-                    <svg 
-                        width="24" 
-                        height="24" 
-                        viewBox="0 0 24 24" 
-                        fill="none" 
-                        stroke="currentColor" 
-                        strokeWidth="2" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round"
+                <RightActions ref={menuRef}>
+                    <ProfileButton
+                        title="Abrir menu de perfil"
+                        onClick={() => setIsMenuOpen((prev) => !prev)}
                     >
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                    </svg>
-                </LogoutButton>
+                        <ProfileAvatar src={profileAvatarUrl} alt={`Foto de perfil de ${firstName}`} />
+                    </ProfileButton>
+
+                    {isMenuOpen && (
+                        <ProfileMenu>
+                            <ProfileMenuHeader>
+                                <ProfileName>{me?.name || 'Usuário'}</ProfileName>
+                                <ProfileEmail>{me?.email || 'sem-email@datalab.app'}</ProfileEmail>
+                            </ProfileMenuHeader>
+
+                            <ProfileMenuLink to="/perfil/editar">Editar perfil</ProfileMenuLink>
+                            <ProfileMenuItem onClick={logout}>Sair</ProfileMenuItem>
+                        </ProfileMenu>
+                    )}
+                </RightActions>
             </HeaderContent>
         </HeaderNav>
     );

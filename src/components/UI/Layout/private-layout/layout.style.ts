@@ -54,6 +54,12 @@ export const Menu = styled.div`
   gap: 1rem;
 `;
 
+export const RightActions = styled.div`
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+`;
+
 const menuItemActiveStyles = css`
   border-bottom-color: ${({ theme }) => theme.colors.primary};
   color: ${({ theme }) => theme.colors.text};
@@ -86,6 +92,89 @@ export const LogoutButton = styled.button`
   &:hover {
     background: ${({ theme }) => theme.colors.inputBackground};
     color: ${({ theme }) => theme.colors.text};
+  }
+`;
+
+export const ProfileButton = styled.button`
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+export const ProfileAvatar = styled.img`
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 50%;
+  border: 2px solid ${({ theme }) => theme.colors.primary};
+  object-fit: cover;
+  box-shadow: 0 6px 12px ${({ theme }) => theme.colors.shadow};
+`;
+
+export const ProfileMenu = styled.div`
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  width: 14rem;
+  border-radius: 0.8rem;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  box-shadow: 0 14px 24px ${({ theme }) => theme.colors.shadow};
+  overflow: hidden;
+  z-index: 120;
+`;
+
+export const ProfileMenuHeader = styled.div`
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.inputBackground};
+`;
+
+export const ProfileName = styled.p`
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text};
+`;
+
+export const ProfileEmail = styled.p`
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.colors.textSecondary};
+`;
+
+export const ProfileMenuItem = styled.button`
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  padding: 0.75rem 0.85rem;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background-color 0.16s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.inputBackground};
+  }
+`;
+
+export const ProfileMenuLink = styled(Link)`
+  display: block;
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background-color 0.16s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.inputBackground};
   }
 `;
 
