@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   AvatarRow,
   Footer,
@@ -14,7 +14,10 @@ import {
 } from './edit-profile-form.style';
 import { ProfileAvatarUploader } from './profile-avatar-uploader';
 import type { IUserResponse } from '../../../services/datalab-api/usersResource';
-import PhoneInput from 'react-phone-number-input';
+import PhoneInput, { getCountries } from 'react-phone-number-input';
+import ptBR from 'react-phone-number-input/locale/pt';
+
+const AVAILABLE_COUNTRIES = getCountries();
 
 interface IEditProfileFormProps {
   user: IUserResponse;
@@ -22,6 +25,21 @@ interface IEditProfileFormProps {
   isPending: boolean;
   error?: string;
 }
+
+const toE164Phone = (value: string | null | undefined): string | undefined => {
+  const raw = (value || '').trim();
+  if (!raw) return undefined;
+
+  const digits = raw.replace(/\D/g, '');
+  if (!digits) return undefined;
+
+  return `+${digits}`;
+};
+
+const toAvatarFallbackUrl = (name: string) => {
+  const firstName = name.trim().split(' ')[0] || 'U';
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}&background=FFBE00&color=00001F&bold=true&format=png&size=256`;
+};
 
 const uploadImageToTemporaryHost = async (file: File): Promise<string> => {
   const uploadFormData = new FormData();
@@ -54,9 +72,10 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url || '');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [uploadError, setUploadError] = useState<string | undefined>(undefined);
-  const [phoneNumber, setPhoneNumber] = useState<string | undefined>(user.phone_number || undefined);
+  const [phoneNumber, setPhoneNumber] = useState<string | undefined>(toE164Phone(user.phone_number));
 
-  const firstName = useMemo(() => user.name.trim().split(' ')[0] || 'Usuário', [user.name]);
+  const firstName = user.name.trim().split(' ')[0] || 'Usuário';
+  const displayAvatarUrl = avatarUrl || toAvatarFallbackUrl(user.name);
 
   const handleAvatarSelected = async (file: File) => {
     setUploadError(undefined);
@@ -77,13 +96,16 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
     <Form action={action}>
       <AvatarRow>
         <ProfileAvatarUploader
-          avatarUrl={avatarUrl}
+          avatarUrl={displayAvatarUrl}
           firstName={firstName}
           isUploading={isUploadingAvatar}
           isDisabled={isPending}
           onFileSelected={handleAvatarSelected}
         />
       </AvatarRow>
+
+      <input type="hidden" name="avatar_url" value={avatarUrl} readOnly />
+      <input type="hidden" name="phone_number" value={phoneNumber || ''} readOnly />
 
       <StyledFieldset disabled={isPending || isUploadingAvatar}>
 
@@ -102,12 +124,13 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
           <PhoneNumberWrapper>
             <PhoneInput
               id="inputPhoneNumber"
+              countries={AVAILABLE_COUNTRIES}
+              labels={ptBR}
               international
-              name="phone_number"
               countryCallingCodeEditable={false}
               defaultCountry="BR"
               value={phoneNumber}
-              onChange={(value) => setPhoneNumber(value || undefined)}
+              onChange={(value) => setPhoneNumber(toE164Phone(value))}
               placeholder="Digite seu telefone"
               autoComplete="tel"
             />

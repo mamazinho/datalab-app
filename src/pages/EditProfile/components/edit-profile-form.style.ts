@@ -130,6 +130,12 @@ export const PhoneNumberWrapper = styled.div`
     color: ${({ theme }) => theme.colors.text};
     padding-right: 0.2rem;
     font-size: 0.92rem;
+    appearance: none;
+
+    option {
+      background: ${({ theme }) => theme.colors.surface};
+      color: ${({ theme }) => theme.colors.text};
+    }
   }
 
   .PhoneInputCountryIcon {
