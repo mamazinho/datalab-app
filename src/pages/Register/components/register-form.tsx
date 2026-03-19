@@ -1,6 +1,4 @@
-import React, { useMemo, useState } from 'react';
-import PhoneInput, { getCountries } from 'react-phone-number-input';
-import ptBR from 'react-phone-number-input/locale/pt';
+import React, { useState } from 'react';
 import {
     AuthForm,
     AuthHeader,
@@ -10,18 +8,20 @@ import {
     FieldsWrapper,
     Input,
     Label,
-    PhoneNumberWrapper,
     PrimaryButton,
     Subtitle,
 } from '../../../styles/design-system.style';
+import { PasswordInput } from '../../../components/UI/Inputs/Password/password-input';
+import { PhoneField } from '../../../components/UI/Inputs/Phone';
 
 interface IRegisterFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
     isPending: boolean;
 }
 
 export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, ...props }) => {
-    const phoneCountries = useMemo(() => getCountries(), []);
     const [phoneNumber, setPhoneNumber] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
 
     return (
         <>
@@ -58,30 +58,25 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, ...props
 
                     <Field>
                         <Label htmlFor="inputPhoneNumber">Telefone</Label>
-                        <PhoneNumberWrapper>
-                            <PhoneInput
-                                id="inputPhoneNumber"
-                                name="phone_number"
-                                countries={phoneCountries}
-                                labels={ptBR}
-                                international
-                                countryCallingCodeEditable={false}
-                                defaultCountry="BR"
-                                value={phoneNumber}
-                                onChange={(value) => setPhoneNumber(value || '')}
-                                placeholder="Digite seu telefone"
-                                autoComplete="tel"
-                                required
-                            />
-                        </PhoneNumberWrapper>
+                        <PhoneField
+                            id="inputPhoneNumber"
+                            name="phone_number"
+                            value={phoneNumber}
+                            onValueChange={setPhoneNumber}
+                            placeholder="Digite seu telefone"
+                            autoComplete="tel"
+                            required
+                            disabled={isPending}
+                        />
                     </Field>
 
                     <Field>
                         <Label htmlFor="inputPassword">Senha</Label>
-                        <Input
-                            type="password"
+                        <PasswordInput
                             id="inputPassword"
                             name="password"
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
                             placeholder="Sua senha"
                             required
                             autoComplete="new-password"
@@ -90,10 +85,12 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, ...props
 
                     <Field>
                         <Label htmlFor="inputConfirmPassword">Confirmar Senha</Label>
-                        <Input
-                            type="password"
+                        <PasswordInput
                             id="inputConfirmPassword"
                             name="confirmPassword"
+                            value={confirmPassword}
+                            onChange={(event) => setConfirmPassword(event.target.value)}
+                            matchValue={password}
                             placeholder="Confirme sua senha"
                             required
                             autoComplete="new-password"

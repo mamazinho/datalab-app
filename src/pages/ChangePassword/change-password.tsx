@@ -1,4 +1,4 @@
-import React, { useActionState, useEffect, useCallback } from 'react';
+import React, { useActionState, useEffect, useCallback, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ChangePasswordCancelLink,
@@ -10,7 +10,7 @@ import {
 import { toast } from 'react-toastify';
 import { changePasswordAction } from './actions';
 import { INITIAL_ACTION_STATE, type ActionState } from '../../types/actions';
-import { PasswordInput } from '../../components/UI/Inputs/password-input';
+import { PasswordInput } from '../../components/UI/Inputs/Password/password-input';
 import { AuthForm, AuthHeader, BrandHighlight, BrandTitle, Description, ErrorText, Field, FieldsWrapper, Label, PrimaryButton, Subtitle } from '../../styles/design-system.style';
 
 
@@ -19,6 +19,8 @@ export const ChangePassword: React.FC = () => {
   const navigate = useNavigate();
 
   const [changePasswordState, changePasswordFormAction, isChangePasswordPending] = useActionState(changePasswordAction, INITIAL_ACTION_STATE);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const email = searchParams.get('email') || '';
   const code = searchParams.get('code') || '';
@@ -57,6 +59,8 @@ export const ChangePassword: React.FC = () => {
                 <PasswordInput
                     id="inputPassword" 
                     name="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                     required 
                     autoFocus
                     autoComplete="new-password"
@@ -68,6 +72,9 @@ export const ChangePassword: React.FC = () => {
                 <PasswordInput
                     id="inputConfirmPassword" 
                     name="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  matchValue={password}
                     required 
                     autoComplete="new-password"
                 />

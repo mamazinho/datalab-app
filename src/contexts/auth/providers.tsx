@@ -28,21 +28,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    if (me?.id) return;
-
     void getMe();
-  }, [accessToken, me, getMe]);
+  }, [accessToken, getMe]);
 
   const login = useCallback(async (loginResponse: ILoginUserResponse) => {
     try {
       setAccessToken(loginResponse.access_token)
       if (loginResponse.access_token) localStorage.setItem("accessToken", loginResponse.access_token);
-      await getMe();
     } catch (error) {
       console.error("Login error:", error);
       throw error;
     }
-  }, [getMe]);
+  }, []);
 
   const logout = useCallback(() => {
     setAccessToken(undefined)

@@ -1,7 +1,7 @@
 import {
   PASSWORD_MIN_LENGTH,
   getPasswordRuleStatus,
-} from '../../../schemas/password';
+} from '../../../../schemas/password';
 import { RequirementItem, RequirementsList } from './password-requirements.style';
 
 interface IPasswordRequirementsProps {

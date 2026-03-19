@@ -27,7 +27,7 @@ import { loginAction } from './actions';
 import { SOCIAL_AUTH_CHANNEL, type ISocialLoginCallbackEvent } from '../../types/auth';
 import type { ILoginUserResponse } from '../../services/datalab-api/authResource';
 import { INITIAL_ACTION_STATE, type ActionState } from '../../types/actions';
-import { PasswordInput } from '../../components/UI/Inputs/password-input';
+import { PasswordInput } from '../../components/UI/Inputs/Password/password-input';
 
 export const Login: React.FC = () => {
   const [loginState, loginFormAction, isLoginPending] = useActionState(loginAction, INITIAL_ACTION_STATE);
@@ -138,8 +138,8 @@ export const Login: React.FC = () => {
             <GoogleButton onClick={handleGoogleLogin} />
 
             <LoginFooterLinks>
-              <LoginRegisterLink to="/register">Não possui conta? Cadastre-se</LoginRegisterLink>
-              <LoginForgotLink to="/forgot-password">Esqueci minha senha</LoginForgotLink>
+              <LoginRegisterLink to="/cadastro">Não possui conta? Cadastre-se</LoginRegisterLink>
+              <LoginForgotLink to="/esqueci-senha">Esqueci minha senha</LoginForgotLink>
             </LoginFooterLinks>
           </LoginForm>
         </LoginCard>
