@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   AvatarRow,
   Footer,
@@ -14,11 +14,8 @@ import {
 } from './edit-profile-form.style';
 import { ProfileAvatarUploader } from './profile-avatar-uploader';
 import type { IUserResponse } from '../../../services/datalab-api/usersResource';
-import PhoneInput, { getCountries } from 'react-phone-number-input';
-import ptBR from 'react-phone-number-input/locale/pt';
-import { PasswordInput } from '../../../components/UI/Inputs/password-input';
-import { PasswordRequirements } from '../../../components/UI/Inputs/password-requirements';
-import { PhoneNumberWrapper } from '../../../styles/design-system.style';
+import { PasswordInput } from '../../../components/UI/Inputs/Password/password-input';
+import { PhoneField } from '../../../components/UI/Inputs/Phone';
 
 interface IEditProfileFormProps {
   user: IUserResponse;
@@ -60,14 +57,12 @@ const uploadImageToTemporaryHost = async (file: File): Promise<string> => {
 };
 
 export const EditProfileForm = ({ user, action, isPending, error }: IEditProfileFormProps) => {
-  const phoneCountries = useMemo(() => getCountries(), []);
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url || '');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [uploadError, setUploadError] = useState<string | undefined>(undefined);
-  const [phoneNumber, setPhoneNumber] = useState<string | undefined>(user.phone_number || undefined);
+  const [phoneNumber, setPhoneNumber] = useState(user.phone_number || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
   const firstName = user.name.trim().split(' ')[0] || 'Usuário';
   const displayAvatarUrl = avatarUrl || toAvatarFallbackUrl(user.name);
@@ -106,7 +101,6 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
       </AvatarRow>
 
       <input type="hidden" name="avatar_url" value={avatarUrl} readOnly />
-      <input type="hidden" name="phone_number" value={phoneNumber || ''} readOnly />
 
       <StyledFieldset disabled={isPending || isUploadingAvatar}>
 
@@ -124,27 +118,22 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
 
         <StyledField>
           <StyledLabel htmlFor="inputPhoneNumber">Telefone</StyledLabel>
-          <PhoneNumberWrapper>
-            <PhoneInput
-              id="inputPhoneNumber"
-              countries={phoneCountries}
-              labels={ptBR}
-              international
-              countryCallingCodeEditable={false}
-              defaultCountry="BR"
-              value={phoneNumber}
-              onChange={(value) => setPhoneNumber(value || undefined)}
-              placeholder="Digite seu telefone"
-              autoComplete="tel"
-            />
-          </PhoneNumberWrapper>
+          <PhoneField
+            id="inputPhoneNumber"
+            name="phone_number"
+            value={phoneNumber}
+            onValueChange={setPhoneNumber}
+            placeholder="Digite seu telefone"
+            autoComplete="tel"
+            disabled={isPending || isUploadingAvatar}
+          />
         </StyledField>
 
         <SectionTitle>Configurações</SectionTitle>
 
         <StyledField>
           <StyledLabel htmlFor="inputTheme">Tema</StyledLabel>
-          <StyledSelect id="inputTheme" name="theme" defaultValue={user.config?.theme || 'light'}>
+          <StyledSelect id="inputTheme" name="theme" defaultValue={user?.config?.theme || 'system'}>
             <option value="light">Claro</option>
             <option value="dark">Escuro</option>
             <option value="system">Sistema</option>
@@ -160,12 +149,9 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
             name="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            onFocus={() => setIsPasswordFocused(true)}
-            onBlur={() => setIsPasswordFocused(false)}
             placeholder="Digite a nova senha"
             autoComplete="new-password"
           />
-          {isPasswordFocused && <PasswordRequirements password={password} />}
         </StyledField>
 
         <StyledField>
@@ -175,6 +161,7 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
             name="confirmPassword"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
+            matchValue={password}
             placeholder="Confirme a nova senha"
             autoComplete="new-password"
           />
