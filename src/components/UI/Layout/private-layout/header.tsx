@@ -42,20 +42,6 @@ export const Header = () => {
     }, [me]);
 
     useEffect(() => {
-        const handleOutsideClick = (event: MouseEvent) => {
-            if (!menuRef.current) return;
-            if (!menuRef.current.contains(event.target as Node)) {
-                setIsMenuOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleOutsideClick);
-        return () => {
-            document.removeEventListener('mousedown', handleOutsideClick);
-        };
-    }, []);
-
-    useEffect(() => {
         setIsMenuOpen(false);
     }, [location.pathname]);
 
