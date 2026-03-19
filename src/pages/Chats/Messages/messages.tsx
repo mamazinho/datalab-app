@@ -1,21 +1,26 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { MessageList } from './components/message-list';
 import { MessageInput } from './components/message-input';
 import { AsyncResource } from '../../../components/Tools/async-resource';
 import { DatalabAPI } from '../../../services/datalab-api';
 import { processStreamResponse, type IMessage } from '../../../utils/process-stream';
 import { ErrorBanner, ErrorLabel, MessagesBody, MessagesContainer, MessagesHeader, MessagesSubtitle, MessagesTitle, MessagesTitleHighlight } from './messages.style';
+import { useChatsContext } from '../../../contexts/chats';
 
 export const ChatMessages: React.FC = () => {
     const { chatId } = useParams<{ chatId: string }>();
+    const navigate = useNavigate();
+    const { chats, getAllChats } = useChatsContext();
     const latestStreamMessagesRef = useRef<IMessage[]>([]);
+    const createdFallbackForChatIdRef = useRef<string | null>(null);
 
     const [error, setError] = useState<string | null>(null);
     const [appendedMessages, setAppendedMessages] = useState<IMessage[]>([]);
     const [streamingMessages, setStreamingMessages] = useState<IMessage[]>([]);
     const [isDisabled, setIsDisabled] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isValidatingChat, setIsValidatingChat] = useState(true);
     const [prompt, setPrompt] = useState('');
 
     const handleError = useCallback((error: unknown) => {
@@ -42,8 +47,77 @@ export const ChatMessages: React.FC = () => {
         latestStreamMessagesRef.current = [];
     }, []);
 
+    useEffect(() => {
+        let isActive = true;
+
+        const ensureCurrentChatExists = async () => {
+            if (!chatId) {
+                if (isActive) {
+                    setIsValidatingChat(false);
+                }
+                return;
+            }
+
+            setIsValidatingChat(true);
+
+            const routeChatId = Number(chatId);
+            if (!Number.isFinite(routeChatId)) {
+                if (isActive) {
+                    setError('ID de conversa inválido.');
+                    setIsValidatingChat(false);
+                }
+                return;
+            }
+
+            try {
+                let contextChats = chats;
+
+                if (!contextChats.length) {
+                    contextChats = await getAllChats();
+                }
+
+                const hasCurrentChat = contextChats.some((chat) => chat.id === routeChatId);
+
+                if (!hasCurrentChat) {
+                    if (createdFallbackForChatIdRef.current === chatId) {
+                        return;
+                    }
+
+                    createdFallbackForChatIdRef.current = chatId;
+
+                    const createdChat = await DatalabAPI.ChatsResource.createChat({
+                        title: 'Nova conversa - Sem título',
+                    });
+
+                    await getAllChats();
+
+                    if (isActive) {
+                        isActive = false;
+                        navigate(`/conversas/${createdChat.id}/mensagens`, { replace: true });
+                    }
+                }
+
+                if (isActive) {
+                    createdFallbackForChatIdRef.current = null;
+                    setError(null);
+                }
+            } catch (validationError: unknown) {
+                if (isActive) {
+                    handleError(validationError);
+                }
+            } finally {
+                if (isActive) {
+                    setIsValidatingChat(false);
+                }
+                isActive = false;
+            }
+        };
+
+        ensureCurrentChatExists();
+    }, [chatId, chats, getAllChats, navigate, handleError]);
+
     const fetchMessages = useCallback(async (): Promise<IMessage[]> => {
-        if (!chatId) return [];
+        if (!chatId || isValidatingChat) return [];
 
         setAppendedMessages([]);
         setStreamingMessages([]);
@@ -57,7 +131,7 @@ export const ChatMessages: React.FC = () => {
         });
 
         return finalMessages;
-    }, [chatId]);
+    }, [chatId, isValidatingChat]);
 
     const handleSendMessage = async () => {
         if (!prompt.trim() || !chatId) return;
@@ -87,7 +161,7 @@ export const ChatMessages: React.FC = () => {
             </MessagesHeader>
 
             <MessagesBody>
-                <AsyncResource fetcher={fetchMessages} dependencies={[chatId]}>
+                <AsyncResource fetcher={fetchMessages} dependencies={[chatId, isValidatingChat]}>
                     {(initialMessages) => (
                         <MessageList
                             messages={[...initialMessages, ...appendedMessages]}

@@ -1,9 +1,9 @@
 import { useState, useActionState, useEffect, useCallback } from 'react';
-import { type IRetrieveChat } from '../../../services/datalab-api/chatsResource';
 import { createChatAction } from '../actions';
 import { toast } from 'react-toastify';
 import { Modal } from '../../../components/UI/Modal/modal';
 import { INITIAL_ACTION_STATE, type ActionState } from '../../../types/actions';
+import { type IRetrieveChat } from '../../../services/datalab-api/chatsResource';
 import {
     CreateChatActions,
     CreateChatButton,
@@ -17,7 +17,7 @@ import {
 } from './chats-components.style';
 
 interface ICreateChatProps {
-    onCreateChat: (chat: IRetrieveChat) => void;
+    onCreateChat: () => Promise<unknown> | void;
 }
 
 export const CreateChat = ({ onCreateChat }: ICreateChatProps) => {
@@ -27,7 +27,7 @@ export const CreateChat = ({ onCreateChat }: ICreateChatProps) => {
     const handleCreateChatResult = useCallback((formState: ActionState<IRetrieveChat>) => {
         if (formState.timestamp === 0) return;
         if (formState.success && formState.data) {
-            onCreateChat(formState.data);
+            void onCreateChat();
             setIsOpen(false);
         } else if (formState.error) {
             toast.error(formState.error);

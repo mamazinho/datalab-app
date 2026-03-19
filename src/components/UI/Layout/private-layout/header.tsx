@@ -30,7 +30,8 @@ export const Header = () => {
 
     const menuPages = [
         { label: 'Página inicial', href: '/' },
-        { label: 'Conversas', href: '/chats' }
+        { label: 'Conversas', href: '/conversas' },
+        { label: 'Cursos', href: '/cursos' }
     ];
 
     const profileAvatarUrl = useMemo(() => {
