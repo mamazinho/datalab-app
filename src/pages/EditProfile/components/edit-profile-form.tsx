@@ -4,7 +4,6 @@ import {
   Footer,
   Form,
   FormError,
-  PhoneNumberWrapper,
   SaveButton,
   SectionTitle,
   StyledField,
@@ -19,6 +18,7 @@ import PhoneInput, { getCountries } from 'react-phone-number-input';
 import ptBR from 'react-phone-number-input/locale/pt';
 import { PasswordInput } from '../../../components/UI/Inputs/password-input';
 import { PasswordRequirements } from '../../../components/UI/Inputs/password-requirements';
+import { PhoneNumberWrapper } from '../../../styles/design-system.style';
 
 interface IEditProfileFormProps {
   user: IUserResponse;
