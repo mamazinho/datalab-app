@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
+import PhoneInput, { getCountries } from 'react-phone-number-input';
+import ptBR from 'react-phone-number-input/locale/pt';
 import {
     AuthForm,
     AuthHeader,
@@ -8,6 +10,7 @@ import {
     FieldsWrapper,
     Input,
     Label,
+    PhoneNumberWrapper,
     PrimaryButton,
     Subtitle,
 } from '../../../styles/design-system.style';
@@ -17,6 +20,9 @@ interface IRegisterFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
 }
 
 export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, ...props }) => {
+    const phoneCountries = useMemo(() => getCountries(), []);
+    const [phoneNumber, setPhoneNumber] = useState('');
+
     return (
         <>
             <AuthHeader>
@@ -52,14 +58,22 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, ...props
 
                     <Field>
                         <Label htmlFor="inputPhoneNumber">Telefone</Label>
-                        <Input
-                            type="tel"
-                            id="inputPhoneNumber"
-                            name="phone_number"
-                            placeholder="+5541999999999"
-                            required
-                            autoComplete="tel"
-                        />
+                        <PhoneNumberWrapper>
+                            <PhoneInput
+                                id="inputPhoneNumber"
+                                name="phone_number"
+                                countries={phoneCountries}
+                                labels={ptBR}
+                                international
+                                countryCallingCodeEditable={false}
+                                defaultCountry="BR"
+                                value={phoneNumber}
+                                onChange={(value) => setPhoneNumber(value || '')}
+                                placeholder="Digite seu telefone"
+                                autoComplete="tel"
+                                required
+                            />
+                        </PhoneNumberWrapper>
                     </Field>
 
                     <Field>
