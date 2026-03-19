@@ -5,6 +5,7 @@ import { AuthProvider } from "./contexts/auth";
 import { ToastContainer } from 'react-toastify';
 import { CustomThemeProvider, useTheme } from "./contexts/theme";
 import { useAuthContext } from "./contexts/auth";
+import { ChatsProvider } from "./contexts/chats";
 
 const ThemeBootstrap = () => {
     const { me } = useAuthContext();
@@ -32,9 +33,11 @@ export function App() {
     return (
         <CustomThemeProvider>
             <AuthProvider>
-                <ThemeBootstrap />
-                <ToastContainer /> 
-                <RouterProvider router={routes} />
+                <ChatsProvider>
+                    <ThemeBootstrap />
+                    <ToastContainer /> 
+                    <RouterProvider router={routes} />
+                </ChatsProvider>
             </AuthProvider>
         </CustomThemeProvider>
     );

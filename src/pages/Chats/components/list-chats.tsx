@@ -9,7 +9,7 @@ export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
         <ChatListWrapper>
             {chats.map(chat => (
                 <div key={chat.id}>
-                    <ChatItemLink to={`/chats/${chat.id}/messages`}>
+                    <ChatItemLink to={`/conversas/${chat.id}/mensagens`}>
                         <ChatItemCard>
                             <ChatTitle>{chat.title}</ChatTitle>
                         </ChatItemCard>
