@@ -1,5 +1,37 @@
 import { Link } from 'react-router-dom';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
+
+const spinDecay3d = keyframes`
+  0% {
+    transform: rotateY(0deg);
+  }
+
+  100% {
+    transform: rotateY(2160deg);
+  }
+`;
+
+const liftAndScale = keyframes`
+  0% {
+    translate: 0 0;
+    scale: 1;
+  }
+
+  16% {
+    translate: 0 -5px;
+    scale: 1.04;
+  }
+
+  32% {
+    translate: 0 0;
+    scale: 1;
+  }
+
+  100% {
+    translate: 0 0;
+    scale: 1;
+  }
+`;
 
 export const HomeContainer = styled.div`
   width: 100%;
@@ -61,6 +93,24 @@ export const FeatureGrid = styled.section`
   }
 `;
 
+export const FeatureIcon = styled.div`
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.8rem;
+  display: grid;
+  place-items: center;
+  margin-bottom: 1rem;
+  background: ${({ theme }) => theme.colors.surfaceAlt};
+  perspective: 700px;
+
+  > span {
+    display: inline-block;
+    transform-origin: center;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+`;
+
 export const FeatureCard = styled.article`
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 1.1rem;
@@ -70,21 +120,29 @@ export const FeatureCard = styled.article`
   display: flex;
   flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
 
   &:hover {
     transform: translateY(-2px);
     box-shadow: 0 14px 24px ${({ theme }) => theme.colors.shadow};
-  }
-`;
 
-export const FeatureIcon = styled.div`
-  width: 3rem;
-  height: 3rem;
-  border-radius: 0.8rem;
-  display: grid;
-  place-items: center;
-  margin-bottom: 1rem;
-  background: ${({ theme }) => theme.colors.surfaceAlt};
+    ${FeatureIcon} > span {
+      animation:
+        ${spinDecay3d} 1s cubic-bezier(0.06, 0.9, 0.25, 1) both,
+        ${liftAndScale} 3s linear both;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:hover {
+      transform: none;
+      box-shadow: 0 10px 18px ${({ theme }) => theme.colors.shadow};
+
+      ${FeatureIcon} > span {
+        animation: none;
+      }
+    }
+  }
 `;
 
 export const FeatureTitle = styled.h5`
