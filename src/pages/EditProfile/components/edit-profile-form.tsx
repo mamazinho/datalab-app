@@ -11,9 +11,10 @@ import {
   StyledInput,
   StyledLabel,
   StyledSelect,
+  StyledOption,
 } from './edit-profile-form.style';
 import { ProfileAvatarUploader } from './profile-avatar-uploader';
-import type { IUserResponse } from '../../../services/datalab-api/usersResource';
+import type { IUserConfig, IUserResponse } from '../../../services/datalab-api/usersResource';
 import { PasswordInput } from '../../../components/UI/Inputs/Password/password-input';
 import { PhoneField } from '../../../components/UI/Inputs/Phone';
 
@@ -23,6 +24,12 @@ interface IEditProfileFormProps {
   isPending: boolean;
   error?: string;
 }
+
+const THEME_OPTIONS: { value: IUserConfig['theme']; label: string }[] = [
+  { value: 'light', label: 'Claro' },
+  { value: 'dark', label: 'Escuro' },
+  { value: 'system', label: 'Sistema' },
+];
 
 const toAvatarFallbackUrl = (name: string) => {
   const firstName = name.trim().split(' ')[0] || 'U';
@@ -63,7 +70,7 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
   const [phoneNumber, setPhoneNumber] = useState(user.phone_number || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-
+  const [theme, setTheme] = useState<IUserConfig['theme']>(user?.config?.theme || 'system');
   const firstName = user.name.trim().split(' ')[0] || 'Usuário';
   const displayAvatarUrl = avatarUrl || toAvatarFallbackUrl(user.name);
 
@@ -82,14 +89,16 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
     }
   };
 
-  const customAction = async (formData: FormData): Promise<void> => {
+  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
     setPassword('');
     setConfirmPassword('');
     action(formData);
   };
 
   return (
-    <Form action={customAction}>
+    <Form onSubmit={handleSubmit}>
       <AvatarRow>
         <ProfileAvatarUploader
           avatarUrl={displayAvatarUrl}
@@ -133,10 +142,17 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
 
         <StyledField>
           <StyledLabel htmlFor="inputTheme">Tema</StyledLabel>
-          <StyledSelect id="inputTheme" name="theme" defaultValue={user?.config?.theme || 'system'}>
-            <option value="light">Claro</option>
-            <option value="dark">Escuro</option>
-            <option value="system">Sistema</option>
+          <StyledSelect
+            id="inputTheme"
+            name="theme"
+            value={theme}
+            onChange={(event) => setTheme(event.target.value as IUserConfig['theme'])}
+          >
+            {THEME_OPTIONS.map((option) => (
+              <StyledOption key={option.value} value={option.value}>
+                {option.label}
+              </StyledOption>
+            ))}
           </StyledSelect>
         </StyledField>
 

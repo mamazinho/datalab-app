@@ -97,12 +97,21 @@ export const StyledSelect = styled.select`
   background: ${({ theme }) => theme.colors.inputBackground};
   color: ${({ theme }) => theme.colors.text};
   outline: none;
+  cursor: pointer;
 
   &:focus {
     border-color: ${({ theme }) => theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(255, 190, 0, 0.25);
     background: ${({ theme }) => theme.colors.surface};
   }
+`;
+
+export const StyledOption = styled.option`
+  background-color: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  padding: 0.8rem;
+  font-size: 1rem;
+  border-radius: 0.85rem;
 `;
 
 export const Footer = styled.div`
