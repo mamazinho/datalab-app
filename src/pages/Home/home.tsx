@@ -38,13 +38,15 @@ export const Home: React.FC = () => {
         
         <FeatureGrid>
           <FeatureCard>
-            <FeatureIcon>🤖</FeatureIcon>
-            <FeatureTitle>Chat AI</FeatureTitle>
+            <FeatureIcon>
+              <span aria-hidden="true">🤖</span>
+            </FeatureIcon>
+            <FeatureTitle>DataLab AI</FeatureTitle>
             <FeatureDescription>
                 Converse com nossa inteligência artificial e tire suas dúvidas em tempo real.
             </FeatureDescription>
             <FeatureLink to="/conversas">
-                Acessar Chats
+                Acessar conversas
             </FeatureLink>
           </FeatureCard>
         </FeatureGrid>
