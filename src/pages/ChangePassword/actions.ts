@@ -1,20 +1,19 @@
 import { DatalabAPI } from "../../services/datalab-api";
 import type { ActionState } from "../../types/actions";
-
+import { changePasswordSchema } from "./schemas";
 
 export const changePasswordAction = async (_prevState: ActionState, formData: FormData): Promise<ActionState> => {
-    const password = formData.get('password') as string;
-    const confirmPassword = formData.get('confirmPassword') as string;
-    const email = formData.get('email') as string;
-    const code = formData.get('code') as string;
+    const result = changePasswordSchema.safeParse(Object.fromEntries(formData));
 
-    if (password !== confirmPassword) {
-        return { success: false, error: 'As senhas não coincidem.', timestamp: Date.now() };
+    if (!result.success) {
+        return { 
+            success: false, 
+            error: result.error.issues[0]?.message || 'Parâmetros inválidos.', 
+            timestamp: Date.now() 
+        };
     }
 
-    if (!email || !code) {
-        return { success: false, error: 'Link inválido (email ou código ausente).', timestamp: Date.now() };
-    }
+    const { email, code, password } = result.data;
 
     try {
         await DatalabAPI.UsersResource.changePassword({

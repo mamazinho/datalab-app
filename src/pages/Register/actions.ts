@@ -1,38 +1,29 @@
 import { DatalabAPI } from "../../services/datalab-api";
 import { type ActionState } from "../../types/actions";
 import { type IUserResponse } from "../../services/datalab-api/usersResource";
+import { registerSchema, confirmAccountSchema } from "./schemas";
 
 export async function registerUserAction(
   _prevState: ActionState<IUserResponse>,
   formData: FormData,
 ): Promise<ActionState<IUserResponse>> {
-  const name = formData.get("name") as string;
-  const email = formData.get("email") as string;
-  const phoneNumber = (formData.get("phone_number") as string | null)?.trim() ?? '';
-  const password = formData.get("password") as string;
-  const confirmPassword = formData.get("confirmPassword") as string;
+  const result = registerSchema.safeParse(Object.fromEntries(formData));
 
-  if (!phoneNumber || !/^\+\d+$/.test(phoneNumber)) {
+  if (!result.success) {
     return {
       success: false,
-      error: "Telefone é obrigatório e deve estar no formato +<codigo><numero>.",
+      error: result.error.issues[0]?.message || 'Parâmetros de cadastro inválidos.',
       timestamp: Date.now(),
     };
   }
 
-  if (password !== confirmPassword) {
-    return {
-      success: false,
-      error: "As senhas não coincidem.",
-      timestamp: Date.now(),
-    };
-  }
+  const { name, email, phone_number, password } = result.data;
 
   try {
     const response: IUserResponse = await DatalabAPI.UsersResource.create({
       name,
       email,
-      phone_number: phoneNumber,
+      phone_number: phone_number || '', // Manda vazio ou a formatada
       password,
     });
 
@@ -61,17 +52,17 @@ export async function confirmUserAction(
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const code = formData.get("code") as string;
-  const userIdData = formData.get("userId");
+  const result = confirmAccountSchema.safeParse(Object.fromEntries(formData));
 
-  if (!userIdData) {
+  if (!result.success) {
     return {
       success: false,
-      error: "Usuário não identificado.",
+      error: result.error.issues[0]?.message || 'Código de confirmação inválido.',
       timestamp: Date.now(),
     };
   }
-  const userId = parseInt(userIdData as string);
+
+  const { code, userId } = result.data;
 
   try {
     await DatalabAPI.UsersResource.confirmAccount(userId, { code });

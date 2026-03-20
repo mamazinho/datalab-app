@@ -42,5 +42,3 @@ export const editProfileFormSchema = z
       });
     }
   });
-
-export type EditProfileFormValues = z.infer<typeof editProfileFormSchema>;

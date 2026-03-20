@@ -3,13 +3,23 @@ import type {
   ILoginUserResponse,
 } from "../../services/datalab-api/authResource";
 import type { ActionState } from "../../types/actions";
+import { loginSchema } from "./schemas";
 
 export const loginAction = async (
   _prevState: ActionState<ILoginUserResponse>,
   formData: FormData,
 ): Promise<ActionState<ILoginUserResponse>> => {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const result = loginSchema.safeParse(Object.fromEntries(formData));
+
+  if (!result.success) {
+    return {
+      success: false,
+      error: result.error.issues[0]?.message || 'Parâmetros de login inválidos.',
+      timestamp: Date.now(),
+    };
+  }
+
+  const { email, password } = result.data;
 
   try {
     const response = await DatalabAPI.AuthResource.login({ email, password });
