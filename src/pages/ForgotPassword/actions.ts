@@ -1,11 +1,23 @@
 import { DatalabAPI } from "../../services/datalab-api";
 import type { ActionState } from "../../types/actions";
+import { forgotPasswordSchema } from "./schemas";
 
 export const forgotPasswordAction = async (
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> => {
-  const email = formData.get("email") as string;
+  const result = forgotPasswordSchema.safeParse(Object.fromEntries(formData));
+
+  if (!result.success) {
+    return {
+      success: false,
+      error: result.error.issues[0]?.message || 'E-mail inválido.',
+      timestamp: Date.now(),
+    };
+  }
+
+  const { email } = result.data;
+
   try {
     await DatalabAPI.UsersResource.forgotPassword({ user_email: email });
     return { success: true, timestamp: Date.now() };

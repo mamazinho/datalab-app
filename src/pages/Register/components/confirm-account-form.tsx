@@ -8,12 +8,11 @@ import {
     Description,
     Field,
     FieldsWrapper,
-    Input,
     Label,
     PrimaryButton,
     Subtitle,
 } from '../../../styles/design-system.style';
-import styled from 'styled-components';
+import { Actions, CodeInput } from './confirm-account-form.style';
 
 interface IConfirmAccountFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
     isPending: boolean;
@@ -21,20 +20,6 @@ interface IConfirmAccountFormProps extends React.FormHTMLAttributes<HTMLFormElem
     userId: number | null;
     onResendCode: () => Promise<void>;
 }
-
-const CodeInput = styled(Input)`
-    text-align: center;
-    letter-spacing: 0.35rem;
-    font-size: 1.05rem;
-`;
-
-const Actions = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-    margin-top: 0.5rem;
-`;
-
 export const ConfirmAccountForm: React.FC<IConfirmAccountFormProps> = ({
     isPending,
     email,

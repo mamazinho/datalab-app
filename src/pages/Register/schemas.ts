@@ -1,0 +1,57 @@
+import { z } from 'zod';
+import { passwordSchema } from '../../schemas/password';
+
+export const registerSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(3, 'O nome deve ter mais de 2 caracteres.')
+    .regex(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/, 'O nome deve conter apenas letras.'),
+  email: z
+    .string()
+    .trim()
+    .min(1, 'O e-mail é obrigatório.')
+    .email('O e-mail deve ser em um formato válido.'),
+  phone_number: z
+    .string()
+    .trim()
+    .regex(/^\+\d{1,31}$/, 'Telefone deve comecar com + e conter apenas numeros (maximo de 32 caracteres).')
+    .optional()
+    .or(z.literal('')),
+  password: z
+    .string()
+    .trim()
+    .min(1, 'A senha é obrigatória.'),
+  confirmPassword: z
+    .string()
+    .trim()
+    .min(1, 'A confirmação de senha é obrigatória.'),
+}).superRefine(({ password, confirmPassword }, context) => {
+  const passwordValidation = passwordSchema.safeParse(password);
+  if (!passwordValidation.success) {
+    for (const issue of passwordValidation.error.issues) {
+      context.addIssue({
+        code: 'custom',
+        path: ['password'],
+        message: issue.message,
+      });
+    }
+  }
+
+  if (password !== confirmPassword) {
+    context.addIssue({
+      code: 'custom',
+      path: ['confirmPassword'],
+      message: 'As senhas nao coincidem.',
+    });
+  }
+});
+
+export const confirmAccountSchema = z.object({
+  userId: z.coerce.number().min(1, 'ID do usuário é obrigatório.'),
+  code: z
+    .string()
+    .trim()
+    .length(6, 'O código deve ter exatamente 6 caracteres.')
+    .regex(/^\d+$/, 'O código deve conter apenas números.'),
+});
