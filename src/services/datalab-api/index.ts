@@ -2,6 +2,7 @@ import { ChatsResource } from "./chatsResource";
 import { ChatMessagesResource } from "./chatMessagesResource";
 import { UsersResource } from "./usersResource";
 import { AuthResource } from "./authResource";
+import { AgentsResource } from "./agentsResource";
 // export * from "./chatsResource";
 // export * from "./chatMessagesResource";
 // export * from "./usersResource";
@@ -10,4 +11,5 @@ export const DatalabAPI = {
   ChatMessagesResource,
   UsersResource,
   AuthResource,
+  AgentsResource,
 };

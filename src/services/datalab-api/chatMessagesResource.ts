@@ -12,10 +12,10 @@ export const ChatMessagesResource = {
     )
     return response.data;
   },
-  async sendMessage(chatId: number, message: string): Promise<ReadableStream<Uint8Array>> {
+  async sendMessage(chatId: number, message: string, modelName: string): Promise<ReadableStream<Uint8Array>> {
     const response = await axiosPrivateInstance.post(
       `chats/${chatId}/messages/`,
-      {'prompt': message.trim()},
+      {'prompt': message.trim(), 'model_name': modelName},
       {
         adapter: 'fetch',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/x-www-form-urlencoded' },
