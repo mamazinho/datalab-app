@@ -22,6 +22,7 @@ export const ChatMessages: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isValidatingChat, setIsValidatingChat] = useState(true);
     const [prompt, setPrompt] = useState('');
+    const [selectedModel, setSelectedModel] = useState('');
 
     const handleError = useCallback((error: unknown) => {
         console.error(error);
@@ -134,7 +135,7 @@ export const ChatMessages: React.FC = () => {
     }, [chatId, isValidatingChat]);
 
     const handleSendMessage = async () => {
-        if (!prompt.trim() || !chatId) return;
+        if (!prompt.trim() || !chatId || !selectedModel) return;
         setIsLoading(true);
         setIsDisabled(true);
         setError(null);
@@ -143,7 +144,7 @@ export const ChatMessages: React.FC = () => {
         setPrompt('');
 
         try {
-            const stream = await DatalabAPI.ChatMessagesResource.sendMessage(Number(chatId), currentPrompt);
+            const stream = await DatalabAPI.ChatMessagesResource.sendMessage(Number(chatId), currentPrompt, selectedModel);
             await processStreamResponse(stream, streamingMessage, streamingCompleted);
         } catch (error) {
             handleError(error);
@@ -179,6 +180,8 @@ export const ChatMessages: React.FC = () => {
 
             <MessageInput
                 value={prompt}
+                modelName={selectedModel}
+                onModelChange={setSelectedModel}
                 onChange={setPrompt}
                 onSubmit={handleSendMessage}
                 isLoading={isLoading}
