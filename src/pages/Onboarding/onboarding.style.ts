@@ -211,3 +211,50 @@ export const OnboardingDivider = styled.div`
     color: ${({ theme }) => theme.colors.textSecondary};
   }
 `;
+
+export const CompanyPickerList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+`;
+
+export const CompanyPickerItem = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.8rem;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.inputBackground};
+  color: ${({ theme }) => theme.colors.text};
+  font-family: ${({ theme }) => theme.fonts.main};
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary};
+    background: ${({ theme }) => theme.colors.surfaceAlt};
+  }
+`;
+
+export const CompanyPickerName = styled.span`
+  font-size: 0.95rem;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const CompanyPickerRole = styled.span`
+  font-size: 0.78rem;
+  color: ${({ theme }) => theme.colors.textSecondary};
+  flex-shrink: 0;
+  text-transform: capitalize;
+`;
