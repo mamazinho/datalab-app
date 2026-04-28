@@ -24,12 +24,14 @@ export const PublicRoutes = () => {
         : <Outlet />;
 };
 
-// Rota de onboarding: só acessível enquanto o usuário não tiver nenhuma empresa.
-// Uma vez com empresa, redireciona para "/" e nunca mais aparece.
+// Wrapper de onboarding: exige token mas NÃO usa PrivateLayout (sem header/footer).
+// Se não autenticado → /login. Se já tem empresa → /. Caso contrário → renderiza.
 export const OnboardingRoute = () => {
-    const { isAuthLoading } = useAuthContext();
+    const { accessToken, isAuthLoading } = useAuthContext();
     const { currentCompany } = useCompanyContext();
+    const location = useLocation();
 
+    if (!accessToken) return <Navigate to="/login" state={{ from: location }} replace />;
     if (isAuthLoading) return null;
 
     return currentCompany === null

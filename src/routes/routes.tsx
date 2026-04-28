@@ -40,20 +40,20 @@ export const routes = createBrowserRouter([
             },
         ],
     },
+    // Onboarding: autenticado, mas sem layout (sem header/footer)
+    {
+        element: <OnboardingRoute />,
+        children: [
+            {
+                path: "/onboarding",
+                element: <Onboarding />,
+            },
+        ],
+    },
     // Protected routes
     {
         element: <PrivateRoutes />,
         children: [
-            // Onboarding: só acessível sem empresa. Com empresa, redireciona para "/"
-            {
-                element: <OnboardingRoute />,
-                children: [
-                    {
-                        path: "/onboarding",
-                        element: <Onboarding />,
-                    },
-                ],
-            },
             // Rotas que exigem empresa selecionada
             {
                 element: <CompanyRoutes />,
