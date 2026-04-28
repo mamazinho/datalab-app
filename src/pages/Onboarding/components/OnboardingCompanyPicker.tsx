@@ -18,7 +18,7 @@ export const OnboardingCompanyPicker = () => {
   const { setCurrentCompany } = useCompanyContext();
   const navigate = useNavigate();
 
-  const companies: IUserCompany[] = me?.companies ?? [];
+  const userCompanies: IUserCompany[] = me?.companies ?? [];
 
   const handleSelect = (company: IUserCompany) => {
     setCurrentCompany(company);
@@ -33,11 +33,11 @@ export const OnboardingCompanyPicker = () => {
           Você faz parte de mais de uma empresa. Escolha com qual deseja continuar.
         </OnboardingSubtitle>
         <CompanyPickerList>
-          {companies.map((uc) => (
-            <li key={uc.company.id}>
-              <CompanyPickerItem type="button" onClick={() => handleSelect(uc)}>
-                <CompanyPickerName>{uc.company.name}</CompanyPickerName>
-                <CompanyPickerRole>{uc.membership.membership_role}</CompanyPickerRole>
+          {userCompanies.map((userCompany) => (
+            <li key={userCompany.id}>
+              <CompanyPickerItem type="button" onClick={() => handleSelect(userCompany)}>
+                <CompanyPickerName>{userCompany.name}</CompanyPickerName>
+                <CompanyPickerRole>{userCompany.membership.membership_role}</CompanyPickerRole>
               </CompanyPickerItem>
             </li>
           ))}

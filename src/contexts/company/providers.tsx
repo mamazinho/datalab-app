@@ -17,7 +17,7 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
   // Derivação síncrona: não depende de useEffect, atualiza no mesmo render que `companies` muda
   const currentCompany = useMemo<IUserCompany | null>(() => {
     if (selectedCompany) {
-      const stillExists = companies.some((c) => c.company.id === selectedCompany.company.id);
+      const stillExists = companies.some((company) => company.id === selectedCompany.id);
       if (stillExists) return selectedCompany;
     }
     // Auto-seleciona apenas quando há exatamente 1 empresa.
@@ -28,7 +28,7 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
 
   // Sincroniza o ID da company no interceptor axios
   useEffect(() => {
-    setCompanyId(currentCompany?.company.id ?? null);
+    setCompanyId(currentCompany?.id ?? null);
   }, [currentCompany]);
 
   // Carrega as permissões do membro sempre que a company ativa mudar

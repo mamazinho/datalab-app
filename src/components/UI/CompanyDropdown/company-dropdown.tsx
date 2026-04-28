@@ -20,7 +20,7 @@ export const CompanyDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
-  const companies: IUserCompany[] = me?.companies ?? [];
+  const userCompanies: IUserCompany[] = me?.companies ?? [];
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -32,7 +32,7 @@ export const CompanyDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  console.log("CompanyDropdown render", { currentCompany, companies });
+  console.log("CompanyDropdown render", { currentCompany, companies: userCompanies });
   if (!currentCompany) return <Navigate to="/onboarding" replace />;
 
   const handleSelect = (userCompany: IUserCompany) => {
@@ -48,7 +48,7 @@ export const CompanyDropdown = () => {
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
-        <DropdownTriggerName>{currentCompany.company.name}</DropdownTriggerName>
+        <DropdownTriggerName>{currentCompany.name}</DropdownTriggerName>
         <DropdownChevron
           fill="none"
           stroke="currentColor"
@@ -62,19 +62,19 @@ export const CompanyDropdown = () => {
       {isOpen && (
         <DropdownMenu role="listbox">
           <DropdownMenuLabel>Empresa ativa</DropdownMenuLabel>
-          {companies.map((uc) => {
-            const isActive = uc.company.id === currentCompany.company.id;
-            const isOwner = uc.membership.membership_role === 'owner';
+          {userCompanies.map((userCompany) => {
+            const isActive = userCompany.id === currentCompany.id;
+            const isOwner = userCompany.membership.membership_role === 'owner';
             return (
               <DropdownItem
-                key={uc.company.id}
+                key={userCompany.id}
                 role="option"
                 aria-selected={isActive}
                 $active={isActive}
-                onClick={() => handleSelect(uc)}
+                onClick={() => handleSelect(userCompany)}
               >
                 {isActive && <ActiveDot />}
-                {uc.company.name}
+                {userCompany.name}
                 {isOwner && (
                   <svg
                     viewBox="0 0 24 24"

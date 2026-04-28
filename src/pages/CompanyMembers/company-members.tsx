@@ -41,7 +41,7 @@ export const CompanyMembers = () => {
         <div>
           <MembersPageTitle>Gerenciamento de membros</MembersPageTitle>
           <MembersPageSubtitle>
-            {currentCompany?.company.name} · Gerencie quem tem acesso e quais rotas cada membro pode usar.
+            {currentCompany?.name} · Gerencie quem tem acesso e quais rotas cada membro pode usar.
           </MembersPageSubtitle>
         </div>
         <InviteMemberButton onClick={() => setIsInviteOpen(true)}>
