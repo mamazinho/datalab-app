@@ -101,6 +101,7 @@ export const ProfileButton = styled.button`
   border-radius: 999px;
   padding: 0;
   cursor: pointer;
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;

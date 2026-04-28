@@ -1,8 +1,8 @@
-import { axiosPrivateInstance } from "./axios";
+import { axiosCompanyInstance } from "./axios";
 
 export const ChatMessagesResource = {
   async getChatMessages(chatId: number): Promise<ReadableStream<Uint8Array>> {
-    const response = await axiosPrivateInstance.get(
+    const response = await axiosCompanyInstance.get(
       `chats/${chatId}/messages/`,
       { 
         adapter: 'fetch',
@@ -13,7 +13,7 @@ export const ChatMessagesResource = {
     return response.data;
   },
   async sendMessage(chatId: number, message: string, modelName: string): Promise<ReadableStream<Uint8Array>> {
-    const response = await axiosPrivateInstance.post(
+    const response = await axiosCompanyInstance.post(
       `chats/${chatId}/messages/`,
       {'prompt': message.trim(), 'model_name': modelName},
       {

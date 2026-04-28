@@ -5,6 +5,7 @@ import type { IUserResponse } from "../../services/datalab-api/usersResource";
 interface IAuthContextProps {
   accessToken: string | undefined;
   me: IUserResponse;
+  isAuthLoading: boolean;
 
   login: (loginResponse: ILoginUserResponse) => Promise<void>;
   logout: () => void;
