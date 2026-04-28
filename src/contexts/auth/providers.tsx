@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import axios from "axios";
 import { AuthContext } from "./contexts";
 import { type ILoginUserResponse } from '../../services/datalab-api/authResource';
 import { DatalabAPI } from "../../services/datalab-api";
@@ -10,6 +11,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return storedToken || undefined;
   });
   const [me, setMe] = useState({} as IUserResponse);
+  // Começa como `true` se há token em cache, para evitar redirects prematuros
+  const [isAuthLoading, setIsAuthLoading] = useState(() => !!localStorage.getItem("accessToken"));
 
   const getMe = useCallback(async (): Promise<IUserResponse> => {
     try {
@@ -22,15 +25,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (!accessToken) {
-      setMe({} as IUserResponse);
-      return;
-    }
-
-    void getMe();
-  }, [accessToken, getMe]);
-
   const login = useCallback(async (loginResponse: ILoginUserResponse) => {
     try {
       setAccessToken(loginResponse.access_token)
@@ -42,14 +36,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const logout = useCallback(() => {
-    setAccessToken(undefined)
+    setAccessToken(undefined);
     setMe({} as IUserResponse);
+    setIsAuthLoading(false);
     localStorage.removeItem("accessToken");
   }, []);
 
+  useEffect(() => {
+    if (!accessToken) {
+      setMe({} as IUserResponse);
+      setIsAuthLoading(false);
+      return;
+    }
+
+    setIsAuthLoading(true);
+    getMe()
+      .catch((error: unknown) => {
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          logout();
+        }
+      })
+      .finally(() => setIsAuthLoading(false));
+  }, [accessToken, getMe, logout]);
+
   const contextValue = useMemo(
-    () => ({ accessToken, me, login, logout, getMe }),
-    [accessToken, me, login, logout, getMe],
+    () => ({ accessToken, me, isAuthLoading, login, logout, getMe }),
+    [accessToken, me, isAuthLoading, login, logout, getMe],
   );
 
   return (

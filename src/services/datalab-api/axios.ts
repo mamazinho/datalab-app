@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type InternalAxiosRequestConfig } from "axios";
 
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_DATALAB_API_URL,
@@ -9,16 +9,41 @@ export const axiosInstance = axios.create({
   },
 });
 
+// Slot para o ID da company selecionada — atualizado pelo CompanyProvider
+let _currentCompanyId: number | null = null;
+
+export function setCompanyId(id: number | null): void {
+  _currentCompanyId = id;
+}
+
+export function getCompanyId(): number | null {
+  return _currentCompanyId;
+}
+
+
 export const axiosPrivateInstance = axios.create({ ...axiosInstance.defaults });
+export const axiosCompanyInstance = axios.create({ ...axiosPrivateInstance.defaults });
 
-
-axiosPrivateInstance.interceptors.request.use(config => {
+const authInterceptor = (config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem('accessToken');
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`;
   }
   return config;
-});
+};
+
+const companyInterceptor = (config: InternalAxiosRequestConfig) => {
+  const companyId = getCompanyId();
+  console.log("Attaching company ID to request:", companyId, config.headers);
+  if (companyId) {
+    config.headers['X-Company-Id'] = String(companyId);
+  }
+  return config;
+};
+
+axiosPrivateInstance.interceptors.request.use(authInterceptor);
+axiosCompanyInstance.interceptors.request.use(authInterceptor);
+axiosCompanyInstance.interceptors.request.use(companyInterceptor);
 
 const handleAxiosError = (error: Error) => {
   let message = "Ocorreu um erro inesperado. Tente novamente mais tarde.";
@@ -49,3 +74,4 @@ const handleAxiosError = (error: Error) => {
 
 axiosInstance.interceptors.response.use((response) => response, handleAxiosError);
 axiosPrivateInstance.interceptors.response.use((response) => response, handleAxiosError);
+axiosCompanyInstance.interceptors.response.use((response) => response, handleAxiosError);

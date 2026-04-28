@@ -8,7 +8,9 @@ import { ForgotPassword } from "../pages/ForgotPassword";
 import { ChangePassword } from "../pages/ChangePassword";
 import { GoogleCallback } from "../pages/AuthCallback/google-callback";
 import { EditProfile } from "../pages/EditProfile";
-import { PrivateRoutes, PublicRoutes } from "./wrappers";
+import { Onboarding } from "../pages/Onboarding";
+import { CompanyMembers } from "../pages/CompanyMembers";
+import { PrivateRoutes, PublicRoutes, CompanyRoutes, OnboardingRoute, PermissionRoute } from "./wrappers";
 
 
 export const routes = createBrowserRouter([
@@ -42,27 +44,59 @@ export const routes = createBrowserRouter([
     {
         element: <PrivateRoutes />,
         children: [
+            // Onboarding: só acessível sem empresa. Com empresa, redireciona para "/"
             {
-                path: "/",
-                element: <Home />,
-            },
-            {
-                path: "/conversas",
+                element: <OnboardingRoute />,
                 children: [
                     {
-                        index: true,
-                        element: <ListChats />,
-                    },
-                    {
-                        path: ":chatId/mensagens",
-                        element: <ChatMessages />,
+                        path: "/onboarding",
+                        element: <Onboarding />,
                     },
                 ],
             },
+            // Rotas que exigem empresa selecionada
             {
-                path: "/perfil/editar",
-                element: <EditProfile />,
-            }
-        ]
+                element: <CompanyRoutes />,
+                children: [
+                    {
+                        path: "/",
+                        element: <Home />,
+                    },
+                    // Rotas de chat — exigem permissão na tag "chat"
+                    {
+                        element: <PermissionRoute tag="chat" />,
+                        children: [
+                            {
+                                path: "/conversas",
+                                children: [
+                                    {
+                                        index: true,
+                                        element: <ListChats />,
+                                    },
+                                    {
+                                        path: ":chatId/mensagens",
+                                        element: <ChatMessages />,
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        path: "/perfil/editar",
+                        element: <EditProfile />,
+                    },
+                    // Gerenciamento — exige permissão na tag "company" (owners sempre passam)
+                    {
+                        element: <PermissionRoute tag="company" />,
+                        children: [
+                            {
+                                path: "/gerenciamento/membros",
+                                element: <CompanyMembers />,
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
     }
 ]);

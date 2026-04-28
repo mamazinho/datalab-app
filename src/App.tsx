@@ -6,6 +6,8 @@ import { ToastContainer } from 'react-toastify';
 import { CustomThemeProvider, useTheme } from "./contexts/theme";
 import { useAuthContext } from "./contexts/auth";
 import { ChatsProvider } from "./contexts/chats";
+import { CompanyProvider } from "./contexts/company";
+import type { ReactNode } from "react";
 
 const ThemeBootstrap = () => {
     const { me } = useAuthContext();
@@ -28,16 +30,25 @@ const ThemeBootstrap = () => {
     return null;
 };
 
+// Wrapper interno que lê o me do AuthContext e injeta as companies no CompanyProvider
+const CompanyBootstrap = ({ children }: { children: ReactNode }) => {
+    const { me } = useAuthContext();
+    const companies = me?.companies ?? [];
+    return <CompanyProvider companies={companies}>{children}</CompanyProvider>;
+};
+
 
 export function App() {
     return (
         <CustomThemeProvider>
             <AuthProvider>
-                <ChatsProvider>
-                    <ThemeBootstrap />
-                    <ToastContainer /> 
-                    <RouterProvider router={routes} />
-                </ChatsProvider>
+                <CompanyBootstrap>
+                    <ChatsProvider>
+                        <ThemeBootstrap />
+                        <ToastContainer /> 
+                        <RouterProvider router={routes} />
+                    </ChatsProvider>
+                </CompanyBootstrap>
             </AuthProvider>
         </CustomThemeProvider>
     );
