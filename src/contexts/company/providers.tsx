@@ -9,16 +9,23 @@ interface ICompanyProviderProps {
   companies: IUserCompany[];
 }
 
+const SELECTED_COMPANY_KEY = 'selectedCompanyId';
+
 export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) => {
-  // Guarda a empresa explicitamente selecionada pelo usuário (null = usar a primeira da lista)
   const [selectedCompany, setSelectedCompany] = useState<IUserCompany | null>(null);
   const [memberPermissions, setMemberPermissions] = useState<IMembershipPermission[]>([]);
 
-  // Derivação síncrona: não depende de useEffect, atualiza no mesmo render que `companies` muda
+  // Derivação síncrona: não depende de useEffect, atualiza no mesmo render que `companies` muda.
+  // Tenta restaurar do localStorage quando companies são carregadas após refresh.
   const currentCompany = useMemo<IUserCompany | null>(() => {
     if (selectedCompany) {
       const stillExists = companies.some((company) => company.id === selectedCompany.id);
       if (stillExists) return selectedCompany;
+    }
+    const savedId = localStorage.getItem(SELECTED_COMPANY_KEY);
+    if (savedId) {
+      const saved = companies.find((company) => String(company.id) === savedId);
+      if (saved) return saved;
     }
     // Auto-seleciona apenas quando há exatamente 1 empresa.
     // Com 2+, o usuário precisa escolher explicitamente no onboarding.
@@ -49,6 +56,7 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
 
   const setCurrentCompany = useCallback((company: IUserCompany) => {
     setSelectedCompany(company);
+    localStorage.setItem(SELECTED_COMPANY_KEY, String(company.id));
   }, []);
 
   const hasPermissionByTag = useCallback(

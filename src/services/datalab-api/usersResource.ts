@@ -161,4 +161,13 @@ export const UsersResource = {
     )
     return response.data as IUserResponse;
   },
+  async acceptInvite(inviteId: number): Promise<IUserInvite> {
+    const response = await axiosPrivateInstance.post(`users/me/invites/${inviteId}/accept/`);
+    return response.data as IUserInvite;
+  },
+
+  async declineInvite(inviteId: number): Promise<IUserInvite> {
+    const response = await axiosPrivateInstance.post(`users/me/invites/${inviteId}/decline/`);
+    return response.data as IUserInvite;
+  },
 }

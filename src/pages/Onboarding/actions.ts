@@ -40,7 +40,7 @@ export async function acceptInviteAction(
   const inviteId = Number(formData.get("inviteId"));
 
   try {
-    await DatalabAPI.InvitesResource.acceptInvite(inviteId);
+    await DatalabAPI.UsersResource.acceptInvite(inviteId);
     return { success: true, timestamp: Date.now() };
   } catch (error: Error | unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -55,7 +55,7 @@ export async function declineInviteAction(
   const inviteId = Number(formData.get("inviteId"));
 
   try {
-    await DatalabAPI.InvitesResource.declineInvite(inviteId);
+    await DatalabAPI.UsersResource.declineInvite(inviteId);
     return { success: true, timestamp: Date.now() };
   } catch (error: Error | unknown) {
     const message = error instanceof Error ? error.message : String(error);

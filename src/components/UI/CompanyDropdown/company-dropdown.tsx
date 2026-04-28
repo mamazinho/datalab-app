@@ -15,7 +15,7 @@ import {
 import type { IUserCompany } from '../../../services/datalab-api/usersResource';
 
 export const CompanyDropdown = () => {
-  const { me } = useAuthContext();
+  const { me, isAuthLoading } = useAuthContext();
   const { currentCompany, setCurrentCompany } = useCompanyContext();
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -32,7 +32,7 @@ export const CompanyDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  console.log("CompanyDropdown render", { currentCompany, companies: userCompanies });
+  if (isAuthLoading) return null;
   if (!currentCompany) return <Navigate to="/onboarding" replace />;
 
   const handleSelect = (userCompany: IUserCompany) => {

@@ -151,9 +151,10 @@ export const OnboardingWelcome = () => {
                 <InviteRow key={invite.id} invite={invite} onRefresh={getMe} />
               ))}
             </InviteList>
-            <OnboardingDivider />
           </div>
         )}
+        <OnboardingDivider />
+        <OnboardingSubtitle>Crie sua própria empresa para começar.</OnboardingSubtitle>
 
         <OnboardingForm action={createFormAction}>
           <OnboardingFieldset disabled={isCreating}>
