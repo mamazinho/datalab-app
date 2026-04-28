@@ -11,15 +11,6 @@ export interface IUserConfig {
   theme: 'light' | 'dark' | 'system';
 }
 
-export interface ICompany {
-  id: number;
-  name: string;
-  status: string;
-  created_by_user_id: number;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface ICompanyMembershipUser {
   id: number;
   name: string;
@@ -42,7 +33,12 @@ export interface ICompanyMembership {
 }
 
 export interface IUserCompany {
-  company: ICompany;
+  id: number;
+  name: string;
+  status: string;
+  created_by_user_id: number;
+  created_at: string;
+  updated_at: string;
   membership: ICompanyMembership;
 }
 
@@ -55,7 +51,7 @@ export interface IUserInvite {
   status: InviteStatus;
   created_at: string;
   updated_at: string;
-  company?: ICompany | null;
+  company?: IUserCompany | null;
   invited_by?: ICompanyMembershipUser | null;
 }
 
