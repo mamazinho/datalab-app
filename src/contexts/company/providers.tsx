@@ -20,7 +20,10 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
       const stillExists = companies.some((c) => c.company.id === selectedCompany.company.id);
       if (stillExists) return selectedCompany;
     }
-    return companies[0] ?? null;
+    // Auto-seleciona apenas quando há exatamente 1 empresa.
+    // Com 2+, o usuário precisa escolher explicitamente no onboarding.
+    if (companies.length === 1) return companies[0];
+    return null;
   }, [selectedCompany, companies]);
 
   // Sincroniza o ID da company no interceptor axios

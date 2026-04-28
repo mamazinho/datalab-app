@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuthContext } from '../../../contexts/auth';
 import { useCompanyContext } from '../../../contexts/company';
 import {
@@ -20,7 +21,6 @@ export const CompanyDropdown = () => {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const companies: IUserCompany[] = me?.companies ?? [];
-  console.log("MEEEEEE", me)
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -31,6 +31,9 @@ export const CompanyDropdown = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  console.log("CompanyDropdown render", { currentCompany, companies });
+  if (!currentCompany) return <Navigate to="/onboarding" replace />;
 
   const handleSelect = (userCompany: IUserCompany) => {
     setCurrentCompany(userCompany);
