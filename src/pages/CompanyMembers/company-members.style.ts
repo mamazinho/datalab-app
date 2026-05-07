@@ -278,6 +278,59 @@ export const PermissionToggleDesc = styled.span`
   text-overflow: ellipsis;
 `;
 
+// Email tag input
+export const EmailTagList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.6rem;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.inputBackground};
+  min-height: 2.8rem;
+  cursor: text;
+`;
+
+export const EmailTag = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.primaryText};
+  font-size: 0.8rem;
+  font-weight: 600;
+`;
+
+export const EmailTagRemove = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.75;
+  font-size: 0.95rem;
+
+  &:hover { opacity: 1; }
+`;
+
+export const EmailTagInput = styled.input`
+  border: none;
+  outline: none;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.9rem;
+  font-family: ${({ theme }) => theme.fonts.main};
+  min-width: 10rem;
+  flex: 1;
+  padding: 0.1rem 0.2rem;
+`;
+
 export const PermissionToggleMethod = styled.span`
   font-size: 0.7rem;
   font-weight: 700;

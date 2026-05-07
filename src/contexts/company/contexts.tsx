@@ -1,9 +1,12 @@
-import { createContext, useContext } from "react";
-import type { IUserCompany, IMembershipPermission } from "../../services/datalab-api/usersResource";
+import { createContext, useContext, useMemo } from "react";
+import type { IUserCompany, IUserMembership, IMembershipPermission } from "../../services/datalab-api/usersResource";
 
 interface ICompanyContextProps {
   currentCompany: IUserCompany | null;
   setCurrentCompany: (company: IUserCompany) => void;
+  selectCompanyById: (id: number) => void;
+  currentMembership: IUserMembership | null;
+  setMembership: (membership: IUserMembership) => void;
   memberPermissions: IMembershipPermission[];
   hasPermissionByTag: (tag: string) => boolean;
 }
@@ -18,4 +21,18 @@ export const useCompanyContext = () => {
   }
 
   return context;
+};
+
+export const useCompanyPermissions = () => {
+  const { currentMembership } = useCompanyContext();
+
+  const isOwner = useMemo(
+    () => currentMembership?.membership_role === 'owner',
+    [currentMembership],
+  );
+
+  return {
+    isOwner,
+    canManageUsers: isOwner,
+  };
 };

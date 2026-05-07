@@ -23,6 +23,7 @@ const Button = styled.button`
   &:hover {
     filter: brightness(0.98);
     box-shadow: 0 12px 18px ${({ theme }) => theme.colors.shadow};
+    cursor: pointer;
   }
 
   &:active {

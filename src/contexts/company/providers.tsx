@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { CompanyContext } from "./contexts";
 import { setCompanyId } from "../../services/datalab-api/axios";
 import { DatalabAPI } from "../../services/datalab-api";
-import type { IUserCompany, IMembershipPermission } from "../../services/datalab-api/usersResource";
+import type { IUserCompany, IUserMembership, IMembershipPermission } from "../../services/datalab-api/usersResource";
 
 interface ICompanyProviderProps {
   children: ReactNode;
@@ -12,65 +12,89 @@ interface ICompanyProviderProps {
 const SELECTED_COMPANY_KEY = 'selectedCompanyId';
 
 export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) => {
-  const [selectedCompany, setSelectedCompany] = useState<IUserCompany | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(() => {
+    const saved = localStorage.getItem(SELECTED_COMPANY_KEY);
+    return saved ? Number(saved) : null;
+  });
+  const [membershipOverride, setMembershipOverride] = useState<IUserMembership | null>(null);
   const [memberPermissions, setMemberPermissions] = useState<IMembershipPermission[]>([]);
 
-  // Derivação síncrona: não depende de useEffect, atualiza no mesmo render que `companies` muda.
-  // Tenta restaurar do localStorage quando companies são carregadas após refresh.
   const currentCompany = useMemo<IUserCompany | null>(() => {
-    if (selectedCompany) {
-      const stillExists = companies.some((company) => company.id === selectedCompany.id);
-      if (stillExists) return selectedCompany;
-    }
-    const savedId = localStorage.getItem(SELECTED_COMPANY_KEY);
-    if (savedId) {
-      const saved = companies.find((company) => String(company.id) === savedId);
-      if (saved) return saved;
+    if (selectedCompanyId) {
+      const found = companies.find((c) => c.id === selectedCompanyId);
+      if (found) return found;
     }
     // Auto-seleciona apenas quando há exatamente 1 empresa.
-    // Com 2+, o usuário precisa escolher explicitamente no onboarding.
     if (companies.length === 1) return companies[0];
     return null;
-  }, [selectedCompany, companies]);
+  }, [selectedCompanyId, companies]);
+
+  // Membership: usa override (ex: após criar company) ou o embutido na company da lista
+  const currentMembership = useMemo<IUserMembership | null>(
+    () => membershipOverride ?? currentCompany?.membership ?? null,
+    [membershipOverride, currentCompany],
+  );
+
+  // Reseta o override ao trocar de empresa
+  useEffect(() => {
+    setMembershipOverride(null);
+  }, [selectedCompanyId]);
 
   // Sincroniza o ID da company no interceptor axios
   useEffect(() => {
     setCompanyId(currentCompany?.id ?? null);
   }, [currentCompany]);
 
-  // Carrega as permissões do membro sempre que a company ativa mudar
+  // Carrega permissões de rota sempre que o membership ativo mudar
   useEffect(() => {
-    if (!currentCompany) {
+    if (!currentCompany || !currentMembership) {
       setMemberPermissions([]);
       return;
     }
     // Owners têm acesso total — não precisam de lista explícita
-    if (currentCompany.membership.membership_role === 'owner') {
+    if (currentMembership.membership_role === 'owner') {
       setMemberPermissions([]);
       return;
     }
-    DatalabAPI.CompanyPermissionsResource.listMemberPermissions(currentCompany.membership.id)
+    DatalabAPI.MembershipsResource.listMemberPermissions(currentMembership.id)
       .then(setMemberPermissions)
       .catch(() => setMemberPermissions([]));
-  }, [currentCompany]);
+  }, [currentCompany, currentMembership]);
 
   const setCurrentCompany = useCallback((company: IUserCompany) => {
-    setSelectedCompany(company);
+    setSelectedCompanyId(company.id);
     localStorage.setItem(SELECTED_COMPANY_KEY, String(company.id));
+  }, []);
+
+  const selectCompanyById = useCallback((id: number) => {
+    setSelectedCompanyId(id);
+    localStorage.setItem(SELECTED_COMPANY_KEY, String(id));
+  }, []);
+
+  const setMembership = useCallback((membership: IUserMembership) => {
+    setMembershipOverride(membership);
   }, []);
 
   const hasPermissionByTag = useCallback(
     (tag: string): boolean => {
-      if (!currentCompany) return false;
-      if (currentCompany.membership.membership_role === 'owner') return true;
+      if (!currentMembership) return false;
+      if (currentMembership.membership_role === 'owner') return true;
       return memberPermissions.some((p) => p.route_permission.tag === tag);
     },
-    [currentCompany, memberPermissions],
+    [currentMembership, memberPermissions],
   );
 
   const contextValue = useMemo(
-    () => ({ currentCompany, setCurrentCompany, memberPermissions, hasPermissionByTag }),
-    [currentCompany, setCurrentCompany, memberPermissions, hasPermissionByTag],
+    () => ({
+      currentCompany,
+      setCurrentCompany,
+      selectCompanyById,
+      currentMembership,
+      setMembership,
+      memberPermissions,
+      hasPermissionByTag,
+    }),
+    [currentCompany, setCurrentCompany, selectCompanyById, currentMembership, setMembership, memberPermissions, hasPermissionByTag],
   );
 
   return (

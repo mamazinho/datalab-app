@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { DatalabAPI } from '../../services/datalab-api';
 import { useCompanyContext } from '../../contexts/company';
-import type { ICompanyMembership } from '../../services/datalab-api/usersResource';
+import type { ICompanyMembership } from '../../services/datalab-api/membershipsResource';
 import { InviteMemberModal } from './components/invite-member-modal';
 import { MembersList } from './components/members-list';
 import {
@@ -22,7 +22,7 @@ export const CompanyMembers = () => {
   const loadMembers = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await DatalabAPI.CompanyMembersResource.listMembers();
+      const data = await DatalabAPI.MembershipsResource.listMembers();
       setMembers(data);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Erro ao carregar membros.');
@@ -45,7 +45,7 @@ export const CompanyMembers = () => {
           </MembersPageSubtitle>
         </div>
         <InviteMemberButton onClick={() => setIsInviteOpen(true)}>
-          + Convidar membro
+          + Convidar membros
         </InviteMemberButton>
       </MembersPageHeader>
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthContext } from "../../../../contexts/auth";
-import { useCompanyPermissions } from "../../../../hooks/useCompanyPermissions";
+import { useCompanyPermissions } from "../../../../contexts/company/contexts";
 import { CompanyDropdown } from "../../CompanyDropdown/company-dropdown";
 import { InvitesMenu } from "../../InvitesMenu/invites-menu";
 import favicon from '../../../../assets/favicon.png';

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
 import { DatalabAPI } from '../../../services/datalab-api';
-import type { ICompanyMembership } from '../../../services/datalab-api/usersResource';
+import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
 import { MemberPermissionsModal } from './member-permissions-modal';
 import {
   MemberActionButton,
@@ -32,7 +32,7 @@ export const MembersList = ({ members, onRefresh }: IMembersListProps) => {
       if (!window.confirm(`Remover ${membership.user?.name ?? 'este membro'} da empresa?`)) return;
       setRemovingId(membership.id);
       try {
-        await DatalabAPI.CompanyMembersResource.removeMember(membership.id);
+        await DatalabAPI.MembershipsResource.removeMember(membership.id);
         toast.success('Membro removido.');
         onRefresh();
       } catch (e: unknown) {
@@ -86,12 +86,14 @@ export const MembersList = ({ members, onRefresh }: IMembersListProps) => {
                     Permissões
                   </MemberActionButton>
                 )}
-                <MemberRemoveButton
-                  disabled={removingId === member.id}
-                  onClick={() => void handleRemove(member)}
-                >
-                  {removingId === member.id ? '...' : 'Remover'}
-                </MemberRemoveButton>
+                {member.membership_role !== 'owner' && (
+                  <MemberRemoveButton
+                    disabled={removingId === member.id}
+                    onClick={() => void handleRemove(member)}
+                  >
+                    {removingId === member.id ? '...' : 'Remover'}
+                  </MemberRemoveButton>
+                )}
               </MemberActionsCell>
             </MembersTableCell>
           </MembersTableRow>

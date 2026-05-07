@@ -1,11 +1,11 @@
 import { DatalabAPI } from "../../services/datalab-api";
-import type { IUserCompany } from "../../services/datalab-api/usersResource";
+import type { ICreateCompanyResponse } from "../../services/datalab-api/companiesResource";
 import type { ActionState } from "../../types/actions";
 
 export async function createCompanyAction(
-  _prevState: ActionState<IUserCompany>,
+  _prevState: ActionState<ICreateCompanyResponse>,
   formData: FormData,
-): Promise<ActionState<IUserCompany>> {
+): Promise<ActionState<ICreateCompanyResponse>> {
   const name = formData.get("name") as string;
 
   if (!name || name.trim().length < 2) {

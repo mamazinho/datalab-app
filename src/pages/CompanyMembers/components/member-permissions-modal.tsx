@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { Modal } from '../../../components/UI/Modal/modal';
 import { DatalabAPI } from '../../../services/datalab-api';
-import type { ICompanyMembership, IRoutePermission } from '../../../services/datalab-api/usersResource';
+import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
+import type { IRoutePermission } from '../../../services/datalab-api/usersResource';
 import {
   PermissionGroup,
   PermissionGroupLabel,
@@ -32,8 +33,8 @@ export const MemberPermissionsModal = ({ isOpen, onClose, member }: IMemberPermi
     setIsLoading(true);
     try {
       const [routes, permissions] = await Promise.all([
-        DatalabAPI.CompanyPermissionsResource.listRoutePermissions(),
-        DatalabAPI.CompanyPermissionsResource.listMemberPermissions(member.id),
+        DatalabAPI.MembershipsResource.listRoutePermissions(),
+        DatalabAPI.MembershipsResource.listMemberPermissions(member.id),
       ]);
       setAllRoutes(routes);
       setGrantedIds(new Set(permissions.map((p) => p.route_permission_id)));
@@ -54,10 +55,10 @@ export const MemberPermissionsModal = ({ isOpen, onClose, member }: IMemberPermi
       setTogglingId(routeId);
       try {
         if (isGranted) {
-          await DatalabAPI.CompanyPermissionsResource.revokePermission(member.id, routeId);
+          await DatalabAPI.MembershipsResource.revokePermission(member.id, routeId);
           setGrantedIds((prev) => { const next = new Set(prev); next.delete(routeId); return next; });
         } else {
-          await DatalabAPI.CompanyPermissionsResource.grantPermission(member.id, routeId);
+          await DatalabAPI.MembershipsResource.grantPermission(member.id, routeId);
           setGrantedIds((prev) => new Set(prev).add(routeId));
         }
       } catch (e: unknown) {
