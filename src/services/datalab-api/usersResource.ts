@@ -11,48 +11,28 @@ export interface IUserConfig {
   theme: 'light' | 'dark' | 'system';
 }
 
-export interface ICompanyMembershipUser {
-  id: number;
-  name: string;
-  email: string;
-}
-
 export type CompanyMembershipRole = 'owner' | 'member';
 export type CompanyMembershipStatus = 'active' | 'inactive';
 export type InviteStatus = 'pending' | 'accepted' | 'declined';
 
-export interface ICompanyMembership {
+// Membership mínimo que vem embutido na lista de empresas do usuário (/users/me)
+// Espelho de RetrieveUserMembership no backend
+export interface IUserMembership {
   id: number;
-  user_id: number;
-  company_id: number;
   membership_role: CompanyMembershipRole;
   status: CompanyMembershipStatus;
   created_at: string;
   updated_at: string;
-  user?: ICompanyMembershipUser | null;
 }
 
+// Empresa da lista do usuário (/users/me) — espelho de RetrieveUserCompany
 export interface IUserCompany {
   id: number;
   name: string;
   status: string;
-  created_by_user_id: number;
   created_at: string;
   updated_at: string;
-  membership: ICompanyMembership;
-}
-
-export interface IUserInvite {
-  id: number;
-  email: string;
-  company_id: number;
-  invited_by_user_id: number;
-  membership_role: CompanyMembershipRole;
-  status: InviteStatus;
-  created_at: string;
-  updated_at: string;
-  company?: IUserCompany | null;
-  invited_by?: ICompanyMembershipUser | null;
+  membership: IUserMembership;
 }
 
 export interface IRoutePermission {
@@ -73,6 +53,20 @@ export interface IMembershipPermission {
   created_at: string;
   updated_at: string;
   route_permission: IRoutePermission;
+}
+
+export interface IUserInvite {
+  id: number;
+  email: string;
+  company_id: number;
+  invited_by_user_id: number;
+  membership_role: CompanyMembershipRole;
+  status: InviteStatus;
+  created_at: string;
+  updated_at: string;
+  company?: IUserCompany | null;
+  invited_by?: { id: number; name: string; email: string } | null;
+  permissions: IRoutePermission[];
 }
 
 export interface IUserResponse {
@@ -101,7 +95,6 @@ export interface IUpdateUserRequest {
 export interface IConfirmAccountRequest {
   code: string;
 }
-
 
 export interface IForgotPasswordRequest {
   user_email: string;

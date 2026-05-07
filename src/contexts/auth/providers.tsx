@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const getMe = useCallback(async (): Promise<IUserResponse> => {
     try {
       const user = await DatalabAPI.UsersResource.me() as IUserResponse;
+      console.log("mee", user);
       setMe(user);
       return user;
     } catch (error) {

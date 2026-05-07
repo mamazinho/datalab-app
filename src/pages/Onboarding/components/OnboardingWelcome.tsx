@@ -27,7 +27,8 @@ import {
   OnboardingWrapper,
 } from '../onboarding.style';
 import { acceptInviteAction, createCompanyAction, declineInviteAction } from '../actions';
-import type { IUserCompany, IUserInvite } from '../../../services/datalab-api/usersResource';
+import type { IUserInvite } from '../../../services/datalab-api/usersResource';
+import type { ICreateCompanyResponse } from '../../../services/datalab-api/companiesResource';
 import type { ActionState } from '../../../types/actions';
 
 const InviteRow = ({
@@ -106,7 +107,7 @@ const InviteRow = ({
 
 export const OnboardingWelcome = () => {
   const { me, getMe } = useAuthContext();
-  const { setCurrentCompany } = useCompanyContext();
+  const { selectCompanyById, setMembership } = useCompanyContext();
   const navigate = useNavigate();
 
   const pendingInvites = (me?.invites ?? []).filter((i) => i.status === 'pending');
@@ -117,17 +118,18 @@ export const OnboardingWelcome = () => {
   );
 
   const handleCreateResult = useCallback(
-    (state: ActionState<IUserCompany>) => {
+    (state: ActionState<ICreateCompanyResponse>) => {
       if (state.timestamp === 0) return;
       if (state.success && state.data) {
         toast.success('Empresa criada com sucesso!');
-        setCurrentCompany(state.data);
+        selectCompanyById(state.data.company.id);
+        setMembership(state.data.membership);
         void getMe().then(() => navigate('/'));
       } else if (state.error) {
         toast.error(state.error);
       }
     },
-    [setCurrentCompany, getMe, navigate],
+    [selectCompanyById, setMembership, getMe, navigate],
   );
 
   useEffect(() => {

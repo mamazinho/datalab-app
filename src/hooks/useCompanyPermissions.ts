@@ -7,11 +7,11 @@ import { useCompanyContext } from '../contexts/company';
  * (verificação de rota pode ser expandida futuramente via route-permissions).
  */
 export const useCompanyPermissions = () => {
-  const { currentCompany } = useCompanyContext();
+  const { currentMembership } = useCompanyContext();
 
   const isOwner = useMemo(
-    () => currentCompany?.membership.membership_role === 'owner',
-    [currentCompany],
+    () => currentMembership?.membership_role === 'owner',
+    [currentMembership],
   );
 
   return {
