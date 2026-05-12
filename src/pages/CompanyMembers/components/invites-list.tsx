@@ -1,17 +1,15 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
+import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../components/UI/Tables/ActionTable';
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { IUserInvite } from '../../../services/datalab-api/usersResource';
-import {
-  MemberActionButton,
-  MembersEmpty,
-  MembersTable,
-  MembersTableCell,
-  MembersTableCellSecondary,
-  MembersTableHeader,
-  MembersTableHeaderCell,
-  MembersTableRow,
-} from '../company-members.style';
+import { InviteStatusBadge, MembersEmpty, MembersTableCellSecondary } from '../company-members.style';
+
+const statusLabel: Record<string, string> = {
+  pending: 'Pendente',
+  accepted: 'Aceito',
+  rejected: 'Recusado',
+};
 
 interface IInvitesListProps {
   invites: IUserInvite[];
@@ -43,47 +41,39 @@ export const InvitesList = ({ invites, onRefresh }: IInvitesListProps) => {
   }
 
   return (
-    <MembersTable style={{ gridTemplateColumns: '1fr 1fr 1fr auto auto' }}>
-      <MembersTableHeader style={{ gridTemplateColumns: '1fr 1fr 1fr auto auto' }}>
-        <MembersTableHeaderCell>Email</MembersTableHeaderCell>
-        <MembersTableHeaderCell>Status</MembersTableHeaderCell>
-        <MembersTableHeaderCell>Enviado por</MembersTableHeaderCell>
-        <MembersTableHeaderCell>Data</MembersTableHeaderCell>
-        <MembersTableHeaderCell>Ações</MembersTableHeaderCell>
-      </MembersTableHeader>
+    <ActionTable>
+      <TableHeaders>
+        <th>Email</th>
+        <th>Status</th>
+        <th>Enviado por</th>
+        <th>Data</th>
+      </TableHeaders>
+
       {invites.map((invite) => (
-        <MembersTableRow key={invite.id} style={{ gridTemplateColumns: '1fr 1fr 1fr auto auto' }}>
-          <MembersTableCell>
-            {invite.email}
-          </MembersTableCell>
-          <MembersTableCell>
-            <span style={{
-              color: invite.status === 'pending' ? '#f59e0b' :
-                     invite.status === 'accepted' ? '#10b981' : '#ef4444'
-            }}>
-              {invite.status === 'pending' ? 'Pendente' :
-               invite.status === 'accepted' ? 'Aceito' : 'Recusado'}
-            </span>
-          </MembersTableCell>
-          <MembersTableCell>
+        <TableRow key={invite.id}>
+          <td>{invite.email}</td>
+          <td>
+            <InviteStatusBadge $status={invite.status as 'pending' | 'accepted' | 'rejected'}>
+              {statusLabel[invite.status] ?? invite.status}
+            </InviteStatusBadge>
+          </td>
+          <td>
             {invite.invited_by?.name ?? 'Desconhecido'}
-            <MembersTableCellSecondary>
-              {invite.invited_by?.email}
-            </MembersTableCellSecondary>
-          </MembersTableCell>
-          <MembersTableCell>
-            {new Date(invite.created_at).toLocaleDateString('pt-BR')}
-          </MembersTableCell>
-          <MembersTableCell>
-            <MemberActionButton
-              onClick={() => handleRemove(invite)}
-              disabled={removingId === invite.id}
-            >
-              {removingId === invite.id ? 'Removendo...' : 'Remover'}
-            </MemberActionButton>
-          </MembersTableCell>
-        </MembersTableRow>
+            <MembersTableCellSecondary>{invite.invited_by?.email}</MembersTableCellSecondary>
+          </td>
+          <td>{new Date(invite.created_at).toLocaleDateString('pt-BR')}</td>
+          <td>
+            <TableActions>
+              <TableAction
+                disabled={removingId === invite.id}
+                onClick={() => void handleRemove(invite)}
+              >
+                {removingId === invite.id ? 'Excluindo...' : 'Excluir convite'}
+              </TableAction>
+            </TableActions>
+          </td>
+        </TableRow>
       ))}
-    </MembersTable>
+    </ActionTable>
   );
 };
