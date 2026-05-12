@@ -10,10 +10,12 @@ import { ConfirmAccountForm } from './components/confirm-account-form';
 import { confirmUserAction, registerUserAction } from './actions';
 import { INITIAL_ACTION_STATE, type ActionState } from '../../types/actions';
 import type { IUserResponse } from '../../services/datalab-api/usersResource';
+import { useGoogleLogin } from '../../hooks/useGoogleLogin';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
   const stepsRef = useRef<StepsRef>(null);
+  const { handleGoogleLogin } = useGoogleLogin();
 
   const [registerState, registerFormAction, isRegisterPending] = useActionState(registerUserAction, INITIAL_ACTION_STATE);
   const [confirmState, confirmFormAction, isConfirmPending] = useActionState(confirmUserAction, INITIAL_ACTION_STATE);
@@ -36,21 +38,21 @@ export const Register: React.FC = () => {
   }, [navigate]);
 
   const handleResendCode = async () => {
-     const userId = registerState.data?.id;
-     const userEmail = registerState.data?.email;
+    const userId = registerState.data?.id;
+    const userEmail = registerState.data?.email;
 
-     if (!userId) {
+    if (!userId) {
       toast.error("Usuário não encontrado para reenviar código.");
       return;
-     }
+    }
 
-     try {
-       await DatalabAPI.UsersResource.resendConfirmationCode(userId);
-       toast.success(`Novo código enviado para ${userEmail}`);
-     } catch (error) {
-       console.error("Erro ao reenviar código:", error);
-       toast.error("Falha ao reenviar código de confirmação.");
-     }
+    try {
+      await DatalabAPI.UsersResource.resendConfirmationCode(userId);
+      toast.success(`Novo código enviado para ${userEmail}`);
+    } catch (error) {
+      console.error("Erro ao reenviar código:", error);
+      toast.error("Falha ao reenviar código de confirmação.");
+    }
   };
 
   useEffect(() => {
@@ -71,6 +73,7 @@ export const Register: React.FC = () => {
               <RegisterForm 
                 action={registerFormAction}
                 isPending={isRegisterPending}
+                onGoogleLogin={handleGoogleLogin}
               />
             </Step>
 

@@ -96,8 +96,8 @@ export const MembershipsResource = {
     return response.data as IUserInvite;
   },
 
-  async createInvite(payload: ICreateInviteRequest): Promise<IUserInvite[]> {
-    const response = await axiosCompanyInstance.post("memberships/invites/", payload);
+  async upsertInvite(payload: ICreateInviteRequest): Promise<IUserInvite[]> {
+    const response = await axiosCompanyInstance.put("memberships/invites/", payload);
     return response.data as IUserInvite[];
   },
 

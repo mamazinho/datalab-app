@@ -14,27 +14,13 @@ import {
   ModalForm,
   ModalLabel,
   ModalSubmit,
-  PermissionGroup,
-  PermissionGroupLabel,
-  PermissionsList,
-  PermissionToggleInfo,
-  PermissionToggleName,
-  PermissionToggleDesc,
-  PermissionToggleRow,
 } from '../company-members.style';
+import { PermissionsSelector } from './permissions-list';
 
 interface IInviteMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-}
-
-function groupByTag(permissions: IRoutePermission[]): Record<string, IRoutePermission[]> {
-  return permissions.reduce<Record<string, IRoutePermission[]>>((acc, p) => {
-    const key = p.tag ?? 'Geral';
-    (acc[key] ??= []).push(p);
-    return acc;
-  }, {});
 }
 
 export const InviteMemberModal = ({ isOpen, onClose, onSuccess }: IInviteMemberModalProps) => {
@@ -95,15 +81,6 @@ export const InviteMemberModal = ({ isOpen, onClose, onSuccess }: IInviteMemberM
     setEmails((prev) => prev.filter((e) => e !== email));
   }, []);
 
-  const togglePermission = useCallback((id: number) => {
-    setSelectedPermissions((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }, []);
-
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -119,7 +96,7 @@ export const InviteMemberModal = ({ isOpen, onClose, onSuccess }: IInviteMemberM
       setIsPending(true);
       setError(null);
       try {
-        await DatalabAPI.MembershipsResource.createInvite({
+        await DatalabAPI.MembershipsResource.upsertInvite({
           emails: finalEmails,
           permissions: Array.from(selectedPermissions),
         });
@@ -138,8 +115,6 @@ export const InviteMemberModal = ({ isOpen, onClose, onSuccess }: IInviteMemberM
     },
     [emails, inputValue, selectedPermissions, onSuccess, onClose],
   );
-
-  const grouped = groupByTag(routePermissions);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Convidar membros">
@@ -175,29 +150,11 @@ export const InviteMemberModal = ({ isOpen, onClose, onSuccess }: IInviteMemberM
           {routePermissions.length > 0 && (
             <ModalField>
               <ModalLabel>Permissões</ModalLabel>
-              <PermissionsList>
-                {Object.entries(grouped).map(([tag, perms]) => (
-                  <PermissionGroup key={tag}>
-                    <PermissionGroupLabel>{tag}</PermissionGroupLabel>
-                    {perms.map((p) => (
-                      <PermissionToggleRow key={p.id} htmlFor={`perm-${p.id}`}>
-                        <PermissionToggleInfo>
-                          <PermissionToggleName>{p.name}</PermissionToggleName>
-                          {p.description && (
-                            <PermissionToggleDesc>{p.description}</PermissionToggleDesc>
-                          )}
-                        </PermissionToggleInfo>
-                        <input
-                          id={`perm-${p.id}`}
-                          type="checkbox"
-                          checked={selectedPermissions.has(p.id)}
-                          onChange={() => togglePermission(p.id)}
-                        />
-                      </PermissionToggleRow>
-                    ))}
-                  </PermissionGroup>
-                ))}
-              </PermissionsList>
+              <PermissionsSelector
+                permissions={routePermissions}
+                selected={selectedPermissions}
+                onChange={setSelectedPermissions}
+              />
             </ModalField>
           )}
 

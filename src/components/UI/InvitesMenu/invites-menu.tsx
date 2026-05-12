@@ -38,7 +38,7 @@ async function acceptAction(
 ): Promise<ActionState<never>> {
   const id = Number(formData.get('inviteId'));
   try {
-    await DatalabAPI.InvitesResource.acceptInvite(id);
+    await DatalabAPI.UsersResource.acceptInvite(id);
     return { success: true, timestamp: Date.now() };
   } catch (e: unknown) {
     return { success: false, error: e instanceof Error ? e.message : String(e), timestamp: Date.now() };
@@ -51,7 +51,7 @@ async function declineAction(
 ): Promise<ActionState<never>> {
   const id = Number(formData.get('inviteId'));
   try {
-    await DatalabAPI.InvitesResource.declineInvite(id);
+    await DatalabAPI.UsersResource.declineInvite(id);
     return { success: true, timestamp: Date.now() };
   } catch (e: unknown) {
     return { success: false, error: e instanceof Error ? e.message : String(e), timestamp: Date.now() };
