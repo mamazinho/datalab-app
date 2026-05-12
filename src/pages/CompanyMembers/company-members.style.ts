@@ -144,6 +144,29 @@ export const MembersEmpty = styled.p`
   color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
+export const TabsContainer = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+export const TabButton = styled.button<{ active: boolean }>`
+  padding: 0.75rem 1.5rem;
+  border: 0;
+  background: transparent;
+  color: ${({ theme, active }) => active ? theme.colors.primary : theme.colors.textSecondary};
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: ${({ theme }) => theme.fonts.main};
+  cursor: pointer;
+  border-bottom: 2px solid ${({ theme, active }) => active ? theme.colors.primary : 'transparent'};
+  transition: color 0.18s ease, border-color 0.18s ease;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
 // Modal forms shared styles
 export const ModalForm = styled.form`
   display: flex;
@@ -233,7 +256,13 @@ export const PermissionGroup = styled.div`
   margin-bottom: 0.5rem;
 `;
 
-export const PermissionGroupLabel = styled.p`
+export const PermissionGroupDetails = styled.details`
+  &[open] > summary { border-bottom: 1px solid ${({ theme }) => theme.colors.border}; }
+`;
+
+export const PermissionGroupSummary = styled.summary`
+  display: flex;
+  align-items: center;
   margin: 0 0 0.3rem;
   font-size: 0.72rem;
   font-weight: 700;
@@ -242,6 +271,23 @@ export const PermissionGroupLabel = styled.p`
   color: ${({ theme }) => theme.colors.textSecondary};
   padding: 0.4rem 0 0.2rem;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  cursor: pointer;
+  user-select: none;
+
+  &::-webkit-details-marker { display: none; }
+
+  &::before {
+    content: '▶';
+    font-size: 0.6rem;
+    color: ${({ theme }) => theme.colors.primary};
+    margin-right: 0.4rem;
+    transition: transform 0.18s ease;
+    display: inline-block;
+  }
+
+  details[open] > &::before { transform: rotate(90deg); }
+
+  input[type='checkbox'] { margin-left: auto; }
 `;
 
 export const PermissionToggleRow = styled.label`

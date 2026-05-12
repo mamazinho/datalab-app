@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
     AuthForm,
     AuthHeader,
@@ -6,6 +7,9 @@ import {
     BrandTitle,
     Field,
     FieldsWrapper,
+    FormDivider,
+    DividerLine,
+    DividerText,
     Input,
     Label,
     PrimaryButton,
@@ -13,12 +17,16 @@ import {
 } from '../../../styles/design-system.style';
 import { PasswordInput } from '../../../components/UI/Inputs/Password/password-input';
 import { PhoneField } from '../../../components/UI/Inputs/Phone';
+import { GoogleButton } from '../../../components/UI/Buttons/google-button';
 
 interface IRegisterFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
     isPending: boolean;
+    onGoogleLogin: () => void;
 }
 
-export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, ...props }) => {
+export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onGoogleLogin, ...props }) => {
+    const [searchParams] = useSearchParams();
+    const emailFromQuery = searchParams.get('email') ?? '';
     const [phoneNumber, setPhoneNumber] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -51,6 +59,7 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, ...props
                             id="inputEmail"
                             name="email"
                             placeholder="seu@email.com"
+                            defaultValue={emailFromQuery}
                             required
                             autoComplete="email"
                         />
@@ -101,6 +110,13 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, ...props
                         {isPending ? "Processando..." : "Cadastrar"}
                     </PrimaryButton>
                 </FieldsWrapper>
+
+                <FormDivider>
+                    <DividerLine />
+                    <DividerText>Ou continue com</DividerText>
+                </FormDivider>
+
+                <GoogleButton onClick={onGoogleLogin} />
             </AuthForm>
         </>
     );

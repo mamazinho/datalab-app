@@ -1,4 +1,4 @@
-import axios, { type InternalAxiosRequestConfig } from "axios";
+import axios, { type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_DATALAB_API_URL,
@@ -9,7 +9,6 @@ export const axiosInstance = axios.create({
   },
 });
 
-// Slot para o ID da company selecionada — atualizado pelo CompanyProvider
 let _currentCompanyId: number | null = null;
 
 export function setCompanyId(id: number | null): void {
@@ -20,6 +19,43 @@ export function getCompanyId(): number | null {
   return _currentCompanyId;
 }
 
+const refreshableErrors = ['Invalid token'];
+const forceLogoutErrors = ['User not found', 'User is not active'];
+
+function forceLogout(): void {
+  localStorage.clear();
+  document.cookie = 'csrftoken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+  window.location.href = '/login';
+}
+
+let _isRefreshing = false;
+let _refreshQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = [];
+
+async function doRefresh(): Promise<string> {
+  const { data } = await axiosInstance.post<{ access_token: string }>('v1/auth/refresh/');
+  localStorage.setItem('accessToken', data.access_token);
+  return data.access_token;
+}
+
+function refreshToken(): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    _refreshQueue.push({ resolve, reject });
+
+    if (_isRefreshing) return;
+
+    _isRefreshing = true;
+    doRefresh()
+      .then((token) => _refreshQueue.forEach((q) => q.resolve(token)))
+      .catch((err) => {
+        _refreshQueue.forEach((q) => q.reject(err));
+        forceLogout();
+      })
+      .finally(() => {
+        _refreshQueue = [];
+        _isRefreshing = false;
+      });
+  });
+}
 
 export const axiosPrivateInstance = axios.create({ ...axiosInstance.defaults });
 export const axiosCompanyInstance = axios.create({ ...axiosPrivateInstance.defaults });
@@ -41,37 +77,92 @@ const companyInterceptor = (config: InternalAxiosRequestConfig) => {
   return config;
 };
 
-axiosPrivateInstance.interceptors.request.use(authInterceptor);
-axiosCompanyInstance.interceptors.request.use(authInterceptor);
-axiosCompanyInstance.interceptors.request.use(companyInterceptor);
+type RequestInterceptor = (config: InternalAxiosRequestConfig) => InternalAxiosRequestConfig;
 
-const handleAxiosError = (error: Error) => {
-  let message = "Ocorreu um erro inesperado. Tente novamente mais tarde.";
+function registerRequestInterceptors(instance: AxiosInstance, interceptors: RequestInterceptor[]): void {
+  interceptors.forEach((interceptor) => {
+    instance.interceptors.request.use(interceptor);
+  });
+}
 
+registerRequestInterceptors(axiosPrivateInstance, [authInterceptor]);
+registerRequestInterceptors(axiosCompanyInstance, [authInterceptor, companyInterceptor]);
+
+function extractErrorMessage(data: unknown): string {
+  const detail = (data as Record<string, unknown>)?.detail;
+  return typeof detail === 'string' ? detail : '';
+}
+
+const handlePublicAxiosError = (error: Error): Promise<never> => {
   if (axios.isAxiosError(error)) {
     if (error.response) {
-      const data = error.response.data;
-
-      if (data) {
-        if (typeof data === 'string') {
-          message = data;
-        } else if (typeof data === 'object') {
-          if (data.message) message = data.message;
-          else if (data.error) message = data.error;
-          else if (data.detail) message = data.detail;
-        }
-      }
+      const msg = extractErrorMessage(error.response.data);
+      if (msg) error.message = msg;
     } else if (error.request) {
-      message = "Não foi possível conectar ao servidor. Verifique sua internet.";
-    } else {
-      message = error.message;
+      error.message = 'Não foi possível conectar ao servidor. Verifique sua internet.';
     }
+  } else {
+    error.message = 'Ocorreu um erro inesperado. Tente novamente mais tarde.';
   }
-
-  error.message = message;
   return Promise.reject(error);
 };
 
-axiosInstance.interceptors.response.use((response) => response, handleAxiosError);
-axiosPrivateInstance.interceptors.response.use((response) => response, handleAxiosError);
-axiosCompanyInstance.interceptors.response.use((response) => response, handleAxiosError);
+function createAuthenticatedErrorHandler(instance: AxiosInstance) {
+  return async (error: Error): Promise<unknown> => {
+    if (!axios.isAxiosError(error)) return Promise.reject(error);
+
+    if (!error.response) {
+      if (error.request) error.message = 'Não foi possível conectar ao servidor. Verifique sua internet.';
+      return Promise.reject(error);
+    }
+
+    const message = extractErrorMessage(error.response.data);
+
+    if (error.response.status === 401) {
+      if (forceLogoutErrors.some((msg) => message.includes(msg))) {
+        forceLogout();
+        return Promise.reject(error);
+      }
+
+      const config = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+
+      if (config && !config._retry && refreshableErrors.some((msg) => message.includes(msg))) {
+        config._retry = true;
+        try {
+          const newToken = await refreshToken();
+          config.headers['Authorization'] = `Bearer ${newToken}`;
+          return instance(config);
+        } catch {
+          return Promise.reject(error);
+        }
+      }
+    }
+
+    if (message) error.message = message;
+    return Promise.reject(error);
+  };
+}
+
+type ResponseInterceptor = {
+  onFulfilled?: (response: AxiosResponse) => AxiosResponse | Promise<AxiosResponse>;
+  onRejected: (error: Error) => unknown;
+};
+
+function registerResponseInterceptors(instance: AxiosInstance, interceptors: ResponseInterceptor[]): void {
+  interceptors.forEach(({ onFulfilled, onRejected }) => {
+    instance.interceptors.response.use(onFulfilled ?? ((r) => r), onRejected);
+  });
+}
+
+registerResponseInterceptors(axiosInstance, [
+  { onRejected: handlePublicAxiosError },
+]);
+
+registerResponseInterceptors(axiosPrivateInstance, [
+  { onRejected: createAuthenticatedErrorHandler(axiosPrivateInstance) },
+]);
+
+registerResponseInterceptors(axiosCompanyInstance, [
+  { onRejected: createAuthenticatedErrorHandler(axiosCompanyInstance) },
+]);
+
