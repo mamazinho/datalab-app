@@ -1,21 +1,10 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
+import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../components/UI/Tables/ActionTable';
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
+import { MembersEmpty, MembersTableCellSecondary, RoleBadge } from '../company-members.style';
 import { MemberPermissionsModal } from './member-permissions-modal';
-import {
-  MemberActionButton,
-  MemberActionsCell,
-  MemberRemoveButton,
-  MembersEmpty,
-  MembersTable,
-  MembersTableCell,
-  MembersTableCellSecondary,
-  MembersTableHeader,
-  MembersTableHeaderCell,
-  MembersTableRow,
-  RoleBadge,
-} from '../company-members.style';
 
 interface IMembersListProps {
   members: ICompanyMembership[];
@@ -43,62 +32,50 @@ export const MembersList = ({ members, onRefresh }: IMembersListProps) => {
     },
     [onRefresh],
   );
-
-  const openPermissions = (member: ICompanyMembership) => {
-    setSelectedMember(member);
-    setIsPermissionsOpen(true);
-  };
-
+  
   if (members.length === 0) {
     return <MembersEmpty>Nenhum membro encontrado.</MembersEmpty>;
   }
 
   return (
     <>
-      <MembersTable>
-        <MembersTableHeader>
-          <MembersTableHeaderCell>Nome</MembersTableHeaderCell>
-          <MembersTableHeaderCell>E-mail</MembersTableHeaderCell>
-          <MembersTableHeaderCell>Papel</MembersTableHeaderCell>
-          <MembersTableHeaderCell>Ações</MembersTableHeaderCell>
-        </MembersTableHeader>
+      <ActionTable>
+        <TableHeaders>
+          <th>Nome</th>
+          <th>E-mail</th>
+          <th>Papel</th>
+        </TableHeaders>
 
         {members.map((member) => (
-          <MembersTableRow key={member.id}>
-            <MembersTableCell>
-              {member.user?.name ?? '—'}
-            </MembersTableCell>
-            <MembersTableCell>
+          <TableRow key={member.id}>
+            <td>{member.user?.name ?? '—'}</td>
+            <td>
               {member.user?.email ?? '—'}
-              <MembersTableCellSecondary>
-                Status: {member.status}
-              </MembersTableCellSecondary>
-            </MembersTableCell>
-            <MembersTableCell>
+              <MembersTableCellSecondary>Status: {member.status}</MembersTableCellSecondary>
+            </td>
+            <td>
               <RoleBadge $owner={member.membership_role === 'owner'}>
                 {member.membership_role === 'owner' ? 'Owner' : 'Membro'}
               </RoleBadge>
-            </MembersTableCell>
-            <MembersTableCell>
-              <MemberActionsCell>
-                {member.membership_role !== 'owner' && (
-                  <MemberActionButton onClick={() => openPermissions(member)}>
-                    Permissões
-                  </MemberActionButton>
-                )}
-                {member.membership_role !== 'owner' && (
-                  <MemberRemoveButton
+            </td>
+            <td>
+              {member.membership_role !== 'owner' && (
+                <TableActions>
+                  <TableAction onClick={() => { setSelectedMember(member); setIsPermissionsOpen(true); }}>
+                    Editar permissões
+                  </TableAction>
+                  <TableAction
                     disabled={removingId === member.id}
                     onClick={() => void handleRemove(member)}
                   >
-                    {removingId === member.id ? '...' : 'Remover'}
-                  </MemberRemoveButton>
-                )}
-              </MemberActionsCell>
-            </MembersTableCell>
-          </MembersTableRow>
+                    {removingId === member.id ? 'Removendo...' : 'Remover membro'}
+                  </TableAction>
+                </TableActions>
+              )}
+            </td>
+          </TableRow>
         ))}
-      </MembersTable>
+      </ActionTable>
 
       <MemberPermissionsModal
         isOpen={isPermissionsOpen}

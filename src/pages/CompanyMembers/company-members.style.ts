@@ -14,6 +14,18 @@ export const MembersPageHeader = styled.div`
   flex-wrap: wrap;
 `;
 
+const statusColors = {
+  pending: '#f59e0b',
+  accepted: '#10b981',
+  rejected: '#ef4444',
+} as const;
+
+export const InviteStatusBadge = styled.span<{ $status: keyof typeof statusColors }>`
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: ${({ $status }) => statusColors[$status] ?? '#888'};
+`;
+
 export const MembersPageTitle = styled.h1`
   margin: 0;
   font-size: 1.4rem;
