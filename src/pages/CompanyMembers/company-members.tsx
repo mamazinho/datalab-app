@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
-import { DatalabAPI } from '../../services/datalab-api';
+import { useCallback, useState } from 'react';
+import { AsyncResource } from '../../components/Tools/async-resource';
 import { useCompanyContext } from '../../contexts/company';
+import { DatalabAPI } from '../../services/datalab-api';
 import type { ICompanyMembership } from '../../services/datalab-api/membershipsResource';
 import type { IUserInvite } from '../../services/datalab-api/usersResource';
 import { InviteMemberModal } from './components/invite-member-modal';
@@ -17,45 +17,18 @@ import {
   TabButton,
 } from './company-members.style';
 
+const fetchMembers = () => DatalabAPI.MembershipsResource.listMembers();
+const fetchInvites = () => DatalabAPI.MembershipsResource.listInvites();
+
 export const CompanyMembers = () => {
   const { currentCompany } = useCompanyContext();
-  const [members, setMembers] = useState<ICompanyMembership[]>([]);
-  const [invites, setInvites] = useState<IUserInvite[]>([]);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'members' | 'invites'>('members');
+  const [membersKey, setMembersKey] = useState(0);
+  const [invitesKey, setInvitesKey] = useState(0);
 
-  const loadMembers = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const data = await DatalabAPI.MembershipsResource.listMembers();
-      setMembers(data);
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Erro ao carregar membros.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const loadInvites = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const data = await DatalabAPI.MembershipsResource.listInvites();
-      setInvites(data);
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Erro ao carregar convites.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'members') {
-      void loadMembers();
-    } else {
-      void loadInvites();
-    }
-  }, [activeTab, loadMembers, loadInvites]);
+  const refreshMembers = useCallback(() => setMembersKey((k) => k + 1), []);
+  const refreshInvites = useCallback(() => setInvitesKey((k) => k + 1), []);
 
   return (
     <MembersPageContainer>
@@ -72,41 +45,32 @@ export const CompanyMembers = () => {
       </MembersPageHeader>
 
       <TabsContainer>
-        <TabButton
-          active={activeTab === 'members'}
-          onClick={() => setActiveTab('members')}
-        >
+        <TabButton active={activeTab === 'members'} onClick={() => setActiveTab('members')}>
           Membros
         </TabButton>
-        <TabButton
-          active={activeTab === 'invites'}
-          onClick={() => setActiveTab('invites')}
-        >
+        <TabButton active={activeTab === 'invites'} onClick={() => setActiveTab('invites')}>
           Convites
         </TabButton>
       </TabsContainer>
 
       {activeTab === 'members' ? (
-        isLoading ? (
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Carregando membros...</p>
-        ) : (
-          <MembersList members={members} onRefresh={() => void loadMembers()} />
-        )
+        <AsyncResource fetcher={fetchMembers} dependencies={[membersKey]}>
+          {(members: ICompanyMembership[]) => (
+            <MembersList members={members} onRefresh={refreshMembers} />
+          )}
+        </AsyncResource>
       ) : (
-        isLoading ? (
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Carregando convites...</p>
-        ) : (
-          <InvitesList invites={invites} onRefresh={() => void loadInvites()} />
-        )
+        <AsyncResource fetcher={fetchInvites} dependencies={[invitesKey]}>
+          {(invites: IUserInvite[]) => (
+            <InvitesList invites={invites} onRefresh={refreshInvites} />
+          )}
+        </AsyncResource>
       )}
 
       <InviteMemberModal
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
-        onSuccess={() => {
-          void loadMembers();
-          void loadInvites();
-        }}
+        onSuccess={() => { refreshMembers(); refreshInvites(); }}
       />
     </MembersPageContainer>
   );
