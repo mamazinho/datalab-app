@@ -34,9 +34,15 @@ export const InviteMemberModal = ({ isOpen, onClose, onSuccess }: IInviteMemberM
 
   useEffect(() => {
     if (!isOpen) return;
-    DatalabAPI.MembershipsResource.listRoutePermissions()
-      .then(setRoutePermissions)
-      .catch(() => setRoutePermissions([]));
+    const load = async () => {
+      try {
+        const data = await DatalabAPI.MembershipsResource.listRoutePermissions();
+        setRoutePermissions(data);
+      } catch {
+        setRoutePermissions([]);
+      }
+    };
+    void load();
   }, [isOpen]);
 
   useEffect(() => {
