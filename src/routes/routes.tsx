@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { ChatMessages } from "../pages/Chats/Messages";
 import { ListChats } from "../pages/Chats";
 import { Home } from "../pages/Home";
@@ -10,8 +10,9 @@ import { GoogleCallback } from "../pages/AuthCallback/google-callback";
 import { EditProfile } from "../pages/EditProfile";
 import { Onboarding } from "../pages/Onboarding";
 import { CompanyMembers } from "../pages/CompanyMembers";
-import { PrivateRoutes, PublicRoutes, CompanyRoutes, OnboardingRoute, PermissionRoute } from "./wrappers";
-
+import { IaLayout } from "../pages/Ia";
+import { Agents } from "../pages/Ia/Agents";
+import { PrivateRoutes, PublicRoutes, CompanyRoutes, OnboardingRoute, PermissionRoute, IaRoute, AgentsRoute, IaIndexRedirect, RedirectLegacyChatMessages } from "./wrappers";
 
 export const routes = createBrowserRouter([
     // Public routes
@@ -62,24 +63,52 @@ export const routes = createBrowserRouter([
                         path: "/",
                         element: <Home />,
                     },
-                    // Rotas de chat — exigem permissão na tag "chat"
+                    // Seção IA — abas de conversas (tag "chat") e agentes (permissões de agents)
                     {
-                        element: <PermissionRoute tag="chat" />,
+                        element: <IaRoute />,
                         children: [
                             {
-                                path: "/conversas",
+                                path: "/ia",
+                                element: <IaLayout />,
                                 children: [
                                     {
                                         index: true,
-                                        element: <ListChats />,
+                                        element: <IaIndexRedirect />,
                                     },
                                     {
-                                        path: ":chatId/mensagens",
-                                        element: <ChatMessages />,
+                                        element: <PermissionRoute tag="chat" />,
+                                        children: [
+                                            {
+                                                path: "conversas",
+                                                element: <ListChats />,
+                                            },
+                                            {
+                                                path: "conversas/:chatId/mensagens",
+                                                element: <ChatMessages />,
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        element: <AgentsRoute />,
+                                        children: [
+                                            {
+                                                path: "agentes",
+                                                element: <Agents />,
+                                            },
+                                        ],
                                     },
                                 ],
                             },
                         ],
+                    },
+                    // Redirects dos paths antigos de chat
+                    {
+                        path: "/conversas",
+                        element: <Navigate to="/ia/conversas" replace />,
+                    },
+                    {
+                        path: "/conversas/:chatId/mensagens",
+                        element: <RedirectLegacyChatMessages />,
                     },
                     {
                         path: "/perfil/editar",

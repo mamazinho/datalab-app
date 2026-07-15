@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { CompanyContext } from "./contexts";
 import { setCompanyId } from "../../services/datalab-api/axios";
 import { DatalabAPI } from "../../services/datalab-api";
+import { isAgentsRoutePermission, matchesRoutePermission, type IRoutePermissionRef } from "../../utils/route-permissions";
 import type { IUserCompany, IUserMembership, IMembershipPermission } from "../../services/datalab-api/usersResource";
 
 interface ICompanyProviderProps {
@@ -84,6 +85,21 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
     [currentMembership, memberPermissions],
   );
 
+  const hasPermissionByRoute = useCallback(
+    (ref: IRoutePermissionRef): boolean => {
+      if (!currentMembership) return false;
+      if (currentMembership.membership_role === 'owner') return true;
+      return memberPermissions.some((p) => matchesRoutePermission(p.route_permission, ref));
+    },
+    [currentMembership, memberPermissions],
+  );
+
+  const hasAnyAgentsPermission = useMemo(() => {
+    if (!currentMembership) return false;
+    if (currentMembership.membership_role === 'owner') return true;
+    return memberPermissions.some((p) => isAgentsRoutePermission(p.route_permission));
+  }, [currentMembership, memberPermissions]);
+
   const contextValue = useMemo(
     () => ({
       currentCompany,
@@ -93,8 +109,10 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
       setMembership,
       memberPermissions,
       hasPermissionByTag,
+      hasPermissionByRoute,
+      hasAnyAgentsPermission,
     }),
-    [currentCompany, setCurrentCompany, selectCompanyById, currentMembership, setMembership, memberPermissions, hasPermissionByTag],
+    [currentCompany, setCurrentCompany, selectCompanyById, currentMembership, setMembership, memberPermissions, hasPermissionByTag, hasPermissionByRoute, hasAnyAgentsPermission],
   );
 
   return (

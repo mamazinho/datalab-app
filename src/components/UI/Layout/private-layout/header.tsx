@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthContext } from "../../../../contexts/auth";
+import { useCompanyContext } from "../../../../contexts/company";
 import { useCompanyPermissions } from "../../../../contexts/company/contexts";
 import { CompanyDropdown } from "../../CompanyDropdown/company-dropdown";
 import { InvitesMenu } from "../../InvitesMenu/invites-menu";
@@ -28,13 +29,16 @@ export const Header = () => {
 
     const { logout, me } = useAuthContext();
     const { canManageUsers } = useCompanyPermissions();
+    const { hasPermissionByTag, hasAnyAgentsPermission } = useCompanyContext();
     const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement | null>(null);
 
+    const canSeeIaSection = hasPermissionByTag('chat') || hasAnyAgentsPermission;
+
     const menuPages = [
         { label: 'Página inicial', href: '/' },
-        { label: 'Conversas', href: '/conversas' },
+        ...(canSeeIaSection ? [{ label: 'IA', href: '/ia' }] : []),
         { label: 'Cursos', href: '/cursos' },
         ...(canManageUsers ? [{ label: 'Gerenciamento', href: '/gerenciamento/membros' }] : []),
     ];
@@ -64,7 +68,10 @@ export const Header = () => {
                 </BrandLink>
                 <Menu>
                     {menuPages.map(({ label, href }) => {
-                        const isActive = location.pathname === href;
+                        // Raiz só ativa por igualdade; demais itens também ativam nas subrotas
+                        const isActive = href === '/'
+                            ? location.pathname === '/'
+                            : location.pathname === href || location.pathname.startsWith(`${href}/`);
                         return (
                             <MenuItem 
                                 key={href}

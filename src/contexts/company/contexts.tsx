@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo } from "react";
 import type { IUserCompany, IUserMembership, IMembershipPermission } from "../../services/datalab-api/usersResource";
+import type { IRoutePermissionRef } from "../../utils/route-permissions";
 
 interface ICompanyContextProps {
   currentCompany: IUserCompany | null;
@@ -9,6 +10,8 @@ interface ICompanyContextProps {
   setMembership: (membership: IUserMembership) => void;
   memberPermissions: IMembershipPermission[];
   hasPermissionByTag: (tag: string) => boolean;
+  hasPermissionByRoute: (ref: IRoutePermissionRef) => boolean;
+  hasAnyAgentsPermission: boolean;
 }
 
 export const CompanyContext = createContext({} as ICompanyContextProps);

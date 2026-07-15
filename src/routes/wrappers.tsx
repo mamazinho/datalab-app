@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation, useParams } from "react-router-dom";
 import { useAuthContext } from "../contexts/auth";
 import { useCompanyContext } from "../contexts/company";
 import { PrivateLayout } from "../components/UI/Layout/private-layout/layout";
@@ -67,4 +67,42 @@ export const PermissionRoute = ({ tag }: IPermissionRouteProps) => {
     return hasPermissionByTag(tag)
         ? <Outlet />
         : <Navigate to="/" replace />;
+};
+
+// Seção IA: acessível com permissão de chat OU alguma permissão de agents
+export const IaRoute = () => {
+    const { isAuthLoading } = useAuthContext();
+    const { hasPermissionByTag, hasAnyAgentsPermission } = useCompanyContext();
+
+    if (isAuthLoading) return null;
+
+    return hasPermissionByTag('chat') || hasAnyAgentsPermission
+        ? <Outlet />
+        : <Navigate to="/" replace />;
+};
+
+// Aba de agentes: exige alguma permissão de rota de agents (owners sempre passam)
+export const AgentsRoute = () => {
+    const { isAuthLoading } = useAuthContext();
+    const { hasAnyAgentsPermission } = useCompanyContext();
+
+    if (isAuthLoading) return null;
+
+    return hasAnyAgentsPermission
+        ? <Outlet />
+        : <Navigate to="/" replace />;
+};
+
+// Index de /ia: cai na primeira aba que o usuário pode ver
+export const IaIndexRedirect = () => {
+    const { hasPermissionByTag } = useCompanyContext();
+
+    return <Navigate to={hasPermissionByTag('chat') ? '/ia/conversas' : '/ia/agentes'} replace />;
+};
+
+// <Navigate> não interpola params — redirect do deep-link legado de mensagens
+export const RedirectLegacyChatMessages = () => {
+    const { chatId } = useParams<{ chatId: string }>();
+
+    return <Navigate to={`/ia/conversas/${chatId}/mensagens`} replace />;
 };
