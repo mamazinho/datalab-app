@@ -1,53 +1,54 @@
-export interface IMessage {
-  sender: string;
-  receiver: string;
-  timestamp: string;
-  content: string;
-  specialist_key: string;
-  message_type: string;
-}
+import type { IChatStreamEvent } from '../services/datalab-api/chatMessagesResource';
 
-const parseMessages = (responseText: string): IMessage[] => {
-  const lines = responseText.split('\n');
-  return lines
-    .filter(line => line.length > 1)
-    .map(line => {
-      try {
-        return JSON.parse(line);
-      } catch {
-        console.warn('Failed to parse line:', line);
-        return null;
-      }
-    })
-    .filter(Boolean);
-}
+const parseEventLine = (line: string): IChatStreamEvent | null => {
+  const trimmed = line.trim();
+  if (!trimmed) return null;
 
-export async function processStreamResponse(
-  stream: ReadableStream<Uint8Array> | null,
-  onMessage: (messages: IMessage[]) => void,
-  onComplete?: () => void
-): Promise<void> {
-  if (!stream) return;
-  
-  let text = '';
+  try {
+    const parsed: unknown = JSON.parse(trimmed);
+    if (parsed && typeof parsed === 'object' && typeof (parsed as { type?: unknown }).type === 'string') {
+      return parsed as IChatStreamEvent;
+    }
+    console.warn('Ignoring stream line without a valid type:', trimmed);
+    return null;
+  } catch {
+    console.warn('Failed to parse stream line:', trimmed);
+    return null;
+  }
+};
+
+export async function* parseChatStream(
+  stream: ReadableStream<Uint8Array>
+): AsyncGenerator<IChatStreamEvent> {
   const decoder = new TextDecoder();
   const reader = stream.getReader();
+  let buffer = '';
 
   try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      text += decoder.decode(value);
-      const messages = parseMessages(text);
-      onMessage(messages);
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        const event = parseEventLine(line);
+        if (event) yield event;
+      }
     }
-    onComplete?.();
-  } catch (error) {
-    console.error('Error processing stream:', error);
-    throw error;
+
+    buffer += decoder.decode();
+    const lastEvent = parseEventLine(buffer);
+    if (lastEvent) yield lastEvent;
   } finally {
-    console.log("finally");
+    try {
+      await reader.cancel();
+    } catch {
+      // stream já encerrado
+    }
     reader.releaseLock();
   }
 }

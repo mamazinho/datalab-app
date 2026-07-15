@@ -45,7 +45,7 @@ export const Home: React.FC = () => {
             <FeatureDescription>
                 Converse com nossa inteligência artificial e tire suas dúvidas em tempo real.
             </FeatureDescription>
-            <FeatureLink to="/conversas">
+            <FeatureLink to="/ia/conversas">
                 Acessar conversas
             </FeatureLink>
           </FeatureCard>

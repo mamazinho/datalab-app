@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MessageList } from './components/message-list';
-import { MessageInput } from './components/message-input';
+import { ChatConversation } from './components/chat-conversation';
 import { AsyncResource } from '../../../components/Tools/async-resource';
 import { DatalabAPI } from '../../../services/datalab-api';
-import { processStreamResponse, type IMessage } from '../../../utils/process-stream';
+import type { IChatMessageRead } from '../../../services/datalab-api/chatMessagesResource';
 import { ErrorBanner, ErrorLabel, MessagesBody, MessagesContainer, MessagesHeader, MessagesSubtitle, MessagesTitle, MessagesTitleHighlight } from './messages.style';
 import { useChatsContext } from '../../../contexts/chats';
 
@@ -12,40 +11,14 @@ export const ChatMessages: React.FC = () => {
     const { chatId } = useParams<{ chatId: string }>();
     const navigate = useNavigate();
     const { chats, getAllChats } = useChatsContext();
-    const latestStreamMessagesRef = useRef<IMessage[]>([]);
     const createdFallbackForChatIdRef = useRef<string | null>(null);
 
     const [error, setError] = useState<string | null>(null);
-    const [appendedMessages, setAppendedMessages] = useState<IMessage[]>([]);
-    const [streamingMessages, setStreamingMessages] = useState<IMessage[]>([]);
-    const [isDisabled, setIsDisabled] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
     const [isValidatingChat, setIsValidatingChat] = useState(true);
-    const [prompt, setPrompt] = useState('');
-    const [selectedModel, setSelectedModel] = useState('');
 
     const handleError = useCallback((error: unknown) => {
         console.error(error);
-        setError('Error occurred, check the browser developer console for more information.');
-        setIsDisabled(false);
-        setIsLoading(false);
-    }, []);
-
-    const streamingMessage = useCallback(async (newMessages: IMessage[]) => {
-        if (!newMessages.length) return;
-
-        const lastMessage = newMessages[newMessages.length - 1];
-        console.log("Streaming completed, lastMessage:", lastMessage);
-        latestStreamMessagesRef.current = newMessages;
-        setStreamingMessages(newMessages);
-    }, []);
-
-    const streamingCompleted = useCallback(async () => {
-        const consolidatedMessages = latestStreamMessagesRef.current;
-        console.log("Streaming completed, final messages:", consolidatedMessages);
-        setAppendedMessages((prevAppendedMessages) => [...prevAppendedMessages, ...consolidatedMessages]);
-        setStreamingMessages([]);
-        latestStreamMessagesRef.current = [];
+        setError('Ocorreu um erro, verifique o console do navegador para mais informações.');
     }, []);
 
     useEffect(() => {
@@ -94,7 +67,7 @@ export const ChatMessages: React.FC = () => {
 
                     if (isActive) {
                         isActive = false;
-                        navigate(`/conversas/${createdChat.id}/mensagens`, { replace: true });
+                        navigate(`/ia/conversas/${createdChat.id}/mensagens`, { replace: true });
                     }
                 }
 
@@ -117,42 +90,11 @@ export const ChatMessages: React.FC = () => {
         ensureCurrentChatExists();
     }, [chatId, chats, getAllChats, navigate, handleError]);
 
-    const fetchMessages = useCallback(async (): Promise<IMessage[]> => {
+    const fetchMessages = useCallback(async (): Promise<IChatMessageRead[]> => {
         if (!chatId || isValidatingChat) return [];
 
-        setAppendedMessages([]);
-        setStreamingMessages([]);
-        latestStreamMessagesRef.current = [];
-
-        const stream = await DatalabAPI.ChatMessagesResource.getChatMessages(Number(chatId));
-        let finalMessages: IMessage[] = [];
-
-        await processStreamResponse(stream, (newMessages) => {
-            finalMessages = [...newMessages];
-        });
-
-        return finalMessages;
+        return DatalabAPI.ChatMessagesResource.getChatMessages(Number(chatId));
     }, [chatId, isValidatingChat]);
-
-    const handleSendMessage = async () => {
-        if (!prompt.trim() || !chatId || !selectedModel) return;
-        setIsLoading(true);
-        setIsDisabled(true);
-        setError(null);
-
-        const currentPrompt = prompt;
-        setPrompt('');
-
-        try {
-            const stream = await DatalabAPI.ChatMessagesResource.sendMessage(Number(chatId), currentPrompt, selectedModel);
-            await processStreamResponse(stream, streamingMessage, streamingCompleted);
-        } catch (error) {
-            handleError(error);
-        } finally {
-            setIsLoading(false);
-            setIsDisabled(false);
-        }
-    };
 
     return (
         <MessagesContainer>
@@ -163,31 +105,17 @@ export const ChatMessages: React.FC = () => {
 
             <MessagesBody>
                 <AsyncResource fetcher={fetchMessages} dependencies={[chatId, isValidatingChat]}>
-                    {(initialMessages) => (
-                        <MessageList
-                            messages={[...initialMessages, ...appendedMessages]}
-                            streamingMessages={streamingMessages}
-                        />
+                    {(history) => (
+                        <ChatConversation chatId={Number(chatId)} history={history} />
                     )}
                 </AsyncResource>
             </MessagesBody>
 
             {error && (
                 <ErrorBanner>
-                    <ErrorLabel>Error:</ErrorLabel> {error}
+                    <ErrorLabel>Erro:</ErrorLabel> {error}
                 </ErrorBanner>
             )}
-
-            <MessageInput
-                value={prompt}
-                modelName={selectedModel}
-                onModelChange={setSelectedModel}
-                onChange={setPrompt}
-                onSubmit={handleSendMessage}
-                isLoading={isLoading}
-                isDisabled={isDisabled}
-            />
         </MessagesContainer>
     );
 };
-

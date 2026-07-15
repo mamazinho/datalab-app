@@ -32,7 +32,7 @@ let _isRefreshing = false;
 let _refreshQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = [];
 
 async function doRefresh(): Promise<string> {
-  const { data } = await axiosInstance.post<{ access_token: string }>('v1/auth/refresh/');
+  const { data } = await axiosInstance.post<{ access_token: string }>('auth/refresh/');
   localStorage.setItem('accessToken', data.access_token);
   return data.access_token;
 }
