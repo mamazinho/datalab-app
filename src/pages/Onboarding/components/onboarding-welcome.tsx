@@ -1,6 +1,5 @@
-import { useActionState, useCallback, useEffect } from 'react';
+import { useActionState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import { useAuthContext } from '../../../contexts/auth';
 import { useCompanyContext } from '../../../contexts/company';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
@@ -26,10 +25,10 @@ import {
   OnboardingTitle,
   OnboardingWrapper,
 } from '../onboarding.style';
-import { acceptInviteAction, createCompanyAction, declineInviteAction } from '../actions';
+import { createCompanyAction } from '../actions';
+import { useActionFeedback } from '../../../hooks/use-action-feedback';
+import { useInviteActions } from '../../../hooks/use-invite-actions';
 import type { IUserInvite } from '../../../services/datalab-api/usersResource';
-import type { ICreateCompanyResponse } from '../../../services/datalab-api/companiesResource';
-import type { ActionState } from '../../../types/actions';
 
 const InviteRow = ({
   invite,
@@ -38,48 +37,7 @@ const InviteRow = ({
   invite: IUserInvite;
   onRefresh: () => Promise<unknown>;
 }) => {
-  const [acceptState, acceptFormAction, isAccepting] = useActionState(
-    acceptInviteAction,
-    INITIAL_ACTION_STATE,
-  );
-  const [declineState, declineFormAction, isDeclining] = useActionState(
-    declineInviteAction,
-    INITIAL_ACTION_STATE,
-  );
-
-  const handleAcceptResult = useCallback(
-    (state: ActionState<never>) => {
-      if (state.timestamp === 0) return;
-      if (state.success) {
-        toast.success('Convite aceito!');
-        void onRefresh();
-      } else if (state.error) {
-        toast.error(state.error);
-      }
-    },
-    [onRefresh],
-  );
-
-  const handleDeclineResult = useCallback(
-    (state: ActionState<never>) => {
-      if (state.timestamp === 0) return;
-      if (state.success) {
-        toast.info('Convite recusado.');
-        void onRefresh();
-      } else if (state.error) {
-        toast.error(state.error);
-      }
-    },
-    [onRefresh],
-  );
-
-  useEffect(() => {
-    handleAcceptResult(acceptState);
-  }, [acceptState, handleAcceptResult]);
-
-  useEffect(() => {
-    handleDeclineResult(declineState);
-  }, [declineState, handleDeclineResult]);
+  const { acceptFormAction, declineFormAction, isAccepting, isDeclining } = useInviteActions(onRefresh);
 
   return (
     <InviteItem>
@@ -117,24 +75,16 @@ export const OnboardingWelcome = () => {
     INITIAL_ACTION_STATE,
   );
 
-  const handleCreateResult = useCallback(
-    (state: ActionState<ICreateCompanyResponse>) => {
-      if (state.timestamp === 0) return;
-      if (state.success && state.data) {
-        toast.success('Empresa criada com sucesso!');
-        selectCompanyById(state.data.company.id);
-        setMembership(state.data.membership);
-        void getMe().then(() => navigate('/'));
-      } else if (state.error) {
-        toast.error(state.error);
-      }
+  useActionFeedback(createState, {
+    successMessage: 'Empresa criada com sucesso!',
+    onSuccess: async (data) => {
+      if (!data) return;
+      selectCompanyById(data.company.id);
+      setMembership(data.membership);
+      await getMe();
+      navigate('/');
     },
-    [selectCompanyById, setMembership, getMe, navigate],
-  );
-
-  useEffect(() => {
-    handleCreateResult(createState);
-  }, [createState, handleCreateResult]);
+  });
 
   return (
     <OnboardingWrapper>

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { passwordSchema } from '../../schemas/password';
+import { emailSchema } from '../../schemas/email';
+import { optionalPhoneSchema } from '../../schemas/phone';
 
 export const registerSchema = z.object({
   name: z
@@ -7,17 +9,8 @@ export const registerSchema = z.object({
     .trim()
     .min(3, 'O nome deve ter mais de 2 caracteres.')
     .regex(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/, 'O nome deve conter apenas letras.'),
-  email: z
-    .string()
-    .trim()
-    .min(1, 'O e-mail é obrigatório.')
-    .email('O e-mail deve ser em um formato válido.'),
-  phone_number: z
-    .string()
-    .trim()
-    .regex(/^\+\d{1,31}$/, 'Telefone deve comecar com + e conter apenas numeros (maximo de 32 caracteres).')
-    .optional()
-    .or(z.literal('')),
+  email: emailSchema,
+  phone_number: optionalPhoneSchema,
   password: z
     .string()
     .trim()

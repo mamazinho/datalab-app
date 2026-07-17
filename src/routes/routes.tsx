@@ -1,12 +1,12 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { ChatMessages } from "../pages/Chats/Messages";
-import { ListChats } from "../pages/Chats";
+import { Chats } from "../pages/Chats";
 import { Home } from "../pages/Home";
 import { Login } from "../pages/Login";
 import { Register } from "../pages/Register";
 import { ForgotPassword } from "../pages/ForgotPassword";
 import { ChangePassword } from "../pages/ChangePassword";
-import { GoogleCallback } from "../pages/AuthCallback/google-callback";
+import { GoogleCallback } from "../pages/AuthCallback";
 import { EditProfile } from "../pages/EditProfile";
 import { Onboarding } from "../pages/Onboarding";
 import { CompanyMembers } from "../pages/CompanyMembers";
@@ -80,7 +80,7 @@ export const routes = createBrowserRouter([
                                         children: [
                                             {
                                                 path: "conversas",
-                                                element: <ListChats />,
+                                                element: <Chats />,
                                             },
                                             {
                                                 path: "conversas/:chatId/mensagens",

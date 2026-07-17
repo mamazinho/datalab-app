@@ -3,10 +3,9 @@ import { passwordSchema } from '../../schemas/password';
 
 export const changePasswordSchema = z.object({
   email: z
-    .string()
+    .email('Link inválido (email incorreto).')
     .trim()
-    .min(1, 'Link inválido (email ausente).')
-    .email('Link inválido (email incorreto).'),
+    .min(1, 'Link inválido (email ausente).'),
   code: z
     .string()
     .trim()

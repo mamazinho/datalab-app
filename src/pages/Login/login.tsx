@@ -1,4 +1,4 @@
-import React, { useEffect, useActionState, useCallback } from 'react';
+import React, { useActionState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LoginButton,
@@ -21,13 +21,12 @@ import {
   LoginTitle,
 } from './login.style';
 import { useAuthContext } from '../../contexts/auth';
-import { toast } from 'react-toastify';
 import { GoogleButton } from '../../components/UI/Buttons/google-button';
 import { loginAction } from './actions';
-import type { ILoginUserResponse } from '../../services/datalab-api/authResource';
-import { INITIAL_ACTION_STATE, type ActionState } from '../../types/actions';
+import { INITIAL_ACTION_STATE } from '../../types/actions';
 import { PasswordInput } from '../../components/UI/Inputs/Password/password-input';
 import { useGoogleLogin } from '../../hooks/useGoogleLogin';
+import { useActionFeedback } from '../../hooks/use-action-feedback';
 
 export const Login: React.FC = () => {
   const [loginState, loginFormAction, isLoginPending] = useActionState(loginAction, INITIAL_ACTION_STATE);
@@ -35,20 +34,13 @@ export const Login: React.FC = () => {
   const navigate = useNavigate();
   const { handleGoogleLogin } = useGoogleLogin();
 
-  const handleLoginActionResult = useCallback(async (formState: ActionState<ILoginUserResponse>) => {
-    if (formState.timestamp === 0) return;
-    if (formState.success && formState.data) {
-      await login(formState.data);
+  useActionFeedback(loginState, {
+    onSuccess: async (data) => {
+      if (!data) return;
+      await login(data);
       navigate('/');
-    } else if (formState.error) {
-      toast.error(formState.error);
-    }
-  }, [login, navigate]);
-
-  // Form submission result effect
-  useEffect(() => {
-    handleLoginActionResult(loginState);
-  }, [loginState, handleLoginActionResult]);
+    },
+  });
 
   return (
     <LoginContainer>

@@ -1,7 +1,9 @@
 import { RouterProvider } from "react-router-dom";
 import { useEffect } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { routes } from "./routes";
 import { AuthProvider } from "./contexts/auth";
+import { ServerErrorComponent } from "./components/Feedback/ErrorBoundaries/server-error";
 import { ToastContainer } from 'react-toastify';
 import { CustomThemeProvider, useTheme } from "./contexts/theme";
 import { useAuthContext } from "./contexts/auth";
@@ -45,8 +47,11 @@ export function App() {
                 <CompanyBootstrap>
                     <ChatsProvider>
                         <ThemeBootstrap />
-                        <ToastContainer /> 
-                        <RouterProvider router={routes} />
+                        <ToastContainer />
+                        {/* Boundary global: erro de render fora dos AsyncResource não vira tela branca */}
+                        <ErrorBoundary FallbackComponent={ServerErrorComponent}>
+                            <RouterProvider router={routes} />
+                        </ErrorBoundary>
                     </ChatsProvider>
                 </CompanyBootstrap>
             </AuthProvider>

@@ -1,9 +1,8 @@
-import { useState, useActionState, useEffect, useCallback } from 'react';
+import { useState, useActionState } from 'react';
 import { createChatAction } from '../actions';
-import { toast } from 'react-toastify';
 import { Modal } from '../../../components/UI/Modal/modal';
-import { INITIAL_ACTION_STATE, type ActionState } from '../../../types/actions';
-import { type IRetrieveChat } from '../../../services/datalab-api/chatsResource';
+import { INITIAL_ACTION_STATE } from '../../../types/actions';
+import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import {
     CreateChatActions,
     CreateChatButton,
@@ -24,19 +23,12 @@ export const CreateChat = ({ onCreateChat }: ICreateChatProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [createChatState, createChatFormAction, isCreateChatPending] = useActionState(createChatAction, INITIAL_ACTION_STATE);
 
-    const handleCreateChatResult = useCallback((formState: ActionState<IRetrieveChat>) => {
-        if (formState.timestamp === 0) return;
-        if (formState.success && formState.data) {
+    useActionFeedback(createChatState, {
+        onSuccess: () => {
             void onCreateChat();
             setIsOpen(false);
-        } else if (formState.error) {
-            toast.error(formState.error);
-        }
-    }, [onCreateChat]);
-
-    useEffect(() => {
-        handleCreateChatResult(createChatState);
-    }, [createChatState, handleCreateChatResult]);
+        },
+    });
 
     return (
         <>

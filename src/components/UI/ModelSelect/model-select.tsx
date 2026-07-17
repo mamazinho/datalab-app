@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { DatalabAPI } from '../../../services/datalab-api';
+import { useClickOutside } from '../../../hooks/use-click-outside';
 import type { IListAvailableModelsResponse } from '../../../services/datalab-api/agentsResource';
 import {
     ModelOptionExpand,
@@ -34,21 +35,7 @@ export const ModelSelect = ({
     const [isModelsLoading, setIsModelsLoading] = useState(true);
     const wrapperRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-
-        if (isOpen) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isOpen]);
+    useClickOutside(wrapperRef, () => setIsOpen(false), isOpen);
 
     useEffect(() => {
         let isActive = true;

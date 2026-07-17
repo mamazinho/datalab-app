@@ -15,6 +15,7 @@ import {
     Menu,
     MenuItem,
     ProfileAvatar,
+    ProfileAvatarBadge,
     ProfileButton,
     ProfileEmail,
     ProfileMenu,
@@ -42,13 +43,6 @@ export const Header = () => {
         { label: 'Cursos', href: '/cursos' },
         ...(canManageUsers ? [{ label: 'Gerenciamento', href: '/gerenciamento/membros' }] : []),
     ];
-
-    const profileAvatarUrl = useMemo(() => {
-        if (me?.avatar_url) return me.avatar_url;
-
-        const seedName = me?.name ? me.name.trim()[0] : 'U';
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(seedName)}&background=FFBE00&color=00001F&bold=true&format=png&size=128`;
-    }, [me]);
 
     const pendingInviteCount = useMemo(
         () => (me?.invites ?? []).filter((i) => i.status === 'pending').length,
@@ -90,7 +84,13 @@ export const Header = () => {
                         onClick={() => setIsMenuOpen((prev) => !prev)}
                         style={{ marginLeft: '0.75rem' }}
                     >
-                        <ProfileAvatar src={profileAvatarUrl} alt={`Foto de perfil de ${me?.name}`} />
+                        <ProfileAvatar
+                            src={me?.avatar_url}
+                            name={me?.name ?? ''}
+                            size={128}
+                            seed="initial"
+                            alt={`Foto de perfil de ${me?.name}`}
+                        />
                         {pendingInviteCount > 0 && (
                             <ProfileAvatarBadge>{pendingInviteCount > 9 ? '9+' : pendingInviteCount}</ProfileAvatarBadge>
                         )}
@@ -113,24 +113,3 @@ export const Header = () => {
         </HeaderNav>
     );
 }
-
-// Badge flutuante sobre o avatar indicando convites pendentes
-import styled from "styled-components";
-const ProfileAvatarBadge = styled.span`
-    position: absolute;
-    top: -0.15rem;
-    right: -0.15rem;
-    min-width: 1rem;
-    height: 1rem;
-    padding: 0 0.22rem;
-    border-radius: 999px;
-    background: ${({ theme }) => theme.colors.error};
-    color: #fff;
-    font-size: 0.62rem;
-    font-weight: 800;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid ${({ theme }) => theme.colors.surface};
-    pointer-events: none;
-`;

@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react';
 import type { IRoutePermission } from '../../../services/datalab-api/usersResource';
+import { groupPermissionsByTag } from '../permissions-helpers';
 import {
   PermissionGroup,
   PermissionGroupDetails,
@@ -15,14 +16,6 @@ interface PermissionsListProps {
   permissions: IRoutePermission[];
   selected: Set<number>;
   onChange: (selected: Set<number>) => void;
-}
-
-function groupByTag(permissions: IRoutePermission[]): Record<string, IRoutePermission[]> {
-  return permissions.reduce<Record<string, IRoutePermission[]>>((acc, p) => {
-    const key = p.tag ?? 'Geral';
-    (acc[key] ??= []).push(p);
-    return acc;
-  }, {});
 }
 
 interface PermissionGroupItemProps {
@@ -85,7 +78,7 @@ const PermissionGroupItem = ({ tag, perms, selected, onToggle, onToggleGroup }: 
 };
 
 export const PermissionsSelector = ({ permissions, selected, onChange }: PermissionsListProps) => {
-  const grouped = groupByTag(permissions);
+  const grouped = groupPermissionsByTag(permissions);
 
   const togglePermission = useCallback((id: number) => {
     onChange(((prev) => {

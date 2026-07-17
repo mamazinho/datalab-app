@@ -1,4 +1,4 @@
-import React, { useActionState, useEffect, useCallback, useState } from 'react';
+import React, { useActionState, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ChangePasswordCancelLink,
@@ -9,7 +9,8 @@ import {
 } from './change-password.style';
 import { toast } from 'react-toastify';
 import { changePasswordAction } from './actions';
-import { INITIAL_ACTION_STATE, type ActionState } from '../../types/actions';
+import { INITIAL_ACTION_STATE } from '../../types/actions';
+import { useActionFeedback } from '../../hooks/use-action-feedback';
 import { PasswordInput } from '../../components/UI/Inputs/Password/password-input';
 import { AuthForm, AuthHeader, BrandHighlight, BrandTitle, Description, ErrorText, Field, FieldsWrapper, Label, PrimaryButton, Subtitle } from '../../styles/design-system.style';
 
@@ -25,19 +26,14 @@ export const ChangePassword: React.FC = () => {
   const email = searchParams.get('email') || '';
   const code = searchParams.get('code') || '';
 
-  const handleChangePasswordResult = useCallback((formState: ActionState) => {
-    if (formState.timestamp === 0) return;
-    if (formState.success) {
-        toast.success("Senha alterada com sucesso!");
-        setTimeout(() => {
-            navigate('/login');
-        }, 3000);
-    } 
-  }, [navigate]);
-
-  useEffect(() => {
-    handleChangePasswordResult(changePasswordState);
-  }, [changePasswordState, handleChangePasswordResult]);
+  useActionFeedback(changePasswordState, {
+    onSuccess: () => {
+      toast.success('Senha alterada com sucesso!');
+      setTimeout(() => navigate('/login'), 3000);
+    },
+    // Erro já aparece inline no formulário — sem toast duplicado
+    onError: () => {},
+  });
 
   return (
     <ChangePasswordContainer>
@@ -57,13 +53,14 @@ export const ChangePassword: React.FC = () => {
               <Field>
                 <Label htmlFor="inputPassword">Nova Senha</Label>
                 <PasswordInput
-                    id="inputPassword" 
+                    id="inputPassword"
                     name="password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                    required 
+                    required
                     autoFocus
                     autoComplete="new-password"
+                    showRequirements
                 />
               </Field>
 

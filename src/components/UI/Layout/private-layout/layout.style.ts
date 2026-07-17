@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import styled, { css } from 'styled-components';
+import { Avatar } from '../../Avatar';
 
 export const Shell = styled.div`
   min-height: 100vh;
@@ -107,7 +108,7 @@ export const ProfileButton = styled.button`
   justify-content: center;
 `;
 
-export const ProfileAvatar = styled.img`
+export const ProfileAvatar = styled(Avatar)`
   width: 2.35rem;
   height: 2.35rem;
   border-radius: 50%;
@@ -227,4 +228,24 @@ export const SocialIcon = styled.svg`
   width: 1.2rem;
   height: 1.2rem;
   fill: currentColor;
+`;
+
+// Badge flutuante sobre o avatar indicando convites pendentes
+export const ProfileAvatarBadge = styled.span`
+    position: absolute;
+    top: -0.15rem;
+    right: -0.15rem;
+    min-width: 1rem;
+    height: 1rem;
+    padding: 0 0.22rem;
+    border-radius: 999px;
+    background: ${({ theme }) => theme.colors.error};
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid ${({ theme }) => theme.colors.surface};
+    pointer-events: none;
 `;

@@ -10,14 +10,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const storedToken = localStorage.getItem("accessToken");
     return storedToken || undefined;
   });
-  const [me, setMe] = useState({} as IUserResponse);
+  const [me, setMe] = useState<IUserResponse | null>(null);
   // Começa como `true` se há token em cache, para evitar redirects prematuros
   const [isAuthLoading, setIsAuthLoading] = useState(() => !!localStorage.getItem("accessToken"));
 
   const getMe = useCallback(async (): Promise<IUserResponse> => {
     try {
       const user = await DatalabAPI.UsersResource.me() as IUserResponse;
-      console.log("mee", user);
       setMe(user);
       return user;
     } catch (error) {
@@ -38,26 +37,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(() => {
     setAccessToken(undefined);
-    setMe({} as IUserResponse);
+    setMe(null);
     setIsAuthLoading(false);
     localStorage.removeItem("accessToken");
   }, []);
 
   useEffect(() => {
     if (!accessToken) {
-      setMe({} as IUserResponse);
+      setMe(null);
       setIsAuthLoading(false);
       return;
     }
 
     setIsAuthLoading(true);
-    getMe()
-      .catch((error: unknown) => {
+
+    const loadMe = async () => {
+      try {
+        await getMe();
+      } catch (error: unknown) {
         if (axios.isAxiosError(error) && error.response?.status === 401) {
           logout();
         }
-      })
-      .finally(() => setIsAuthLoading(false));
+      } finally {
+        setIsAuthLoading(false);
+      }
+    };
+
+    void loadMe();
   }, [accessToken, getMe, logout]);
 
   const contextValue = useMemo(

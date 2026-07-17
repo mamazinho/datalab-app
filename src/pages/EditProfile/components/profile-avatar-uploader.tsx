@@ -41,7 +41,7 @@ export const ProfileAvatarUploader = ({
   return (
     <>
       <AvatarButton type="button" onClick={handleOpenFilePicker} disabled={isDisabled || isUploading}>
-        <AvatarImage src={avatarUrl} alt={`Foto de perfil de ${firstName}`} />
+        <AvatarImage src={avatarUrl} name={firstName} size={256} alt={`Foto de perfil de ${firstName}`} />
         <AvatarEditIndicator title="Editar foto">✎</AvatarEditIndicator>
       </AvatarButton>
       <HiddenFileInput

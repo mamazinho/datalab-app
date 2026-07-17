@@ -14,7 +14,7 @@ interface ICompanyContextProps {
   hasAnyAgentsPermission: boolean;
 }
 
-export const CompanyContext = createContext({} as ICompanyContextProps);
+export const CompanyContext = createContext<ICompanyContextProps | null>(null);
 
 export const useCompanyContext = () => {
   const context = useContext(CompanyContext);

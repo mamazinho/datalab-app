@@ -89,6 +89,7 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onGoogle
                             placeholder="Sua senha"
                             required
                             autoComplete="new-password"
+                            showRequirements
                         />
                     </Field>
 

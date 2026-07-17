@@ -7,7 +7,7 @@ interface IChatsContextProps {
   getAllChats: () => Promise<IRetrieveChat[]>;
 }
 
-export const ChatsContext = createContext({} as IChatsContextProps);
+export const ChatsContext = createContext<IChatsContextProps | null>(null);
 
 export const useChatsContext = () => {
   const context = useContext(ChatsContext);

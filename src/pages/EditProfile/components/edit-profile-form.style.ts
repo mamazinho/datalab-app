@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { ErrorText, Field, FieldsWrapper, Input, Label, PrimaryButton } from '../../../styles/design-system.style';
+import { Avatar } from '../../../components/UI/Avatar';
 
 export const Form = styled.form`
   display: flex;
@@ -25,7 +26,7 @@ export const AvatarButton = styled.button`
   background: transparent;
 `;
 
-export const AvatarImage = styled.img`
+export const AvatarImage = styled(Avatar)`
   width: 100%;
   height: 100%;
   border-radius: 50%;

@@ -4,7 +4,7 @@ import type { IUserResponse } from "../../services/datalab-api/usersResource";
 
 interface IAuthContextProps {
   accessToken: string | undefined;
-  me: IUserResponse;
+  me: IUserResponse | null;
   isAuthLoading: boolean;
 
   login: (loginResponse: ILoginUserResponse) => Promise<void>;
@@ -13,8 +13,7 @@ interface IAuthContextProps {
   getMe: () => Promise<IUserResponse>;
 }
 
-
-export const AuthContext = createContext({} as IAuthContextProps);
+export const AuthContext = createContext<IAuthContextProps | null>(null);
 
 export const useAuthContext = () => {
   const context = useContext(AuthContext);

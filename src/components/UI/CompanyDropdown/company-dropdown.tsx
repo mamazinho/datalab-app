@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuthContext } from '../../../contexts/auth';
 import { useCompanyContext } from '../../../contexts/company';
+import { useClickOutside } from '../../../hooks/use-click-outside';
 import {
   ActiveDot,
   DropdownChevron,
@@ -22,15 +23,7 @@ export const CompanyDropdown = () => {
 
   const userCompanies: IUserCompany[] = me?.companies ?? [];
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  useClickOutside(wrapperRef, () => setIsOpen(false));
 
   if (isAuthLoading) return null;
   if (!currentCompany) return <Navigate to="/onboarding" replace />;

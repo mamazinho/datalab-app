@@ -1,10 +1,7 @@
-import { useActionState, useCallback, useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
+import { useState } from 'react';
 import { useAuthContext } from '../../../contexts/auth';
-import { DatalabAPI } from '../../../services/datalab-api';
-import { INITIAL_ACTION_STATE } from '../../../types/actions';
+import { useInviteActions } from '../../../hooks/use-invite-actions';
 import type { IUserInvite } from '../../../services/datalab-api/usersResource';
-import type { ActionState } from '../../../types/actions';
 import {
   InviteRow,
   InviteRowAccept,
@@ -32,32 +29,6 @@ const TAB_LABELS: Record<InviteTab, string> = {
   declined: 'Recusados',
 };
 
-async function acceptAction(
-  _prev: ActionState<never>,
-  formData: FormData,
-): Promise<ActionState<never>> {
-  const id = Number(formData.get('inviteId'));
-  try {
-    await DatalabAPI.UsersResource.acceptInvite(id);
-    return { success: true, timestamp: Date.now() };
-  } catch (e: unknown) {
-    return { success: false, error: e instanceof Error ? e.message : String(e), timestamp: Date.now() };
-  }
-}
-
-async function declineAction(
-  _prev: ActionState<never>,
-  formData: FormData,
-): Promise<ActionState<never>> {
-  const id = Number(formData.get('inviteId'));
-  try {
-    await DatalabAPI.UsersResource.declineInvite(id);
-    return { success: true, timestamp: Date.now() };
-  } catch (e: unknown) {
-    return { success: false, error: e instanceof Error ? e.message : String(e), timestamp: Date.now() };
-  }
-}
-
 const InviteActionRow = ({
   invite,
   onRefresh,
@@ -65,31 +36,7 @@ const InviteActionRow = ({
   invite: IUserInvite;
   onRefresh: () => Promise<unknown>;
 }) => {
-  const [acceptState, acceptFormAction, isAccepting] = useActionState(acceptAction, INITIAL_ACTION_STATE);
-  const [declineState, declineFormAction, isDeclining] = useActionState(declineAction, INITIAL_ACTION_STATE);
-
-  const handleAccept = useCallback((state: ActionState<never>) => {
-    if (state.timestamp === 0) return;
-    if (state.success) {
-      toast.success('Convite aceito!');
-      void onRefresh();
-    } else if (state.error) {
-      toast.error(state.error);
-    }
-  }, [onRefresh]);
-
-  const handleDecline = useCallback((state: ActionState<never>) => {
-    if (state.timestamp === 0) return;
-    if (state.success) {
-      toast.info('Convite recusado.');
-      void onRefresh();
-    } else if (state.error) {
-      toast.error(state.error);
-    }
-  }, [onRefresh]);
-
-  useEffect(() => { handleAccept(acceptState); }, [acceptState, handleAccept]);
-  useEffect(() => { handleDecline(declineState); }, [declineState, handleDecline]);
+  const { acceptFormAction, declineFormAction, isAccepting, isDeclining } = useInviteActions(onRefresh);
 
   return (
     <InviteRow>

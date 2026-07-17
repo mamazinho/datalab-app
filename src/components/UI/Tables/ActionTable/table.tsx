@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
+import { useClickOutside } from '../../../../hooks/use-click-outside';
 import { ActionItem, ActionsMenu, ActionsTrigger, StyledTable } from './table.style';
 
 export const TableHeaders = ({ children, ...props }: ComponentPropsWithoutRef<'tr'>) => (
@@ -31,16 +32,7 @@ export const TableActions = ({ children }: { children: React.ReactNode }) => {
     setOpen(v => !v);
   };
 
-  useEffect(() => {
-    if (!open) return;
-    const onMouseDown = (e: MouseEvent) => {
-      if (!triggerRef.current?.contains(e.target as Node) && !menuRef.current?.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onMouseDown);
-    return () => document.removeEventListener('mousedown', onMouseDown);
-  }, [open]);
+  useClickOutside([triggerRef, menuRef], () => setOpen(false), open);
 
   return (
     <>
