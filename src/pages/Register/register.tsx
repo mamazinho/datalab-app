@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useActionState, useCallback } from 'react';
+import React, { useRef, useActionState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RegisterCard, RegisterContainer, RegisterFooter, RegisterFooterLink, RegisterShell } from './register.style';
 import { DatalabAPI } from '../../services/datalab-api';
@@ -8,9 +8,9 @@ import { toast } from 'react-toastify';
 import { RegisterForm } from './components/register-form';
 import { ConfirmAccountForm } from './components/confirm-account-form';
 import { confirmUserAction, registerUserAction } from './actions';
-import { INITIAL_ACTION_STATE, type ActionState } from '../../types/actions';
-import type { IUserResponse } from '../../services/datalab-api/usersResource';
+import { INITIAL_ACTION_STATE } from '../../types/actions';
 import { useGoogleLogin } from '../../hooks/useGoogleLogin';
+import { useActionFeedback } from '../../hooks/use-action-feedback';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -20,22 +20,14 @@ export const Register: React.FC = () => {
   const [registerState, registerFormAction, isRegisterPending] = useActionState(registerUserAction, INITIAL_ACTION_STATE);
   const [confirmState, confirmFormAction, isConfirmPending] = useActionState(confirmUserAction, INITIAL_ACTION_STATE);
 
-  const handleRegisterActionResult = useCallback((formState: ActionState<IUserResponse>) => {
-    if (formState.success) {
-      stepsRef.current?.next();
-    } else if (formState.error) {
-      toast.error(formState.error);
-    }
-  }, [stepsRef]);
+  useActionFeedback(registerState, {
+    onSuccess: () => stepsRef.current?.next(),
+  });
 
-  const handleConfirmActionResult = useCallback((formState: ActionState) => {
-    if (formState.success) {
-      toast.success("Conta confirmada com sucesso!");
-      navigate('/login');
-    } else if (formState.error) {
-      toast.error(formState.error);
-    }
-  }, [navigate]);
+  useActionFeedback(confirmState, {
+    successMessage: 'Conta confirmada com sucesso!',
+    onSuccess: () => navigate('/login'),
+  });
 
   const handleResendCode = async () => {
     const userId = registerState.data?.id;
@@ -54,14 +46,6 @@ export const Register: React.FC = () => {
       toast.error("Falha ao reenviar código de confirmação.");
     }
   };
-
-  useEffect(() => {
-    handleRegisterActionResult(registerState);
-  }, [registerState, handleRegisterActionResult]);
-
-  useEffect(() => {
-    handleConfirmActionResult(confirmState);
-  }, [confirmState, handleConfirmActionResult]);
 
   return (
     <RegisterContainer>

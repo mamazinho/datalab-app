@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { Modal } from '../../../components/UI/Modal/modal';
+import { AsyncResource } from '../../../components/Tools/async-resource';
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
 import type { IRoutePermission } from '../../../services/datalab-api/usersResource';
+import { groupPermissionsByTag } from '../permissions-helpers';
 import {
   PermissionGroup,
   PermissionGroupLabel,
@@ -22,43 +24,36 @@ interface IMemberPermissionsModalProps {
   member: ICompanyMembership | null;
 }
 
-export const MemberPermissionsModal = ({ isOpen, onClose, member }: IMemberPermissionsModalProps) => {
-  const [allRoutes, setAllRoutes] = useState<IRoutePermission[]>([]);
-  const [grantedIds, setGrantedIds] = useState<Set<number>>(new Set());
-  const [isLoading, setIsLoading] = useState(false);
+interface IMemberPermissionsData {
+  routes: IRoutePermission[];
+  grantedIds: number[];
+}
+
+const fetchMemberPermissionsData = async (memberId: number): Promise<IMemberPermissionsData> => {
+  const [routes, permissions] = await Promise.all([
+    DatalabAPI.MembershipsResource.listRoutePermissions(),
+    DatalabAPI.MembershipsResource.listMemberPermissions(memberId),
+  ]);
+
+  return { routes, grantedIds: permissions.map((p) => p.route_permission_id) };
+};
+
+const MemberPermissionToggles = ({ memberId, data }: { memberId: number; data: IMemberPermissionsData }) => {
+  const [grantedIds, setGrantedIds] = useState<Set<number>>(() => new Set(data.grantedIds));
   const [togglingId, setTogglingId] = useState<number | null>(null);
 
-  const loadData = useCallback(async () => {
-    if (!member) return;
-    setIsLoading(true);
-    try {
-      const [routes, permissions] = await Promise.all([
-        DatalabAPI.MembershipsResource.listRoutePermissions(),
-        DatalabAPI.MembershipsResource.listMemberPermissions(member.id),
-      ]);
-      setAllRoutes(routes);
-      setGrantedIds(new Set(permissions.map((p) => p.route_permission_id)));
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Erro ao carregar permissões.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [member]);
-
-  useEffect(() => {
-    if (isOpen) void loadData();
-  }, [isOpen, loadData]);
+  const grouped = useMemo(() => groupPermissionsByTag(data.routes), [data.routes]);
 
   const handleToggle = useCallback(
     async (routeId: number, isGranted: boolean) => {
-      if (!member || togglingId !== null) return;
+      if (togglingId !== null) return;
       setTogglingId(routeId);
       try {
         if (isGranted) {
-          await DatalabAPI.MembershipsResource.revokePermission(member.id, routeId);
+          await DatalabAPI.MembershipsResource.revokePermission(memberId, routeId);
           setGrantedIds((prev) => { const next = new Set(prev); next.delete(routeId); return next; });
         } else {
-          await DatalabAPI.MembershipsResource.grantPermission(member.id, routeId);
+          await DatalabAPI.MembershipsResource.grantPermission(memberId, routeId);
           setGrantedIds((prev) => new Set(prev).add(routeId));
         }
       } catch (e: unknown) {
@@ -67,57 +62,50 @@ export const MemberPermissionsModal = ({ isOpen, onClose, member }: IMemberPermi
         setTogglingId(null);
       }
     },
-    [member, togglingId],
+    [memberId, togglingId],
   );
-
-  // Agrupa as rotas por tag
-  const grouped = useMemo(() => {
-    const groups: Record<string, IRoutePermission[]> = {};
-    for (const route of allRoutes) {
-      const tag = route.tag ?? 'Geral';
-      if (!groups[tag]) groups[tag] = [];
-      groups[tag].push(route);
-    }
-    return groups;
-  }, [allRoutes]);
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`Permissões — ${member?.user?.name ?? 'Membro'}`}
-    >
-      {isLoading ? (
-        <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--text-secondary)' }}>Carregando...</p>
-      ) : (
-        <PermissionsList>
-          {Object.entries(grouped).map(([tag, routes]) => (
-            <PermissionGroup key={tag}>
-              <PermissionGroupLabel>{tag}</PermissionGroupLabel>
-              {routes.map((route) => {
-                const isGranted = grantedIds.has(route.id);
-                const isToggling = togglingId === route.id;
-                return (
-                  <PermissionToggleRow key={route.id}>
-                    <PermissionToggleInfo>
-                      <PermissionToggleName>{route.description || route.name}</PermissionToggleName>
-                      <PermissionToggleDesc>
-                        <PermissionToggleMethod>{route.method}</PermissionToggleMethod>
-                        {' '}{route.path}
-                      </PermissionToggleDesc>
-                    </PermissionToggleInfo>
-                    <ToggleSwitch
-                      checked={isGranted}
-                      disabled={isToggling}
-                      onChange={() => void handleToggle(route.id, isGranted)}
-                    />
-                  </PermissionToggleRow>
-                );
-              })}
-            </PermissionGroup>
-          ))}
-        </PermissionsList>
-      )}
-    </Modal>
+    <PermissionsList>
+      {Object.entries(grouped).map(([tag, routes]) => (
+        <PermissionGroup key={tag}>
+          <PermissionGroupLabel>{tag}</PermissionGroupLabel>
+          {routes.map((route) => {
+            const isGranted = grantedIds.has(route.id);
+            const isToggling = togglingId === route.id;
+            return (
+              <PermissionToggleRow key={route.id}>
+                <PermissionToggleInfo>
+                  <PermissionToggleName>{route.description || route.name}</PermissionToggleName>
+                  <PermissionToggleDesc>
+                    <PermissionToggleMethod>{route.method}</PermissionToggleMethod>
+                    {' '}{route.path}
+                  </PermissionToggleDesc>
+                </PermissionToggleInfo>
+                <ToggleSwitch
+                  checked={isGranted}
+                  disabled={isToggling}
+                  onChange={() => void handleToggle(route.id, isGranted)}
+                />
+              </PermissionToggleRow>
+            );
+          })}
+        </PermissionGroup>
+      ))}
+    </PermissionsList>
   );
 };
+
+export const MemberPermissionsModal = ({ isOpen, onClose, member }: IMemberPermissionsModalProps) => (
+  <Modal
+    isOpen={isOpen}
+    onClose={onClose}
+    title={`Permissões — ${member?.user?.name ?? 'Membro'}`}
+  >
+    {member && (
+      <AsyncResource fetcher={() => fetchMemberPermissionsData(member.id)} dependencies={[member.id]}>
+        {(data) => <MemberPermissionToggles memberId={member.id} data={data} />}
+      </AsyncResource>
+    )}
+  </Modal>
+);

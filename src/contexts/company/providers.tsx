@@ -57,9 +57,23 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
       setMemberPermissions([]);
       return;
     }
-    DatalabAPI.MembershipsResource.listMemberPermissions(currentMembership.id)
-      .then(setMemberPermissions)
-      .catch(() => setMemberPermissions([]));
+
+    let isActive = true;
+
+    const loadPermissions = async () => {
+      try {
+        const permissions = await DatalabAPI.MembershipsResource.listMemberPermissions(currentMembership.id);
+        if (isActive) setMemberPermissions(permissions);
+      } catch {
+        if (isActive) setMemberPermissions([]);
+      }
+    };
+
+    void loadPermissions();
+
+    return () => {
+      isActive = false;
+    };
   }, [currentCompany, currentMembership]);
 
   const setCurrentCompany = useCallback((company: IUserCompany) => {

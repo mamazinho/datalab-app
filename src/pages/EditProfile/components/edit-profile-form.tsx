@@ -14,6 +14,7 @@ import {
   StyledOption,
 } from './edit-profile-form.style';
 import { ProfileAvatarUploader } from './profile-avatar-uploader';
+import { useAvatarUpload } from './use-avatar-upload';
 import type { IUserConfig, IUserResponse } from '../../../services/datalab-api/usersResource';
 import { PasswordInput } from '../../../components/UI/Inputs/Password/password-input';
 import { PhoneField } from '../../../components/UI/Inputs/Phone';
@@ -31,81 +32,30 @@ const THEME_OPTIONS: { value: IUserConfig['theme']; label: string }[] = [
   { value: 'system', label: 'Sistema' },
 ];
 
-const toAvatarFallbackUrl = (name: string) => {
-  const firstName = name.trim().split(' ')[0] || 'U';
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}&background=FFBE00&color=00001F&bold=true&format=png&size=256`;
-};
-
-const uploadImageToTemporaryHost = async (file: File): Promise<string> => {
-  const uploadFormData = new FormData();
-  uploadFormData.append('file', file);
-
-  const response = await fetch('https://tmpfiles.org/api/v1/upload', {
-    method: 'POST',
-    body: uploadFormData,
-  });
-
-  if (!response.ok) {
-    throw new Error('Falha no upload da imagem.');
-  }
-
-  const data = (await response.json()) as {
-    data?: {
-      url?: string;
-    };
-  };
-
-  const fileUrl = data?.data?.url;
-  if (!fileUrl) {
-    throw new Error('URL da imagem não retornada pelo serviço de upload.');
-  }
-
-  return fileUrl.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
-};
-
 export const EditProfileForm = ({ user, action, isPending, error }: IEditProfileFormProps) => {
-  const [avatarUrl, setAvatarUrl] = useState(user.avatar_url || '');
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [uploadError, setUploadError] = useState<string | undefined>(undefined);
+  const { avatarUrl, isUploading: isUploadingAvatar, uploadError, handleFileSelected } = useAvatarUpload(user.avatar_url || '');
   const [phoneNumber, setPhoneNumber] = useState(user.phone_number || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [theme, setTheme] = useState<IUserConfig['theme']>(user?.config?.theme || 'system');
   const firstName = user.name.trim().split(' ')[0] || 'Usuário';
-  const displayAvatarUrl = avatarUrl || toAvatarFallbackUrl(user.name);
 
-  const handleAvatarSelected = async (file: File) => {
-    setUploadError(undefined);
-    setIsUploadingAvatar(true);
-
-    try {
-      const uploadedImageUrl = await uploadImageToTemporaryHost(file);
-      setAvatarUrl(uploadedImageUrl);
-    } catch (uploadErr: unknown) {
-      const message = uploadErr instanceof Error ? uploadErr.message : String(uploadErr);
-      setUploadError(`Erro no upload da foto: ${message}`);
-    } finally {
-      setIsUploadingAvatar(false);
-    }
-  };
-
-  const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+  // O submit segue pelo action do React 19; aqui só limpamos as senhas
+  // (controladas por causa do matchValue) — o FormData já foi capturado com elas.
+  const handleSubmit = () => {
     setPassword('');
     setConfirmPassword('');
-    action(formData);
   };
 
   return (
-    <Form onSubmit={handleSubmit}>
+    <Form action={action} onSubmit={handleSubmit}>
       <AvatarRow>
         <ProfileAvatarUploader
-          avatarUrl={displayAvatarUrl}
+          avatarUrl={avatarUrl}
           firstName={firstName}
           isUploading={isUploadingAvatar}
           isDisabled={isPending}
-          onFileSelected={handleAvatarSelected}
+          onFileSelected={handleFileSelected}
         />
       </AvatarRow>
 
@@ -167,6 +117,7 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
             onChange={(event) => setPassword(event.target.value)}
             placeholder="Digite a nova senha"
             autoComplete="new-password"
+            showRequirements
           />
         </StyledField>
 

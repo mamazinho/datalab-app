@@ -2,7 +2,6 @@ export interface ActionState<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
-  errors?: Record<string, string[]>;
   timestamp: number;
 }
 

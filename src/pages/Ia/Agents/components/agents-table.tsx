@@ -21,15 +21,8 @@ import {
 interface IAgentsTableProps {
   agents: IRetrieveAgentWithState[];
   onEdit: (agent: IRetrieveAgentWithState) => void;
-  onRefresh: () => Promise<void>;
+  onRefresh: () => void;
 }
-
-const getAvatarUrl = (agent: IRetrieveAgentWithState): string => {
-  if (agent.avatar_url) return agent.avatar_url;
-
-  const seed = agent.name.trim()[0] ?? 'A';
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(seed)}&background=FFBE00&color=00001F&bold=true&format=png&size=64`;
-};
 
 const renderStatusBadges = (agent: IRetrieveAgentWithState) => (
   <AgentBadges>
@@ -61,7 +54,7 @@ export const AgentsTable = ({ agents, onEdit, onRefresh }: IAgentsTableProps) =>
     try {
       await DatalabAPI.AgentsResource.deleteSpecialist(agent.id);
       toast.success('Agente excluído.');
-      await onRefresh();
+      onRefresh();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Erro ao excluir o agente.');
     } finally {
@@ -75,7 +68,7 @@ export const AgentsTable = ({ agents, onEdit, onRefresh }: IAgentsTableProps) =>
     try {
       await DatalabAPI.AgentsResource.setCompanyState(agent.id, enable);
       toast.success(enable ? 'Agente ativado para a empresa.' : 'Agente desativado para a empresa.');
-      await onRefresh();
+      onRefresh();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Erro ao alterar o estado do agente.');
     } finally {
@@ -89,7 +82,7 @@ export const AgentsTable = ({ agents, onEdit, onRefresh }: IAgentsTableProps) =>
     try {
       await DatalabAPI.AgentsResource.setUserState(agent.id, enable);
       toast.success(enable ? 'Agente ativado para você.' : 'Agente desativado para você.');
-      await onRefresh();
+      onRefresh();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Erro ao alterar o estado do agente.');
     } finally {
@@ -119,7 +112,7 @@ export const AgentsTable = ({ agents, onEdit, onRefresh }: IAgentsTableProps) =>
           <TableRow key={agent.id}>
             <td>
               <AgentCell>
-                <AgentAvatar src={getAvatarUrl(agent)} alt="" />
+                <AgentAvatar src={agent.avatar_url} name={agent.name} size={64} seed="initial" alt="" />
                 <AgentIdentity>
                   <AgentName>{agent.name}</AgentName>
                   <AgentKey>{agent.key}</AgentKey>

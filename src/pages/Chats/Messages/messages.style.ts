@@ -195,13 +195,6 @@ export const ThreadSummary = styled.summary`
   }
 `;
 
-export const ThreadAvatar = styled.img`
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: 50%;
-  object-fit: cover;
-`;
-
 export const ThreadList = styled.div`
   display: flex;
   flex-direction: column;

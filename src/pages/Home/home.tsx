@@ -32,7 +32,7 @@ export const Home: React.FC = () => {
             DataLab <HeroHighlight>App</HeroHighlight>
           </HeroTitle>
           <HeroText>
-            Bem-vindo a DataLab, {extractFirstName(me.name)}! Escolha uma das opções abaixo para começar a explorar nossos recursos de inteligência.
+            Bem-vindo a DataLab, {extractFirstName(me?.name ?? '')}! Escolha uma das opções abaixo para começar a explorar nossos recursos de inteligência.
           </HeroText>
         </Hero>
         

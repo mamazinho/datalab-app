@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useActionState } from 'react';
+import React, { useActionState } from 'react';
 import {
     ForgotPasswordBackLink,
     ForgotPasswordCard,
@@ -8,24 +8,16 @@ import {
 } from './forgot-password.style';
 import { TimedButton } from '../../components/UI/Buttons/timed-button';
 import { forgotPasswordAction } from './actions';
-import { INITIAL_ACTION_STATE, type ActionState } from '../../types/actions';
+import { INITIAL_ACTION_STATE } from '../../types/actions';
+import { useActionFeedback } from '../../hooks/use-action-feedback';
 import { AuthForm, AuthHeader, BrandHighlight, BrandTitle, Description, Field, FieldsWrapper, Input, Label, Subtitle } from '../../styles/design-system.style';
 
 export const ForgotPassword: React.FC = () => {
     const [forgotPasswordState, forgotPasswordFormAction, isForgotPasswordPending] = useActionState(forgotPasswordAction, INITIAL_ACTION_STATE);
 
-    const handleForgotPasswordResult = useCallback((formState: ActionState) => {
-        if (formState.timestamp === 0) return;
-        if (formState.success) {
-            alert("Um link de recuperação foi enviado para o seu email.");
-        } else if (formState.error) {
-            console.log("Falha ao enviar o link de recuperação.", formState.error);
-        }
-    }, [])
-
-    useEffect(() => {
-        handleForgotPasswordResult(forgotPasswordState);
-    }, [forgotPasswordState, handleForgotPasswordResult]);
+    useActionFeedback(forgotPasswordState, {
+        successMessage: 'Um link de recuperação foi enviado para o seu email.',
+    });
 
     return (
         <ForgotPasswordContainer>

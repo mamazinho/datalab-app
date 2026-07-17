@@ -46,23 +46,20 @@ interface IPasswordInputProps extends React.InputHTMLAttributes<HTMLInputElement
     matchValue?: string;
     mismatchMessage?: string;
     enableMatchValidation?: boolean;
+    showRequirements?: boolean;
 }
 
 export const PasswordInput: React.FC<IPasswordInputProps> = ({
     matchValue,
     mismatchMessage = 'As senhas não coincidem.',
     enableMatchValidation,
+    showRequirements = false,
     ...props
 }) => {
     const inputRef = useRef<HTMLInputElement | null>(null);
     const [isFocused, setIsFocused] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [typedPassword, setTypedPassword] = useState('');
-
-    const shouldShowRequirements = useMemo(
-        () => props.name === 'password' && props.autoComplete === 'new-password',
-        [props.name, props.autoComplete],
-    );
 
     const shouldValidateMatch = useMemo(
         () => typeof matchValue === 'string' && (enableMatchValidation ?? true),
@@ -126,7 +123,7 @@ export const PasswordInput: React.FC<IPasswordInputProps> = ({
                     )}
                 </TogglePasswordButton>
             </InputWrapper>
-            {shouldShowRequirements && isFocused && <PasswordRequirements password={typedPassword} />}
+            {showRequirements && isFocused && <PasswordRequirements password={typedPassword} />}
             {isMismatch && <MatchErrorText>{mismatchMessage}</MatchErrorText>}
         </Wrapper>
     )

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ThemeProvider as StyledThemeProvider, type DefaultTheme } from 'styled-components';
 import { GlobalStyle } from '../../styles/global-style';
 import { darkTheme, lightTheme } from '../../styles/themes';
@@ -15,14 +15,10 @@ const getDefaultMode = (): ThemeMode => {
 export const CustomThemeProvider = ({ children }: { children: ReactNode }) => {
   const [mode, setMode] = useState<ThemeMode>(getDefaultMode);
 
-  const setThemeMode = (newMode: ThemeMode) => {
+  const setThemeMode = useCallback((newMode: ThemeMode) => {
     setMode(newMode);
     localStorage.setItem(STORAGE_KEY, newMode);
-  };
-
-  const toggleTheme = () => {
-    setThemeMode(mode === 'light' ? 'dark' : 'light');
-  };
+  }, []);
 
   const theme = useMemo<DefaultTheme>(() => {
     const baseTheme = mode === 'dark' ? darkTheme : lightTheme;
@@ -33,8 +29,10 @@ export const CustomThemeProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [mode]);
 
+  const contextValue = useMemo(() => ({ mode, setThemeMode }), [mode, setThemeMode]);
+
   return (
-    <ThemeContext.Provider value={{ mode, toggleTheme, setThemeMode }}>
+    <ThemeContext.Provider value={contextValue}>
       <StyledThemeProvider theme={theme}>
         <GlobalStyle />
         {children}

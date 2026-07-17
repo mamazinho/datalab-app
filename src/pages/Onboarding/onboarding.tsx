@@ -6,7 +6,5 @@ export const Onboarding = () => {
 
   const companies = me?.companies ?? [];
 
-  console.log("ONBOARDING COMPANIES", companies);
-
   return companies.length >= 2 ? <OnboardingCompanyPicker /> : <OnboardingWelcome />;
 };

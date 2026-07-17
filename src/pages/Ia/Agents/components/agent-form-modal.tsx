@@ -1,8 +1,9 @@
-import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
+import { useActionState, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { Modal } from '../../../../components/UI/Modal/modal';
 import { ModelSelect } from '../../../../components/UI/ModelSelect';
 import { INITIAL_ACTION_STATE } from '../../../../types/actions';
+import { useActionFeedback } from '../../../../hooks/use-action-feedback';
 import type { IRetrieveAgentWithState } from '../../../../services/datalab-api/agentsResource';
 import { saveAgentAction } from '../actions';
 import {
@@ -28,7 +29,6 @@ export const AgentFormModal = ({ isOpen, agent, onClose, onSuccess }: IAgentForm
   const boundAction = useMemo(() => saveAgentAction.bind(null, agent?.id ?? null), [agent]);
   const [formState, formAction, isPending] = useActionState(boundAction, INITIAL_ACTION_STATE);
   const [modelName, setModelName] = useState('');
-  const lastHandledTimestampRef = useRef(0);
 
   useEffect(() => {
     if (isOpen) {
@@ -36,16 +36,15 @@ export const AgentFormModal = ({ isOpen, agent, onClose, onSuccess }: IAgentForm
     }
   }, [isOpen, agent]);
 
-  useEffect(() => {
-    if (formState.timestamp === 0 || formState.timestamp === lastHandledTimestampRef.current) return;
-    lastHandledTimestampRef.current = formState.timestamp;
-
-    if (formState.success && formState.data) {
+  useActionFeedback(formState, {
+    onSuccess: () => {
       toast.success(isEditing ? 'Agente atualizado.' : 'Agente criado.');
       onSuccess();
       onClose();
-    }
-  }, [formState, isEditing, onClose, onSuccess]);
+    },
+    // Erro já aparece inline no formulário — sem toast duplicado
+    onError: () => {},
+  });
 
   return (
     <Modal

@@ -1,13 +1,12 @@
-import { useState } from 'react';
-import { LoadingPiece } from '../../../components/Feedback/Loadings/loading';
-import { useAgentsContext } from '../../../contexts/agents';
+import { useCallback, useState } from 'react';
+import { AsyncResource } from '../../../components/Tools/async-resource';
 import { useCompanyContext } from '../../../contexts/company';
+import { DatalabAPI } from '../../../services/datalab-api';
 import type { IRetrieveAgentWithState } from '../../../services/datalab-api/agentsResource';
 import { AGENT_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
 import { AgentsTable } from './components/agents-table';
 import { AgentFormModal } from './components/agent-form-modal';
 import {
-  AgentsEmpty,
   AgentsPageContainer,
   AgentsPageHeader,
   AgentsPageSubtitle,
@@ -16,11 +15,12 @@ import {
 } from './agents.style';
 
 export const Agents = () => {
-  const { agents, isLoadingAgents, canListAgents, refreshAgents } = useAgentsContext();
   const { currentCompany, hasPermissionByRoute } = useCompanyContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<IRetrieveAgentWithState | null>(null);
+  const [agentsKey, setAgentsKey] = useState(0);
 
+  const refreshAgents = useCallback(() => setAgentsKey((k) => k + 1), []);
   const canCreate = hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.create);
 
   const openCreateModal = () => {
@@ -51,19 +51,17 @@ export const Agents = () => {
         </CreateAgentButton>
       </AgentsPageHeader>
 
-      {isLoadingAgents ? (
-        <LoadingPiece />
-      ) : !canListAgents ? (
-        <AgentsEmpty>Não foi possível carregar os agentes. Verifique suas permissões.</AgentsEmpty>
-      ) : (
-        <AgentsTable agents={agents} onEdit={openEditModal} onRefresh={refreshAgents} />
-      )}
+      <AsyncResource fetcher={() => DatalabAPI.AgentsResource.listAgents()} dependencies={[agentsKey]}>
+        {(agents) => (
+          <AgentsTable agents={agents} onEdit={openEditModal} onRefresh={refreshAgents} />
+        )}
+      </AsyncResource>
 
       <AgentFormModal
         isOpen={isFormOpen}
         agent={editingAgent}
         onClose={() => setIsFormOpen(false)}
-        onSuccess={() => void refreshAgents()}
+        onSuccess={refreshAgents}
       />
     </AgentsPageContainer>
   );

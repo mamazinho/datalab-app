@@ -1,2 +1,2 @@
-export { OnboardingWelcome } from './OnboardingWelcome';
-export { OnboardingCompanyPicker } from './OnboardingCompanyPicker';
+export { OnboardingWelcome } from './onboarding-welcome';
+export { OnboardingCompanyPicker } from './onboarding-company-picker';

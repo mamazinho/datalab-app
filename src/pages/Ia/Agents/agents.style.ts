@@ -1,4 +1,5 @@
 import styled, { css } from 'styled-components';
+import { Avatar } from '../../../components/UI/Avatar';
 
 export const AgentsPageContainer = styled.div`
   display: flex;
@@ -61,7 +62,7 @@ export const AgentCell = styled.div`
   min-width: 0;
 `;
 
-export const AgentAvatar = styled.img`
+export const AgentAvatar = styled(Avatar)`
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
