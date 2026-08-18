@@ -100,3 +100,25 @@ export const ActiveDot = styled.span`
   background: ${({ theme }) => theme.colors.primary};
   flex-shrink: 0;
 `;
+
+export const CreateCompanyItem = styled.button`
+  width: 100%;
+  border: 0;
+  border-top: 1px solid ${({ theme }) => theme.colors.border};
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  padding: 0.7rem 0.85rem;
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: ${({ theme }) => theme.fonts.main};
+  transition: background-color 0.16s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.inputBackground};
+  }
+`;

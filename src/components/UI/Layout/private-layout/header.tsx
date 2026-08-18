@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthContext } from "../../../../contexts/auth";
+import { useMe } from "../../../../hooks/use-me";
 import { useCompanyContext } from "../../../../contexts/company";
-import { useCompanyPermissions } from "../../../../contexts/company/contexts";
+import { COMPANY_PATH, INTEGRATIONS_PATH, MANAGEMENT_BASE_PATH, MEMBERS_PATH } from "../../../../routes/paths";
+import { RouteTabs, type IRouteTabItem } from "../../Tabs";
 import { CompanyDropdown } from "../../CompanyDropdown/company-dropdown";
 import { InvitesMenu } from "../../InvitesMenu/invites-menu";
 import favicon from '../../../../assets/favicon.png';
@@ -12,8 +14,6 @@ import {
     BrandText,
     HeaderContent,
     HeaderNav,
-    Menu,
-    MenuItem,
     ProfileAvatar,
     ProfileAvatarBadge,
     ProfileButton,
@@ -28,20 +28,31 @@ import {
 
 export const Header = () => {
 
-    const { logout, me } = useAuthContext();
-    const { canManageUsers } = useCompanyPermissions();
-    const { hasPermissionByTag, hasAnyAgentsPermission } = useCompanyContext();
+    const { logout } = useAuthContext();
+    const { data: me } = useMe();
+    const { hasPermissionByTag, hasAnyAgentsPermission, hasAnyCompanyPermission } = useCompanyContext();
     const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement | null>(null);
 
     const canSeeIaSection = hasPermissionByTag('chat') || hasAnyAgentsPermission;
+    const canManageMembers = hasPermissionByTag('company');
+    // Gerenciamento está sempre disponível: mesmo sem permissão de empresa, todo
+    // membro precisa da aba de integrações para conectar a conta dele.
+    // Cai na primeira aba que o usuário pode ver.
+    const managementHref = canManageMembers
+        ? MEMBERS_PATH
+        : hasAnyCompanyPermission
+            ? COMPANY_PATH
+            : INTEGRATIONS_PATH;
 
-    const menuPages = [
-        { label: 'Página inicial', href: '/' },
-        ...(canSeeIaSection ? [{ label: 'IA', href: '/ia' }] : []),
-        { label: 'Cursos', href: '/cursos' },
-        ...(canManageUsers ? [{ label: 'Gerenciamento', href: '/gerenciamento/membros' }] : []),
+    // `match` existe para itens cujo destino é uma sub-aba: o menu continua
+    // ativo em qualquer aba de gerenciamento, não só na de entrada.
+    const menuPages: IRouteTabItem[] = [
+        { label: 'Página inicial', to: '/' },
+        ...(canSeeIaSection ? [{ label: 'IA', to: '/ia' }] : []),
+        { label: 'Cursos', to: '/cursos' },
+        { label: 'Gerenciamento', to: managementHref, match: MANAGEMENT_BASE_PATH },
     ];
 
     const pendingInviteCount = useMemo(
@@ -60,23 +71,7 @@ export const Header = () => {
                     <BrandImage src={favicon} alt="Logo da DataLab" />
                     <BrandText>DataLab</BrandText>
                 </BrandLink>
-                <Menu>
-                    {menuPages.map(({ label, href }) => {
-                        // Raiz só ativa por igualdade; demais itens também ativam nas subrotas
-                        const isActive = href === '/'
-                            ? location.pathname === '/'
-                            : location.pathname === href || location.pathname.startsWith(`${href}/`);
-                        return (
-                            <MenuItem 
-                                key={href}
-                                to={href} 
-                                $active={isActive}
-                            >
-                                {label}
-                            </MenuItem>
-                        );
-                    })}
-                </Menu>
+                <RouteTabs items={menuPages} variant="nav" label="Menu principal" />
                 <RightActions ref={menuRef}>
                     <CompanyDropdown />
                     <ProfileButton

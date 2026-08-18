@@ -1,21 +1,29 @@
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
+import {
+  memberPermissionsQuery,
+  memberProviderPermissionsQuery,
+  providerPermissionsQuery,
+  routePermissionsQuery,
+} from '../../../queries';
 import { Modal } from '../../../components/UI/Modal/modal';
-import { AsyncResource } from '../../../components/Tools/async-resource';
+import { QueryBoundary } from '../../../components/Tools/query-boundary';
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
-import type { IRoutePermission } from '../../../services/datalab-api/usersResource';
-import { groupPermissionsByTag } from '../permissions-helpers';
+import type {
+  IMembershipPermission,
+  IMembershipProviderPermission,
+} from '../../../services/datalab-api/usersResource';
+import type { UUID } from '../../../types/ids';
+import { providerPermissionGroups, routePermissionGroups } from './permission-options';
+import { PermissionToggles } from './permission-toggles';
 import {
-  PermissionGroup,
-  PermissionGroupLabel,
-  PermissionsList,
-  PermissionToggleDesc,
-  PermissionToggleInfo,
-  PermissionToggleMethod,
-  PermissionToggleName,
-  PermissionToggleRow,
-  ToggleSwitch,
+  OwnerNotice,
+  PermissionSection,
+  PermissionSectionHint,
+  PermissionSections,
+  PermissionSectionTitle,
 } from '../company-members.style';
 
 interface IMemberPermissionsModalProps {
@@ -24,75 +32,132 @@ interface IMemberPermissionsModalProps {
   member: ICompanyMembership | null;
 }
 
-interface IMemberPermissionsData {
-  routes: IRoutePermission[];
-  grantedIds: number[];
-}
+const MemberPermissionsContent = ({ memberId }: { memberId: UUID }) => {
+  const queryClient = useQueryClient();
+  const [togglingId, setTogglingId] = useState<UUID | null>(null);
 
-const fetchMemberPermissionsData = async (memberId: number): Promise<IMemberPermissionsData> => {
-  const [routes, permissions] = await Promise.all([
-    DatalabAPI.MembershipsResource.listRoutePermissions(),
-    DatalabAPI.MembershipsResource.listMemberPermissions(memberId),
-  ]);
+  const [
+    { data: routes },
+    { data: memberPermissions },
+    { data: providerPermissions },
+    { data: memberProviderPermissions },
+  ] = useSuspenseQueries({
+    queries: [
+      routePermissionsQuery,
+      memberPermissionsQuery(memberId),
+      providerPermissionsQuery,
+      memberProviderPermissionsQuery(memberId),
+    ],
+  });
 
-  return { routes, grantedIds: permissions.map((p) => p.route_permission_id) };
-};
+  // O cache é a fonte de verdade: os toggles atualizam a query via setQueryData
+  const grantedRouteIds = useMemo(
+    () => new Set(memberPermissions.map((p) => p.route_permission_id)),
+    [memberPermissions],
+  );
 
-const MemberPermissionToggles = ({ memberId, data }: { memberId: number; data: IMemberPermissionsData }) => {
-  const [grantedIds, setGrantedIds] = useState<Set<number>>(() => new Set(data.grantedIds));
-  const [togglingId, setTogglingId] = useState<number | null>(null);
+  const grantedProviderIds = useMemo(
+    () => new Set(memberProviderPermissions.map((p) => p.provider_permission_id)),
+    [memberProviderPermissions],
+  );
 
-  const grouped = useMemo(() => groupPermissionsByTag(data.routes), [data.routes]);
+  const routeGroups = useMemo(() => routePermissionGroups(routes), [routes]);
+  const providerGroups = useMemo(
+    () => providerPermissionGroups(providerPermissions),
+    [providerPermissions],
+  );
 
-  const handleToggle = useCallback(
-    async (routeId: number, isGranted: boolean) => {
+  // Um toggle por vez: concessões concorrentes embaralhariam o estado otimista.
+  const withToggle = useCallback(
+    async (id: UUID, run: () => Promise<void>) => {
       if (togglingId !== null) return;
-      setTogglingId(routeId);
+      setTogglingId(id);
       try {
-        if (isGranted) {
-          await DatalabAPI.MembershipsResource.revokePermission(memberId, routeId);
-          setGrantedIds((prev) => { const next = new Set(prev); next.delete(routeId); return next; });
-        } else {
-          await DatalabAPI.MembershipsResource.grantPermission(memberId, routeId);
-          setGrantedIds((prev) => new Set(prev).add(routeId));
-        }
+        await run();
       } catch (e: unknown) {
         toast.error(e instanceof Error ? e.message : 'Erro ao alterar permissão.');
       } finally {
         setTogglingId(null);
       }
     },
-    [memberId, togglingId],
+    [togglingId],
+  );
+
+  const handleToggleRoute = useCallback(
+    (routeId: UUID, isGranted: boolean) =>
+      void withToggle(routeId, async () => {
+        const { queryKey } = memberPermissionsQuery(memberId);
+        if (isGranted) {
+          await DatalabAPI.MembershipsResource.revokePermission(memberId, routeId);
+          queryClient.setQueryData<IMembershipPermission[]>(queryKey, (old = []) =>
+            old.filter((p) => p.route_permission_id !== routeId),
+          );
+          return;
+        }
+        const created = await DatalabAPI.MembershipsResource.grantPermission(memberId, routeId);
+        queryClient.setQueryData<IMembershipPermission[]>(queryKey, (old = []) => [...old, created]);
+      }),
+    [memberId, queryClient, withToggle],
+  );
+
+  const handleToggleProvider = useCallback(
+    (providerPermissionId: UUID, isGranted: boolean) =>
+      void withToggle(providerPermissionId, async () => {
+        const { queryKey } = memberProviderPermissionsQuery(memberId);
+        if (isGranted) {
+          await DatalabAPI.MembershipsResource.revokeProviderPermission(
+            memberId,
+            providerPermissionId,
+          );
+          queryClient.setQueryData<IMembershipProviderPermission[]>(queryKey, (old = []) =>
+            old.filter((p) => p.provider_permission_id !== providerPermissionId),
+          );
+          return;
+        }
+        const created = await DatalabAPI.MembershipsResource.grantProviderPermission(
+          memberId,
+          providerPermissionId,
+        );
+        queryClient.setQueryData<IMembershipProviderPermission[]>(queryKey, (old = []) => [
+          ...old,
+          created,
+        ]);
+      }),
+    [memberId, queryClient, withToggle],
   );
 
   return (
-    <PermissionsList>
-      {Object.entries(grouped).map(([tag, routes]) => (
-        <PermissionGroup key={tag}>
-          <PermissionGroupLabel>{tag}</PermissionGroupLabel>
-          {routes.map((route) => {
-            const isGranted = grantedIds.has(route.id);
-            const isToggling = togglingId === route.id;
-            return (
-              <PermissionToggleRow key={route.id}>
-                <PermissionToggleInfo>
-                  <PermissionToggleName>{route.description || route.name}</PermissionToggleName>
-                  <PermissionToggleDesc>
-                    <PermissionToggleMethod>{route.method}</PermissionToggleMethod>
-                    {' '}{route.path}
-                  </PermissionToggleDesc>
-                </PermissionToggleInfo>
-                <ToggleSwitch
-                  checked={isGranted}
-                  disabled={isToggling}
-                  onChange={() => void handleToggle(route.id, isGranted)}
-                />
-              </PermissionToggleRow>
-            );
-          })}
-        </PermissionGroup>
-      ))}
-    </PermissionsList>
+    <PermissionSections>
+      <PermissionSection>
+        <PermissionSectionTitle>Permissões do app</PermissionSectionTitle>
+        <PermissionSectionHint>
+          Rotas da Datalab que este membro pode chamar.
+        </PermissionSectionHint>
+        <PermissionToggles
+          groups={routeGroups}
+          grantedIds={grantedRouteIds}
+          togglingId={togglingId}
+          onToggle={handleToggleRoute}
+        />
+      </PermissionSection>
+
+      {providerPermissions.length > 0 && (
+        <PermissionSection>
+          <PermissionSectionTitle>Permissões nos agentes</PermissionSectionTitle>
+          <PermissionSectionHint>
+            O que o agente pode executar por este membro dentro do Google/Meta. É independente
+            das permissões do app: quem pode criar uma property pelo agente não necessariamente
+            pode adicioná-la à empresa.
+          </PermissionSectionHint>
+          <PermissionToggles
+            groups={providerGroups}
+            grantedIds={grantedProviderIds}
+            togglingId={togglingId}
+            onToggle={handleToggleProvider}
+          />
+        </PermissionSection>
+      )}
+    </PermissionSections>
   );
 };
 
@@ -103,9 +168,17 @@ export const MemberPermissionsModal = ({ isOpen, onClose, member }: IMemberPermi
     title={`Permissões — ${member?.user?.name ?? 'Membro'}`}
   >
     {member && (
-      <AsyncResource fetcher={() => fetchMemberPermissionsData(member.id)} dependencies={[member.id]}>
-        {(data) => <MemberPermissionToggles memberId={member.id} data={data} />}
-      </AsyncResource>
+      // Owner tem tudo implicitamente — a API recusa conceder e revogar para ele.
+      member.membership_role === 'owner' ? (
+        <OwnerNotice>
+          Este membro é owner da empresa e tem todas as permissões implicitamente — não há o
+          que conceder ou revogar.
+        </OwnerNotice>
+      ) : (
+        <QueryBoundary>
+          <MemberPermissionsContent memberId={member.id} />
+        </QueryBoundary>
+      )
     )}
   </Modal>
 );

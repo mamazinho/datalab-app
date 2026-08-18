@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuthContext } from '../../../contexts/auth';
+import { useMe } from '../../../hooks/use-me';
 import { useInviteActions } from '../../../hooks/use-invite-actions';
 import type { IUserInvite } from '../../../services/datalab-api/usersResource';
 import {
@@ -29,14 +29,8 @@ const TAB_LABELS: Record<InviteTab, string> = {
   declined: 'Recusados',
 };
 
-const InviteActionRow = ({
-  invite,
-  onRefresh,
-}: {
-  invite: IUserInvite;
-  onRefresh: () => Promise<unknown>;
-}) => {
-  const { acceptFormAction, declineFormAction, isAccepting, isDeclining } = useInviteActions(onRefresh);
+const InviteActionRow = ({ invite }: { invite: IUserInvite }) => {
+  const { acceptFormAction, declineFormAction, isAccepting, isDeclining } = useInviteActions();
 
   return (
     <InviteRow>
@@ -61,7 +55,7 @@ const InviteActionRow = ({
 };
 
 export const InvitesMenu = () => {
-  const { me, getMe } = useAuthContext();
+  const { data: me } = useMe();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<InviteTab>('pending');
 
@@ -105,7 +99,7 @@ export const InvitesMenu = () => {
             ) : (
               filtered.map((invite) =>
                 activeTab === 'pending' ? (
-                  <InviteActionRow key={invite.id} invite={invite} onRefresh={getMe} />
+                  <InviteActionRow key={invite.id} invite={invite} />
                 ) : (
                   <InviteRow key={invite.id}>
                     <InviteRowCompany>{invite.company?.name ?? `Empresa #${invite.company_id}`}</InviteRowCompany>

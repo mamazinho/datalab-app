@@ -1,20 +1,23 @@
+import { useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useCompanyContext } from '../../contexts/company';
-import { IaContainer, IaTabLink, IaTabs } from './ia.style';
+import { RouteTabs, type IRouteTabItem } from '../../components/UI/Tabs';
+import { IaContainer } from './ia.style';
 
 export const IaLayout = () => {
   const { hasPermissionByTag, hasAnyAgentsPermission } = useCompanyContext();
 
+  const tabs = useMemo<IRouteTabItem[]>(
+    () => [
+      ...(hasPermissionByTag('chat') ? [{ label: 'Conversas', to: '/ia/conversas' }] : []),
+      ...(hasAnyAgentsPermission ? [{ label: 'Agentes', to: '/ia/agentes' }] : []),
+    ],
+    [hasPermissionByTag, hasAnyAgentsPermission],
+  );
+
   return (
     <IaContainer>
-      <IaTabs>
-        {hasPermissionByTag('chat') && (
-          <IaTabLink to="/ia/conversas">Conversas</IaTabLink>
-        )}
-        {hasAnyAgentsPermission && (
-          <IaTabLink to="/ia/agentes">Agentes</IaTabLink>
-        )}
-      </IaTabs>
+      <RouteTabs items={tabs} label="Seções de IA" />
       <Outlet />
     </IaContainer>
   );

@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import {
   ChatContainer,
   ChatHeaderCard,
@@ -11,36 +10,37 @@ import {
 } from './chats.style';
 import { CreateChat } from './components/create-chat';
 import { ChatList } from './components/list-chats';
-import { useChatsContext } from '../../contexts/chats';
+import { QueryBoundary } from '../../components/Tools/query-boundary';
+import { useChats } from '../../hooks/use-chats';
 
-export const Chats = () => {
-  const { chats, getAllChats } = useChatsContext();
+const ChatsListSection = () => {
+  const { data: chats } = useChats();
 
-  useEffect(() => {
-    void getAllChats();
-  }, [getAllChats]);
+  return <ChatList chats={chats} />;
+};
 
-  return (
-    <ChatContainer>
-      <ChatPageContent>
+export const Chats = () => (
+  <ChatContainer>
+    <ChatPageContent>
       <ChatHeaderCard>
         <div>
           <ChatHeaderTitle>Gerenciador de conversas</ChatHeaderTitle>
           <ChatHeaderText>Inicie novas conversas ou continue de onde parou</ChatHeaderText>
         </div>
-        <CreateChat onCreateChat={getAllChats} />
+        <CreateChat />
       </ChatHeaderCard>
-        
+
       <ChatListCard>
         <div>
           <ChatListTitle>
             <ChatListTitleBadge>📋</ChatListTitleBadge>
             Conversas Disponíveis
           </ChatListTitle>
-          <ChatList chats={chats} />
+          <QueryBoundary>
+            <ChatsListSection />
+          </QueryBoundary>
         </div>
       </ChatListCard>
-      </ChatPageContent>
-    </ChatContainer>
-  );
-};
+    </ChatPageContent>
+  </ChatContainer>
+);

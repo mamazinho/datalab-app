@@ -156,29 +156,6 @@ export const MembersEmpty = styled.p`
   color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
-export const TabsContainer = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-`;
-
-export const TabButton = styled.button<{ active: boolean }>`
-  padding: 0.75rem 1.5rem;
-  border: 0;
-  background: transparent;
-  color: ${({ theme, active }) => active ? theme.colors.primary : theme.colors.textSecondary};
-  font-size: 0.9rem;
-  font-weight: 600;
-  font-family: ${({ theme }) => theme.fonts.main};
-  cursor: pointer;
-  border-bottom: 2px solid ${({ theme, active }) => active ? theme.colors.primary : 'transparent'};
-  transition: color 0.18s ease, border-color 0.18s ease;
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.primary};
-  }
-`;
-
 // Modal forms shared styles
 export const ModalForm = styled.form`
   display: flex;
@@ -253,6 +230,43 @@ export const ModalSubmit = styled.button`
 
   &:hover { opacity: 0.88; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
+`;
+
+// Seções de permissão: app (rotas) e agentes (providers) são independentes e
+// nunca podem virar uma lista só.
+export const PermissionSections = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+`;
+
+export const PermissionSection = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+`;
+
+export const PermissionSectionTitle = styled.h3`
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text};
+`;
+
+export const PermissionSectionHint = styled.p`
+  margin: 0 0 0.3rem;
+  font-size: 0.78rem;
+  color: ${({ theme }) => theme.colors.textSecondary};
+`;
+
+export const OwnerNotice = styled.p`
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.85rem;
+  background: ${({ theme }) => theme.colors.inputBackground};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
 // Permission toggles

@@ -1,6 +1,8 @@
 import { useActionState } from 'react';
 import { toast } from 'react-toastify';
-import { useAuthContext } from '../../contexts/auth';
+import { useQueryClient } from '@tanstack/react-query';
+import { useMe } from '../../hooks/use-me';
+import { meQuery } from '../../queries';
 import { INITIAL_ACTION_STATE } from '../../types/actions';
 import { useActionFeedback } from '../../hooks/use-action-feedback';
 import { EditProfileForm } from './components';
@@ -8,7 +10,8 @@ import { updateProfileAction } from './actions';
 import { EditProfileContainer, EditProfileShell, EditProfileSubtitle, EditProfileTitle } from './edit-profile.style';
 
 export const EditProfile = () => {
-  const { me, getMe } = useAuthContext();
+  const { data: me } = useMe();
+  const queryClient = useQueryClient();
   const [formState, formAction, isPending] = useActionState(
     updateProfileAction,
     INITIAL_ACTION_STATE,
@@ -16,7 +19,7 @@ export const EditProfile = () => {
 
   useActionFeedback(formState, {
     onSuccess: async () => {
-      await getMe();
+      await queryClient.invalidateQueries({ queryKey: meQuery.queryKey });
       toast.success('Perfil atualizado com sucesso!');
     },
   });

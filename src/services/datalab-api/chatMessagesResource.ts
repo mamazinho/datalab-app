@@ -1,11 +1,12 @@
 import { axiosCompanyInstance } from "./axios";
+import type { UUID } from "../../types/ids";
 
 export type ChatChannel = 'main' | 'thread';
 export type ChatAuthor = 'user' | 'supervisor' | 'specialist';
 export type ChatMessageType = 'chat' | 'agent_event' | 'clarification';
 
 export interface IChatMessageRead {
-  id: number;
+  id: UUID;
   author: ChatAuthor;
   agent_key: string | null;
   message_type: ChatMessageType;
@@ -30,11 +31,11 @@ export interface IUserPrompt {
 }
 
 export const ChatMessagesResource = {
-  async getChatMessages(chatId: number): Promise<IChatMessageRead[]> {
+  async getChatMessages(chatId: UUID): Promise<IChatMessageRead[]> {
     const response = await axiosCompanyInstance.get(`chats/${chatId}/messages/`);
     return response.data as IChatMessageRead[];
   },
-  async sendMessage(chatId: number, payload: IUserPrompt): Promise<ReadableStream<Uint8Array>> {
+  async sendMessage(chatId: UUID, payload: IUserPrompt): Promise<ReadableStream<Uint8Array>> {
     const response = await axiosCompanyInstance.post(
       `chats/${chatId}/messages/`,
       { ...payload, prompt: payload.prompt.trim() },

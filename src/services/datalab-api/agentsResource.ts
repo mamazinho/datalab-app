@@ -1,4 +1,5 @@
 import { axiosCompanyInstance } from "./axios";
+import type { UUID } from "../../types/ids";
 
 export interface IListAvailableModelsResponse {
   models: string[];
@@ -8,7 +9,7 @@ export interface IListAvailableModelsResponse {
 export type AgentType = 'supervisor' | 'specialist';
 
 export interface IMcpServer {
-  id: number;
+  id: UUID;
   name: string;
   url: string;
   transport: string;
@@ -16,7 +17,7 @@ export interface IMcpServer {
 }
 
 export interface IRetrieveAgent {
-  id: number;
+  id: UUID;
   type: AgentType;
   key: string;
   name: string;
@@ -57,17 +58,17 @@ export const AgentsResource = {
     const response = await axiosCompanyInstance.post('agents/', payload);
     return response.data as IRetrieveAgent;
   },
-  async updateSpecialist(agentId: number, payload: IUpdateSpecialistRequest): Promise<IRetrieveAgent> {
+  async updateSpecialist(agentId: UUID, payload: IUpdateSpecialistRequest): Promise<IRetrieveAgent> {
     const response = await axiosCompanyInstance.patch(`agents/${agentId}/`, payload);
     return response.data as IRetrieveAgent;
   },
-  async deleteSpecialist(agentId: number): Promise<void> {
+  async deleteSpecialist(agentId: UUID): Promise<void> {
     await axiosCompanyInstance.delete(`agents/${agentId}/`);
   },
-  async setCompanyState(agentId: number, enabled: boolean): Promise<void> {
+  async setCompanyState(agentId: UUID, enabled: boolean): Promise<void> {
     await axiosCompanyInstance.put(`agents/${agentId}/company-state/`, { enabled });
   },
-  async setUserState(agentId: number, enabled: boolean): Promise<void> {
+  async setUserState(agentId: UUID, enabled: boolean): Promise<void> {
     await axiosCompanyInstance.put(`agents/${agentId}/user-state/`, { enabled });
   },
 }

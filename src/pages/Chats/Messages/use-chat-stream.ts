@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'r
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { IChatMessageRead, IChatStreamEvent } from '../../../services/datalab-api/chatMessagesResource';
 import { parseChatStream } from '../../../utils/process-stream';
+import type { UUID } from '../../../types/ids';
 import {
   appendUserMessage,
   applyStreamEvent,
@@ -34,7 +35,7 @@ const timelineReducer = (items: TimelineItem[], action: TimelineAction): Timelin
 const getErrorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error && error.message ? error.message : fallback;
 
-export const useChatStream = (chatId: number, initialHistory: IChatMessageRead[]) => {
+export const useChatStream = (chatId: UUID, initialHistory: IChatMessageRead[]) => {
   const [items, dispatch] = useReducer(timelineReducer, initialHistory, mapHistoryToTimeline);
   const [isStreaming, setIsStreaming] = useState(false);
   // Identifica a "geração" ativa do stream: trocar de chat/desmontar invalida loops em andamento

@@ -1,10 +1,13 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../../components/UI/Tables/ActionTable';
 import { DatalabAPI } from '../../../../services/datalab-api';
 import type { IRetrieveAgentWithState } from '../../../../services/datalab-api/agentsResource';
+import type { UUID } from '../../../../types/ids';
 import { useCompanyContext } from '../../../../contexts/company';
 import { AGENT_ROUTE_PERMISSIONS } from '../../../../utils/route-permissions';
+import { agentsQuery } from '../../../../queries';
 import {
   AgentAvatar,
   AgentBadge,
@@ -21,7 +24,6 @@ import {
 interface IAgentsTableProps {
   agents: IRetrieveAgentWithState[];
   onEdit: (agent: IRetrieveAgentWithState) => void;
-  onRefresh: () => void;
 }
 
 const renderStatusBadges = (agent: IRetrieveAgentWithState) => (
@@ -39,10 +41,16 @@ const renderStatusBadges = (agent: IRetrieveAgentWithState) => (
   </AgentBadges>
 );
 
-export const AgentsTable = ({ agents, onEdit, onRefresh }: IAgentsTableProps) => {
+export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
   const { hasPermissionByRoute } = useCompanyContext();
-  const [removingId, setRemovingId] = useState<number | null>(null);
-  const [togglingId, setTogglingId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
+  const [removingId, setRemovingId] = useState<UUID | null>(null);
+  const [togglingId, setTogglingId] = useState<UUID | null>(null);
+
+  const invalidateAgents = useCallback(
+    () => void queryClient.invalidateQueries({ queryKey: agentsQuery.queryKey }),
+    [queryClient],
+  );
 
   const canUpdate = hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.update);
   const canRemove = hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.remove);
@@ -54,13 +62,13 @@ export const AgentsTable = ({ agents, onEdit, onRefresh }: IAgentsTableProps) =>
     try {
       await DatalabAPI.AgentsResource.deleteSpecialist(agent.id);
       toast.success('Agente excluído.');
-      onRefresh();
+      invalidateAgents();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Erro ao excluir o agente.');
     } finally {
       setRemovingId(null);
     }
-  }, [onRefresh]);
+  }, [invalidateAgents]);
 
   const handleCompanyToggle = useCallback(async (agent: IRetrieveAgentWithState) => {
     const enable = agent.disabled_by_company;
@@ -68,13 +76,13 @@ export const AgentsTable = ({ agents, onEdit, onRefresh }: IAgentsTableProps) =>
     try {
       await DatalabAPI.AgentsResource.setCompanyState(agent.id, enable);
       toast.success(enable ? 'Agente ativado para a empresa.' : 'Agente desativado para a empresa.');
-      onRefresh();
+      invalidateAgents();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Erro ao alterar o estado do agente.');
     } finally {
       setTogglingId(null);
     }
-  }, [onRefresh]);
+  }, [invalidateAgents]);
 
   const handleUserToggle = useCallback(async (agent: IRetrieveAgentWithState) => {
     const enable = agent.disabled_by_user;
@@ -82,13 +90,13 @@ export const AgentsTable = ({ agents, onEdit, onRefresh }: IAgentsTableProps) =>
     try {
       await DatalabAPI.AgentsResource.setUserState(agent.id, enable);
       toast.success(enable ? 'Agente ativado para você.' : 'Agente desativado para você.');
-      onRefresh();
+      invalidateAgents();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : 'Erro ao alterar o estado do agente.');
     } finally {
       setTogglingId(null);
     }
-  }, [onRefresh]);
+  }, [invalidateAgents]);
 
   if (agents.length === 0) {
     return <AgentsEmpty>Nenhum agente encontrado.</AgentsEmpty>;

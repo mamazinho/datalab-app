@@ -13,11 +13,12 @@ import {
     Subtitle,
 } from '../../../styles/design-system.style';
 import { Actions, CodeInput } from './confirm-account-form.style';
+import type { UUID } from '../../../types/ids';
 
 interface IConfirmAccountFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
     isPending: boolean;
     email: string;
-    userId: number | null;
+    userId: UUID | null;
     onResendCode: () => Promise<void>;
 }
 export const ConfirmAccountForm: React.FC<IConfirmAccountFormProps> = ({

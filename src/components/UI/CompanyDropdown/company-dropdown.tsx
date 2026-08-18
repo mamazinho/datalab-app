@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuthContext } from '../../../contexts/auth';
+import { useMe, useIsAuthLoading } from '../../../hooks/use-me';
 import { useCompanyContext } from '../../../contexts/company';
 import { useClickOutside } from '../../../hooks/use-click-outside';
+import { CompanyFormModal } from '../CompanyFormModal';
 import {
   ActiveDot,
+  CreateCompanyItem,
   DropdownChevron,
   DropdownItem,
   DropdownMenu,
@@ -16,9 +18,11 @@ import {
 import type { IUserCompany } from '../../../services/datalab-api/usersResource';
 
 export const CompanyDropdown = () => {
-  const { me, isAuthLoading } = useAuthContext();
+  const { data: me } = useMe();
+  const isAuthLoading = useIsAuthLoading();
   const { currentCompany, setCurrentCompany } = useCompanyContext();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const userCompanies: IUserCompany[] = me?.companies ?? [];
@@ -81,8 +85,23 @@ export const CompanyDropdown = () => {
               </DropdownItem>
             );
           })}
+
+          <CreateCompanyItem
+            onClick={() => {
+              setIsOpen(false);
+              setIsCreateOpen(true);
+            }}
+          >
+            + Criar empresa
+          </CreateCompanyItem>
         </DropdownMenu>
       )}
+
+      <CompanyFormModal
+        isOpen={isCreateOpen}
+        company={null}
+        onClose={() => setIsCreateOpen(false)}
+      />
     </DropdownWrapper>
   );
 };
