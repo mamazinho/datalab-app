@@ -9,13 +9,13 @@ import { RegisterForm } from './components/register-form';
 import { ConfirmAccountForm } from './components/confirm-account-form';
 import { confirmUserAction, registerUserAction } from './actions';
 import { INITIAL_ACTION_STATE } from '../../types/actions';
-import { useGoogleLogin } from '../../hooks/useGoogleLogin';
+import { useSocialLogin } from '../../hooks/use-social-login';
 import { useActionFeedback } from '../../hooks/use-action-feedback';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
   const stepsRef = useRef<StepsRef>(null);
-  const { handleGoogleLogin } = useGoogleLogin();
+  const { handleSocialLogin } = useSocialLogin();
 
   const [registerState, registerFormAction, isRegisterPending] = useActionState(registerUserAction, INITIAL_ACTION_STATE);
   const [confirmState, confirmFormAction, isConfirmPending] = useActionState(confirmUserAction, INITIAL_ACTION_STATE);
@@ -57,7 +57,7 @@ export const Register: React.FC = () => {
               <RegisterForm 
                 action={registerFormAction}
                 isPending={isRegisterPending}
-                onGoogleLogin={handleGoogleLogin}
+                onSocialLogin={handleSocialLogin}
               />
             </Step>
 

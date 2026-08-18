@@ -1,11 +1,13 @@
 import { useActionState, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
 import { Modal } from '../../../../components/UI/Modal/modal';
 import { ModelSelect } from '../../../../components/UI/ModelSelect';
 import { INITIAL_ACTION_STATE } from '../../../../types/actions';
 import { useActionFeedback } from '../../../../hooks/use-action-feedback';
+import { agentsQuery } from '../../../../queries';
 import type { IRetrieveAgentWithState } from '../../../../services/datalab-api/agentsResource';
-import { saveAgentAction } from '../actions';
+import { createSaveAgentAction } from '../actions';
 import {
   ModalError,
   ModalField,
@@ -21,12 +23,12 @@ interface IAgentFormModalProps {
   isOpen: boolean;
   agent: IRetrieveAgentWithState | null;
   onClose: () => void;
-  onSuccess: () => void;
 }
 
-export const AgentFormModal = ({ isOpen, agent, onClose, onSuccess }: IAgentFormModalProps) => {
+export const AgentFormModal = ({ isOpen, agent, onClose }: IAgentFormModalProps) => {
   const isEditing = agent !== null;
-  const boundAction = useMemo(() => saveAgentAction.bind(null, agent?.id ?? null), [agent]);
+  const queryClient = useQueryClient();
+  const boundAction = useMemo(() => createSaveAgentAction(agent?.id ?? null), [agent]);
   const [formState, formAction, isPending] = useActionState(boundAction, INITIAL_ACTION_STATE);
   const [modelName, setModelName] = useState('');
 
@@ -39,7 +41,7 @@ export const AgentFormModal = ({ isOpen, agent, onClose, onSuccess }: IAgentForm
   useActionFeedback(formState, {
     onSuccess: () => {
       toast.success(isEditing ? 'Agente atualizado.' : 'Agente criado.');
-      onSuccess();
+      void queryClient.invalidateQueries({ queryKey: agentsQuery.queryKey });
       onClose();
     },
     // Erro já aparece inline no formulário — sem toast duplicado

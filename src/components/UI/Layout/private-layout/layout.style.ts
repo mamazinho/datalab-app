@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 import { Avatar } from '../../Avatar';
 
 export const Shell = styled.div`
@@ -49,36 +49,10 @@ export const BrandText = styled.span`
   font-size: 1.2rem;
 `;
 
-export const Menu = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 2rem;
-`;
-
 export const RightActions = styled.div`
   position: relative;
   display: inline-flex;
   align-items: center;
-`;
-
-const menuItemActiveStyles = css`
-  border-bottom-color: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.text};
-`;
-
-export const MenuItem = styled(Link)<{ $active: boolean }>`
-  padding: 0.2rem 0;
-  border-bottom: 2px solid transparent;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  font-weight: 600;
-  transition: color 0.18s ease, border-color 0.18s ease;
-
-  ${({ $active }) => $active && menuItemActiveStyles}
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.text};
-    border-bottom-color: ${({ theme }) => theme.colors.primary};
-  }
 `;
 
 export const LogoutButton = styled.button`

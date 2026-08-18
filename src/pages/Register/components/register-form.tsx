@@ -17,14 +17,15 @@ import {
 } from '../../../styles/design-system.style';
 import { PasswordInput } from '../../../components/UI/Inputs/Password/password-input';
 import { PhoneField } from '../../../components/UI/Inputs/Phone';
-import { GoogleButton } from '../../../components/UI/Buttons/google-button';
+import { SocialLoginButtons } from '../../../components/UI/Buttons/social-login-buttons';
+import type { Provider } from '../../../types/integrations';
 
 interface IRegisterFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
     isPending: boolean;
-    onGoogleLogin: () => void;
+    onSocialLogin: (provider: Provider) => void;
 }
 
-export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onGoogleLogin, ...props }) => {
+export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onSocialLogin, ...props }) => {
     const [searchParams] = useSearchParams();
     const emailFromQuery = searchParams.get('email') ?? '';
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -72,7 +73,6 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onGoogle
                             name="phone_number"
                             value={phoneNumber}
                             onValueChange={setPhoneNumber}
-                            placeholder="Digite seu telefone"
                             autoComplete="tel"
                             required
                             disabled={isPending}
@@ -117,7 +117,7 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onGoogle
                     <DividerText>Ou continue com</DividerText>
                 </FormDivider>
 
-                <GoogleButton onClick={onGoogleLogin} />
+                <SocialLoginButtons onSelect={onSocialLogin} />
             </AuthForm>
         </>
     );

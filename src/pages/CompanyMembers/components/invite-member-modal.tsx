@@ -1,9 +1,11 @@
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRoutePermissions } from '../../../hooks/use-route-permissions';
+import { useProviderPermissions } from '../../../hooks/use-provider-permissions';
+import { invitesQuery } from '../../../queries';
 import { Modal } from '../../../components/UI/Modal/modal';
-import { AsyncResource } from '../../../components/Tools/async-resource';
-import { DatalabAPI } from '../../../services/datalab-api';
-import type { IRoutePermission } from '../../../services/datalab-api/usersResource';
+import { QueryBoundary } from '../../../components/Tools/query-boundary';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { inviteMembersAction } from '../actions';
@@ -20,26 +22,61 @@ import {
   ModalSubmit,
 } from '../company-members.style';
 import { PermissionsSelector } from './permissions-list';
+import { providerPermissionGroups, routePermissionGroups } from './permission-options';
+import type { UUID } from '../../../types/ids';
 
 interface IInviteMemberModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
 }
 
-// Sem acesso à listagem de permissões, o convite ainda pode ser enviado — degrada para lista vazia
-const fetchRoutePermissions = async (): Promise<IRoutePermission[]> => {
-  try {
-    return await DatalabAPI.MembershipsResource.listRoutePermissions();
-  } catch {
-    return [];
-  }
+interface IPermissionsFieldProps {
+  selected: Set<UUID>;
+  onChange: (selected: Set<UUID>) => void;
+}
+
+const InvitePermissionsField = ({ selected, onChange }: IPermissionsFieldProps) => {
+  const { data: routePermissions } = useRoutePermissions();
+
+  if (routePermissions.length === 0) return null;
+
+  return (
+    <ModalField>
+      <ModalLabel>Permissões do app</ModalLabel>
+      <PermissionsSelector
+        groups={routePermissionGroups(routePermissions)}
+        selected={selected}
+        onChange={onChange}
+      />
+    </ModalField>
+  );
 };
 
-export const InviteMemberModal = ({ isOpen, onClose, onSuccess }: IInviteMemberModalProps) => {
+// Mesmo componente, outra chave de payload e outro catálogo: as duas listas são
+// independentes e o convite carrega as duas.
+const InviteProviderPermissionsField = ({ selected, onChange }: IPermissionsFieldProps) => {
+  const { data: providerPermissions } = useProviderPermissions();
+
+  if (providerPermissions.length === 0) return null;
+
+  return (
+    <ModalField>
+      <ModalLabel>Permissões nos agentes</ModalLabel>
+      <PermissionsSelector
+        groups={providerPermissionGroups(providerPermissions)}
+        selected={selected}
+        onChange={onChange}
+      />
+    </ModalField>
+  );
+};
+
+export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) => {
+  const queryClient = useQueryClient();
   const [emails, setEmails] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const [selectedPermissions, setSelectedPermissions] = useState<Set<number>>(new Set());
+  const [selectedPermissions, setSelectedPermissions] = useState<Set<UUID>>(new Set());
+  const [selectedProviderPermissions, setSelectedProviderPermissions] = useState<Set<UUID>>(new Set());
   const [tagError, setTagError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -52,7 +89,7 @@ export const InviteMemberModal = ({ isOpen, onClose, onSuccess }: IInviteMemberM
           ? 'Convite enviado com sucesso!'
           : `${sentCount} convites enviados com sucesso!`,
       );
-      onSuccess();
+      void queryClient.invalidateQueries({ queryKey: invitesQuery.queryKey });
       onClose();
     },
     // Erro já aparece inline no formulário — sem toast duplicado
@@ -64,6 +101,7 @@ export const InviteMemberModal = ({ isOpen, onClose, onSuccess }: IInviteMemberM
       setEmails([]);
       setInputValue('');
       setSelectedPermissions(new Set());
+      setSelectedProviderPermissions(new Set());
       setTagError(null);
     }
   }, [isOpen]);
@@ -110,6 +148,9 @@ export const InviteMemberModal = ({ isOpen, onClose, onSuccess }: IInviteMemberM
         {Array.from(selectedPermissions).map((permissionId) => (
           <input key={permissionId} type="hidden" name="permissions" value={permissionId} />
         ))}
+        {Array.from(selectedProviderPermissions).map((permissionId) => (
+          <input key={permissionId} type="hidden" name="provider_permissions" value={permissionId} />
+        ))}
 
         <ModalFieldset disabled={isPending}>
           <ModalField>
@@ -140,18 +181,19 @@ export const InviteMemberModal = ({ isOpen, onClose, onSuccess }: IInviteMemberM
             </EmailTagList>
           </ModalField>
 
-          <AsyncResource fetcher={fetchRoutePermissions}>
-            {(routePermissions) => routePermissions.length > 0 && (
-              <ModalField>
-                <ModalLabel>Permissões</ModalLabel>
-                <PermissionsSelector
-                  permissions={routePermissions}
-                  selected={selectedPermissions}
-                  onChange={setSelectedPermissions}
-                />
-              </ModalField>
-            )}
-          </AsyncResource>
+          <QueryBoundary>
+            <InvitePermissionsField
+              selected={selectedPermissions}
+              onChange={setSelectedPermissions}
+            />
+          </QueryBoundary>
+
+          <QueryBoundary>
+            <InviteProviderPermissionsField
+              selected={selectedProviderPermissions}
+              onChange={setSelectedProviderPermissions}
+            />
+          </QueryBoundary>
 
           {formError && <ModalError>{formError}</ModalError>}
 

@@ -1,7 +1,7 @@
-import { useCallback, useState } from 'react';
-import { AsyncResource } from '../../../components/Tools/async-resource';
+import { useState } from 'react';
+import { QueryBoundary } from '../../../components/Tools/query-boundary';
 import { useCompanyContext } from '../../../contexts/company';
-import { DatalabAPI } from '../../../services/datalab-api';
+import { useAgents } from '../../../hooks/use-agents';
 import type { IRetrieveAgentWithState } from '../../../services/datalab-api/agentsResource';
 import { AGENT_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
 import { AgentsTable } from './components/agents-table';
@@ -14,13 +14,21 @@ import {
   CreateAgentButton,
 } from './agents.style';
 
+interface IAgentsListSectionProps {
+  onEdit: (agent: IRetrieveAgentWithState) => void;
+}
+
+const AgentsListSection = ({ onEdit }: IAgentsListSectionProps) => {
+  const { data: agents } = useAgents();
+
+  return <AgentsTable agents={agents} onEdit={onEdit} />;
+};
+
 export const Agents = () => {
   const { currentCompany, hasPermissionByRoute } = useCompanyContext();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAgent, setEditingAgent] = useState<IRetrieveAgentWithState | null>(null);
-  const [agentsKey, setAgentsKey] = useState(0);
 
-  const refreshAgents = useCallback(() => setAgentsKey((k) => k + 1), []);
   const canCreate = hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.create);
 
   const openCreateModal = () => {
@@ -51,17 +59,14 @@ export const Agents = () => {
         </CreateAgentButton>
       </AgentsPageHeader>
 
-      <AsyncResource fetcher={() => DatalabAPI.AgentsResource.listAgents()} dependencies={[agentsKey]}>
-        {(agents) => (
-          <AgentsTable agents={agents} onEdit={openEditModal} onRefresh={refreshAgents} />
-        )}
-      </AsyncResource>
+      <QueryBoundary>
+        <AgentsListSection onEdit={openEditModal} />
+      </QueryBoundary>
 
       <AgentFormModal
         isOpen={isFormOpen}
         agent={editingAgent}
         onClose={() => setIsFormOpen(false)}
-        onSuccess={refreshAgents}
       />
     </AgentsPageContainer>
   );

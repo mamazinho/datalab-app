@@ -1,6 +1,8 @@
 import { useActionState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthContext } from '../../../contexts/auth';
+import { useQueryClient } from '@tanstack/react-query';
+import { useMe } from '../../../hooks/use-me';
+import { meQuery } from '../../../queries';
 import { useCompanyContext } from '../../../contexts/company';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import {
@@ -30,14 +32,8 @@ import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { useInviteActions } from '../../../hooks/use-invite-actions';
 import type { IUserInvite } from '../../../services/datalab-api/usersResource';
 
-const InviteRow = ({
-  invite,
-  onRefresh,
-}: {
-  invite: IUserInvite;
-  onRefresh: () => Promise<unknown>;
-}) => {
-  const { acceptFormAction, declineFormAction, isAccepting, isDeclining } = useInviteActions(onRefresh);
+const InviteRow = ({ invite }: { invite: IUserInvite }) => {
+  const { acceptFormAction, declineFormAction, isAccepting, isDeclining } = useInviteActions();
 
   return (
     <InviteItem>
@@ -64,8 +60,9 @@ const InviteRow = ({
 };
 
 export const OnboardingWelcome = () => {
-  const { me, getMe } = useAuthContext();
-  const { selectCompanyById, setMembership } = useCompanyContext();
+  const { data: me } = useMe();
+  const queryClient = useQueryClient();
+  const { selectCompanyById } = useCompanyContext();
   const navigate = useNavigate();
 
   const pendingInvites = (me?.invites ?? []).filter((i) => i.status === 'pending');
@@ -80,8 +77,9 @@ export const OnboardingWelcome = () => {
     onSuccess: async (data) => {
       if (!data) return;
       selectCompanyById(data.company.id);
-      setMembership(data.membership);
-      await getMe();
+      // /memberships/current (com o novo X-Company-Id) já traz o membership fresco;
+      // invalidar me repõe a empresa na lista antes de navegar.
+      await queryClient.invalidateQueries({ queryKey: meQuery.queryKey });
       navigate('/');
     },
   });
@@ -100,7 +98,7 @@ export const OnboardingWelcome = () => {
           <div>
             <InviteList>
               {pendingInvites.map((invite) => (
-                <InviteRow key={invite.id} invite={invite} onRefresh={getMe} />
+                <InviteRow key={invite.id} invite={invite} />
               ))}
             </InviteList>
           </div>

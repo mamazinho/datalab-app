@@ -16,6 +16,9 @@ const PARAM_SEGMENT_REGEX = /^\{.+\}$/;
  * Ex.: "/v1/agents/{agent_id}/company-state/" → "/agents/{param}/company-state/"
  */
 export const normalizeRoutePath = (path: string): string => {
+  // Blindagem: uma permissão malformada não pode derrubar o CompanyProvider inteiro.
+  if (!path) return '/';
+
   const segments = path.split('/').filter(Boolean);
 
   if (segments[0] === 'v1') {
@@ -43,6 +46,31 @@ export const matchesRoutePermission = (
   );
 };
 
+/**
+ * `/memberships/current` já devolveu a permissão dentro da linha de concessão
+ * (`.route_permission`) e hoje devolve achatada. Aceitar as duas formas — e
+ * exigir os campos que as checagens leem — evita que uma mudança de contrato
+ * derrube o CompanyProvider inteiro, que significa tela branca no app.
+ */
+export const toRoutePermission = (entry: unknown): IRoutePermission | null => {
+  if (!entry || typeof entry !== 'object') return null;
+
+  const permission =
+    'route_permission' in entry
+      ? (entry as { route_permission: unknown }).route_permission
+      : entry;
+
+  if (!permission || typeof permission !== 'object') return null;
+
+  // method e path são lidos sem defesa por matchesRoutePermission/normalizeRoutePath:
+  // um item pela metade tem que ser descartado aqui, não estourar lá na frente.
+  const { method, path } = permission as Partial<IRoutePermission>;
+
+  return typeof method === 'string' && typeof path === 'string'
+    ? (permission as IRoutePermission)
+    : null;
+};
+
 export const isAgentsRoutePermission = (permission: IRoutePermission): boolean =>
   permission.tag === 'agents' || normalizeRoutePath(permission.path).startsWith('/agents/');
 
@@ -52,4 +80,10 @@ export const AGENT_ROUTE_PERMISSIONS = {
   update: { method: 'PATCH', path: 'agents/{agent_id}/' },
   remove: { method: 'DELETE', path: 'agents/{agent_id}/' },
   companyState: { method: 'PUT', path: 'agents/{agent_id}/company-state/' },
+} as const satisfies Record<string, IRoutePermissionRef>;
+
+// Gerenciamento de empresa: editar nome e deletar a empresa ativa.
+export const COMPANY_ROUTE_PERMISSIONS = {
+  update: { method: 'PATCH', path: 'companies/{id}/' },
+  remove: { method: 'DELETE', path: 'companies/{id}/' },
 } as const satisfies Record<string, IRoutePermissionRef>;

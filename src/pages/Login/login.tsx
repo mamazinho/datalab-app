@@ -21,18 +21,18 @@ import {
   LoginTitle,
 } from './login.style';
 import { useAuthContext } from '../../contexts/auth';
-import { GoogleButton } from '../../components/UI/Buttons/google-button';
+import { SocialLoginButtons } from '../../components/UI/Buttons/social-login-buttons';
 import { loginAction } from './actions';
 import { INITIAL_ACTION_STATE } from '../../types/actions';
 import { PasswordInput } from '../../components/UI/Inputs/Password/password-input';
-import { useGoogleLogin } from '../../hooks/useGoogleLogin';
+import { useSocialLogin } from '../../hooks/use-social-login';
 import { useActionFeedback } from '../../hooks/use-action-feedback';
 
 export const Login: React.FC = () => {
   const [loginState, loginFormAction, isLoginPending] = useActionState(loginAction, INITIAL_ACTION_STATE);
   const { login } = useAuthContext();
   const navigate = useNavigate();
-  const { handleGoogleLogin } = useGoogleLogin();
+  const { handleSocialLogin } = useSocialLogin();
 
   useActionFeedback(loginState, {
     onSuccess: async (data) => {
@@ -87,7 +87,7 @@ export const Login: React.FC = () => {
               <LoginDividerText>Ou continue com</LoginDividerText>
             </LoginDivider>
 
-            <GoogleButton onClick={handleGoogleLogin} />
+            <SocialLoginButtons onSelect={handleSocialLogin} />
 
             <LoginFooterLinks>
               <LoginRegisterLink to="/cadastro">Não possui conta? Cadastre-se</LoginRegisterLink>

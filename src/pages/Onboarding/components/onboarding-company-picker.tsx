@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuthContext } from '../../../contexts/auth';
+import { useMe } from '../../../hooks/use-me';
 import { useCompanyContext } from '../../../contexts/company';
 import {
   CompanyPickerItem,
@@ -14,7 +14,7 @@ import {
 import type { IUserCompany } from '../../../services/datalab-api/usersResource';
 
 export const OnboardingCompanyPicker = () => {
-  const { me } = useAuthContext();
+  const { data: me } = useMe();
   const { setCurrentCompany } = useCompanyContext();
   const navigate = useNavigate();
 

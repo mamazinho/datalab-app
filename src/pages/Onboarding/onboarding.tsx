@@ -1,8 +1,8 @@
-import { useAuthContext } from '../../contexts/auth';
+import { useMe } from '../../hooks/use-me';
 import { OnboardingCompanyPicker, OnboardingWelcome } from './components';
 
 export const Onboarding = () => {
-  const { me } = useAuthContext();
+  const { data: me } = useMe();
 
   const companies = me?.companies ?? [];
 

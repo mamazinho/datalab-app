@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { passwordSchema } from '../../schemas/password';
 import { emailSchema } from '../../schemas/email';
 import { optionalPhoneSchema } from '../../schemas/phone';
+import { uuidSchema } from '../../schemas/uuid';
 
 export const registerSchema = z.object({
   name: z
@@ -41,7 +42,7 @@ export const registerSchema = z.object({
 });
 
 export const confirmAccountSchema = z.object({
-  userId: z.coerce.number().min(1, 'ID do usuário é obrigatório.'),
+  userId: uuidSchema,
   code: z
     .string()
     .trim()

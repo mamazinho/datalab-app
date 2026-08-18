@@ -1,20 +1,23 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../components/UI/Tables/ActionTable';
 import { DatalabAPI } from '../../../services/datalab-api';
+import { membersQuery } from '../../../queries';
 import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
+import type { UUID } from '../../../types/ids';
 import { MembersEmpty, MembersTableCellSecondary, RoleBadge } from '../company-members.style';
 import { MemberPermissionsModal } from './member-permissions-modal';
 
 interface IMembersListProps {
   members: ICompanyMembership[];
-  onRefresh: () => void;
 }
 
-export const MembersList = ({ members, onRefresh }: IMembersListProps) => {
+export const MembersList = ({ members }: IMembersListProps) => {
+  const queryClient = useQueryClient();
   const [selectedMember, setSelectedMember] = useState<ICompanyMembership | null>(null);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
-  const [removingId, setRemovingId] = useState<number | null>(null);
+  const [removingId, setRemovingId] = useState<UUID | null>(null);
 
   const handleRemove = useCallback(
     async (membership: ICompanyMembership) => {
@@ -23,14 +26,14 @@ export const MembersList = ({ members, onRefresh }: IMembersListProps) => {
       try {
         await DatalabAPI.MembershipsResource.removeMember(membership.id);
         toast.success('Membro removido.');
-        onRefresh();
+        void queryClient.invalidateQueries({ queryKey: membersQuery.queryKey });
       } catch (e: unknown) {
         toast.error(e instanceof Error ? e.message : 'Erro ao remover membro.');
       } finally {
         setRemovingId(null);
       }
     },
-    [onRefresh],
+    [queryClient],
   );
   
   if (members.length === 0) {

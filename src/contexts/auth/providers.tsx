@@ -1,74 +1,38 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "./contexts";
+import { setSessionExpiredHandler } from "../../services/datalab-api/axios";
 import { type ILoginUserResponse } from '../../services/datalab-api/authResource';
-import { DatalabAPI } from "../../services/datalab-api";
-import type { IUserResponse } from "../../services/datalab-api/usersResource";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const queryClient = useQueryClient();
   const [accessToken, setAccessToken] = useState<string | undefined>(() => {
     const storedToken = localStorage.getItem("accessToken");
     return storedToken || undefined;
   });
-  const [me, setMe] = useState<IUserResponse | null>(null);
-  // Começa como `true` se há token em cache, para evitar redirects prematuros
-  const [isAuthLoading, setIsAuthLoading] = useState(() => !!localStorage.getItem("accessToken"));
-
-  const getMe = useCallback(async (): Promise<IUserResponse> => {
-    try {
-      const user = await DatalabAPI.UsersResource.me() as IUserResponse;
-      setMe(user);
-      return user;
-    } catch (error) {
-      console.error("Get me error:", error);
-      throw error;
-    }
-  }, []);
 
   const login = useCallback(async (loginResponse: ILoginUserResponse) => {
-    try {
-      setAccessToken(loginResponse.access_token)
-      if (loginResponse.access_token) localStorage.setItem("accessToken", loginResponse.access_token);
-    } catch (error) {
-      console.error("Login error:", error);
-      throw error;
-    }
+    setAccessToken(loginResponse.access_token);
+    if (loginResponse.access_token) localStorage.setItem("accessToken", loginResponse.access_token);
   }, []);
 
   const logout = useCallback(() => {
     setAccessToken(undefined);
-    setMe(null);
-    setIsAuthLoading(false);
     localStorage.removeItem("accessToken");
-  }, []);
+    // Dados do usuário anterior não podem vazar para a próxima sessão
+    queryClient.clear();
+  }, [queryClient]);
 
+  // Permite ao interceptor axios encerrar a sessão via React (sem reload de página)
+  // quando o backend responde 401 — o token some e os guards mandam para /login.
   useEffect(() => {
-    if (!accessToken) {
-      setMe(null);
-      setIsAuthLoading(false);
-      return;
-    }
-
-    setIsAuthLoading(true);
-
-    const loadMe = async () => {
-      try {
-        await getMe();
-      } catch (error: unknown) {
-        if (axios.isAxiosError(error) && error.response?.status === 401) {
-          logout();
-        }
-      } finally {
-        setIsAuthLoading(false);
-      }
-    };
-
-    void loadMe();
-  }, [accessToken, getMe, logout]);
+    setSessionExpiredHandler(logout);
+    return () => setSessionExpiredHandler(null);
+  }, [logout]);
 
   const contextValue = useMemo(
-    () => ({ accessToken, me, isAuthLoading, login, logout, getMe }),
-    [accessToken, me, isAuthLoading, login, logout, getMe],
+    () => ({ accessToken, login, logout }),
+    [accessToken, login, logout],
   );
 
   return (

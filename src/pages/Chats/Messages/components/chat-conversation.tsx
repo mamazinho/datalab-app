@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import type { IChatMessageRead } from '../../../../services/datalab-api/chatMessagesResource';
+import type { UUID } from '../../../../types/ids';
 import { useChatStream } from '../use-chat-stream';
 import { MessageList } from './message-list';
 import { MessageInput } from './message-input';
 
 interface ChatConversationProps {
-    chatId: number;
+    chatId: UUID;
     history: IChatMessageRead[];
 }
 

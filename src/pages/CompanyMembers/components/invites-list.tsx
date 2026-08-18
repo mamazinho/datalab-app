@@ -1,8 +1,11 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../components/UI/Tables/ActionTable';
 import { DatalabAPI } from '../../../services/datalab-api';
+import { invitesQuery } from '../../../queries';
 import type { IUserInvite } from '../../../services/datalab-api/usersResource';
+import type { UUID } from '../../../types/ids';
 import { InviteStatusBadge, MembersEmpty, MembersTableCellSecondary } from '../company-members.style';
 
 const statusLabel: Record<string, string> = {
@@ -13,11 +16,11 @@ const statusLabel: Record<string, string> = {
 
 interface IInvitesListProps {
   invites: IUserInvite[];
-  onRefresh: () => void;
 }
 
-export const InvitesList = ({ invites, onRefresh }: IInvitesListProps) => {
-  const [removingId, setRemovingId] = useState<number | null>(null);
+export const InvitesList = ({ invites }: IInvitesListProps) => {
+  const queryClient = useQueryClient();
+  const [removingId, setRemovingId] = useState<UUID | null>(null);
 
   const handleRemove = useCallback(
     async (invite: IUserInvite) => {
@@ -26,14 +29,14 @@ export const InvitesList = ({ invites, onRefresh }: IInvitesListProps) => {
       try {
         await DatalabAPI.MembershipsResource.deleteInvite(invite.id);
         toast.success('Convite removido.');
-        onRefresh();
+        void queryClient.invalidateQueries({ queryKey: invitesQuery.queryKey });
       } catch (e: unknown) {
         toast.error(e instanceof Error ? e.message : 'Erro ao remover convite.');
       } finally {
         setRemovingId(null);
       }
     },
-    [onRefresh],
+    [queryClient],
   );
 
   if (invites.length === 0) {

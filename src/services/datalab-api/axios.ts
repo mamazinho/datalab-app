@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
+import type { UUID } from "../../types/ids";
 
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_DATALAB_API_URL,
@@ -9,24 +10,36 @@ export const axiosInstance = axios.create({
   },
 });
 
-let _currentCompanyId: number | null = null;
+let _currentCompanyId: UUID | null = null;
 
-export function setCompanyId(id: number | null): void {
+export function setCompanyId(id: UUID | null): void {
   _currentCompanyId = id;
 }
 
-export function getCompanyId(): number | null {
+export function getCompanyId(): UUID | null {
   return _currentCompanyId;
 }
 
-const refreshableErrors = ['Invalid token'];
-const forceLogoutErrors = ['User not found', 'User is not active'];
+// ── Fim de sessão ────────────────────────────────────────────────────────────
+// O AuthProvider registra um handler (logout via React) para encerrar a sessão
+// sem recarregar a página. Enquanto não houver handler, usa o fallback de reload.
+let _onSessionExpired: (() => void) | null = null;
 
-function forceLogout(): void {
+export function setSessionExpiredHandler(handler: (() => void) | null): void {
+  _onSessionExpired = handler;
+}
+
+function endSession(): void {
+  if (_onSessionExpired) {
+    _onSessionExpired();
+    return;
+  }
   localStorage.clear();
   document.cookie = 'csrftoken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
   window.location.href = '/login';
 }
+
+const refreshableErrors = ['Token has expired', 'Invalid token'];
 
 let _isRefreshing = false;
 let _refreshQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = [];
@@ -48,7 +61,7 @@ function refreshToken(): Promise<string> {
       .then((token) => _refreshQueue.forEach((q) => q.resolve(token)))
       .catch((err) => {
         _refreshQueue.forEach((q) => q.reject(err));
-        forceLogout();
+        endSession();
       })
       .finally(() => {
         _refreshQueue = [];
@@ -70,7 +83,6 @@ const authInterceptor = (config: InternalAxiosRequestConfig) => {
 
 const companyInterceptor = (config: InternalAxiosRequestConfig) => {
   const companyId = getCompanyId();
-  console.log("Attaching company ID to request:", companyId, config.headers);
   if (companyId) {
     config.headers['X-Company-Id'] = String(companyId);
   }
@@ -119,13 +131,9 @@ function createAuthenticatedErrorHandler(instance: AxiosInstance) {
     const message = extractErrorMessage(error.response.data);
 
     if (error.response.status === 401) {
-      if (forceLogoutErrors.some((msg) => message.includes(msg))) {
-        forceLogout();
-        return Promise.reject(error);
-      }
-
       const config = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
 
+      // Tenta um refresh silencioso uma única vez para 401 recuperáveis
       if (config && !config._retry && refreshableErrors.some((msg) => message.includes(msg))) {
         config._retry = true;
         try {
@@ -133,9 +141,16 @@ function createAuthenticatedErrorHandler(instance: AxiosInstance) {
           config.headers['Authorization'] = `Bearer ${newToken}`;
           return instance(config);
         } catch {
+          // refreshToken já encerra a sessão no seu catch
           return Promise.reject(error);
         }
       }
+
+      // Qualquer outro 401 = sessão inválida/expirada → encerra e volta ao login
+      // (em vez de deixar o app cair em /onboarding por falta de dados do usuário)
+      endSession();
+      if (message) error.message = message;
+      return Promise.reject(error);
     }
 
     if (message) error.message = message;
@@ -165,4 +180,3 @@ registerResponseInterceptors(axiosPrivateInstance, [
 registerResponseInterceptors(axiosCompanyInstance, [
   { onRejected: createAuthenticatedErrorHandler(axiosCompanyInstance) },
 ]);
-

@@ -1,56 +1,54 @@
 import { useActionState } from 'react';
 import { toast } from 'react-toastify';
+import { useQueryClient } from '@tanstack/react-query';
 import { DatalabAPI } from '../services/datalab-api';
-import { INITIAL_ACTION_STATE, type ActionState } from '../types/actions';
+import { INITIAL_ACTION_STATE } from '../types/actions';
+import { uuidSchema } from '../schemas/uuid';
+import { createFormAction } from '../utils/create-form-action';
 import { useActionFeedback } from './use-action-feedback';
+import { meQuery } from '../queries';
 
-export async function acceptInviteAction(
-  _prevState: ActionState<never>,
-  formData: FormData,
-): Promise<ActionState<never>> {
-  const inviteId = Number(formData.get('inviteId'));
-
-  try {
+export const acceptInviteAction = createFormAction(
+  uuidSchema,
+  async (inviteId) => {
     await DatalabAPI.UsersResource.acceptInvite(inviteId);
-    return { success: true, timestamp: Date.now() };
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    return { success: false, error: message, timestamp: Date.now() };
-  }
-}
+  },
+  {
+    invalidMessage: 'Convite inválido.',
+    mapFormData: (formData) => formData.get('inviteId'),
+  },
+);
 
-export async function declineInviteAction(
-  _prevState: ActionState<never>,
-  formData: FormData,
-): Promise<ActionState<never>> {
-  const inviteId = Number(formData.get('inviteId'));
-
-  try {
+export const declineInviteAction = createFormAction(
+  uuidSchema,
+  async (inviteId) => {
     await DatalabAPI.UsersResource.declineInvite(inviteId);
-    return { success: true, timestamp: Date.now() };
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    return { success: false, error: message, timestamp: Date.now() };
-  }
-}
+  },
+  {
+    invalidMessage: 'Convite inválido.',
+    mapFormData: (formData) => formData.get('inviteId'),
+  },
+);
 
 /**
- * Par de form actions de aceitar/recusar convite com feedback e refresh,
+ * Par de form actions de aceitar/recusar convite com feedback,
  * compartilhado entre o menu de convites do header e o onboarding.
+ * O sucesso invalida ['me'] — todos os consumidores do usuário se atualizam.
  */
-export function useInviteActions(onRefresh: () => Promise<unknown>) {
+export function useInviteActions() {
+  const queryClient = useQueryClient();
   const [acceptState, acceptFormAction, isAccepting] = useActionState(acceptInviteAction, INITIAL_ACTION_STATE);
   const [declineState, declineFormAction, isDeclining] = useActionState(declineInviteAction, INITIAL_ACTION_STATE);
 
   useActionFeedback(acceptState, {
     successMessage: 'Convite aceito!',
-    onSuccess: () => void onRefresh(),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: meQuery.queryKey }),
   });
 
   useActionFeedback(declineState, {
     onSuccess: () => {
       toast.info('Convite recusado.');
-      void onRefresh();
+      void queryClient.invalidateQueries({ queryKey: meQuery.queryKey });
     },
   });
 

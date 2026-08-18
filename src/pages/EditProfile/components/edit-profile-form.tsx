@@ -82,7 +82,6 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
             name="phone_number"
             value={phoneNumber}
             onValueChange={setPhoneNumber}
-            placeholder="Digite seu telefone"
             autoComplete="tel"
             disabled={isPending || isUploadingAvatar}
           />

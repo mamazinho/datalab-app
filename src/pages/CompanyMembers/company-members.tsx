@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react';
-import { AsyncResource } from '../../components/Tools/async-resource';
+import { useState } from 'react';
+import { QueryBoundary } from '../../components/Tools/query-boundary';
+import { StateTabs, type IStateTabItem } from '../../components/UI/Tabs';
 import { useCompanyContext } from '../../contexts/company';
-import { DatalabAPI } from '../../services/datalab-api';
-import type { ICompanyMembership } from '../../services/datalab-api/membershipsResource';
-import type { IUserInvite } from '../../services/datalab-api/usersResource';
+import { useMembers } from '../../hooks/use-members';
+import { useInvites } from '../../hooks/use-invites';
 import { InviteMemberModal } from './components/invite-member-modal';
 import { MembersList } from './components/members-list';
 import { InvitesList } from './components/invites-list';
@@ -13,22 +13,31 @@ import {
   MembersPageHeader,
   MembersPageSubtitle,
   MembersPageTitle,
-  TabsContainer,
-  TabButton,
 } from './company-members.style';
 
-const fetchMembers = () => DatalabAPI.MembershipsResource.listMembers();
-const fetchInvites = () => DatalabAPI.MembershipsResource.listInvites();
+type MembersTabValue = 'members' | 'invites';
+
+const MEMBERS_TABS: IStateTabItem<MembersTabValue>[] = [
+  { label: 'Membros', value: 'members' },
+  { label: 'Convites', value: 'invites' },
+];
+
+const MembersTab = () => {
+  const { data: members } = useMembers();
+
+  return <MembersList members={members} />;
+};
+
+const InvitesTab = () => {
+  const { data: invites } = useInvites();
+
+  return <InvitesList invites={invites} />;
+};
 
 export const CompanyMembers = () => {
   const { currentCompany } = useCompanyContext();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'members' | 'invites'>('members');
-  const [membersKey, setMembersKey] = useState(0);
-  const [invitesKey, setInvitesKey] = useState(0);
-
-  const refreshMembers = useCallback(() => setMembersKey((k) => k + 1), []);
-  const refreshInvites = useCallback(() => setInvitesKey((k) => k + 1), []);
+  const [activeTab, setActiveTab] = useState<MembersTabValue>('members');
 
   return (
     <MembersPageContainer>
@@ -44,33 +53,15 @@ export const CompanyMembers = () => {
         </InviteMemberButton>
       </MembersPageHeader>
 
-      <TabsContainer>
-        <TabButton active={activeTab === 'members'} onClick={() => setActiveTab('members')}>
-          Membros
-        </TabButton>
-        <TabButton active={activeTab === 'invites'} onClick={() => setActiveTab('invites')}>
-          Convites
-        </TabButton>
-      </TabsContainer>
+      <StateTabs items={MEMBERS_TABS} value={activeTab} onChange={setActiveTab} />
 
-      {activeTab === 'members' ? (
-        <AsyncResource fetcher={fetchMembers} dependencies={[membersKey]}>
-          {(members: ICompanyMembership[]) => (
-            <MembersList members={members} onRefresh={refreshMembers} />
-          )}
-        </AsyncResource>
-      ) : (
-        <AsyncResource fetcher={fetchInvites} dependencies={[invitesKey]}>
-          {(invites: IUserInvite[]) => (
-            <InvitesList invites={invites} onRefresh={refreshInvites} />
-          )}
-        </AsyncResource>
-      )}
+      <QueryBoundary>
+        {activeTab === 'members' ? <MembersTab /> : <InvitesTab />}
+      </QueryBoundary>
 
       <InviteMemberModal
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
-        onSuccess={() => { refreshMembers(); refreshInvites(); }}
       />
     </MembersPageContainer>
   );

@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
-import type { IRoutePermission } from '../../../services/datalab-api/usersResource';
-import { groupPermissionsByTag } from '../permissions-helpers';
+import type { UUID } from '../../../types/ids';
+import type { IPermissionOption } from './permission-options';
 import {
   PermissionGroup,
   PermissionGroupDetails,
@@ -12,32 +12,33 @@ import {
   PermissionToggleRow,
 } from '../company-members.style';
 
-interface PermissionsListProps {
-  permissions: IRoutePermission[];
-  selected: Set<number>;
-  onChange: (selected: Set<number>) => void;
+interface PermissionsSelectorProps {
+  /** Grupos já rotulados (tag da rota, provider da permissão de agente...) */
+  groups: Record<string, IPermissionOption[]>;
+  selected: Set<UUID>;
+  onChange: (selected: Set<UUID>) => void;
 }
 
 interface PermissionGroupItemProps {
-  tag: string;
-  perms: IRoutePermission[];
-  selected: Set<number>;
-  onToggle: (id: number) => void;
-  onToggleGroup: (perms: IRoutePermission[]) => void;
+  label: string;
+  options: IPermissionOption[];
+  selected: Set<UUID>;
+  onToggle: (id: UUID) => void;
+  onToggleGroup: (options: IPermissionOption[]) => void;
 }
 
-const PermissionGroupItem = ({ tag, perms, selected, onToggle, onToggleGroup }: PermissionGroupItemProps) => {
+const PermissionGroupItem = ({ label, options, selected, onToggle, onToggleGroup }: PermissionGroupItemProps) => {
   const checkboxRef = useRef<HTMLInputElement>(null);
   const detailsRef = useRef<HTMLDetailsElement>(null);
 
-  const allSelected = perms.every((p) => selected.has(p.id));
-  const someSelected = perms.some((p) => selected.has(p.id));
+  const allSelected = options.every((option) => selected.has(option.id));
+  const someSelected = options.some((option) => selected.has(option.id));
 
   const handleGroupCheckbox = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    onToggleGroup(perms);
+    onToggleGroup(options);
     if (!allSelected && detailsRef.current) detailsRef.current.open = false;
-  }, [allSelected, onToggleGroup, perms]);
+  }, [allSelected, onToggleGroup, options]);
 
   if (checkboxRef.current) {
     checkboxRef.current.indeterminate = someSelected && !allSelected;
@@ -47,7 +48,7 @@ const PermissionGroupItem = ({ tag, perms, selected, onToggle, onToggleGroup }: 
     <PermissionGroup>
       <PermissionGroupDetails ref={detailsRef}>
         <PermissionGroupSummary>
-          {tag}
+          {label}
           <input
             ref={checkboxRef}
             type="checkbox"
@@ -56,19 +57,19 @@ const PermissionGroupItem = ({ tag, perms, selected, onToggle, onToggleGroup }: 
             onChange={() => {}}
           />
         </PermissionGroupSummary>
-        {perms.map((p) => (
-          <PermissionToggleRow key={p.id} htmlFor={`perm-${p.id}`}>
+        {options.map((option) => (
+          <PermissionToggleRow key={option.id} htmlFor={`perm-${option.id}`}>
             <PermissionToggleInfo>
-              <PermissionToggleName>{p.name}</PermissionToggleName>
-              {p.description && (
-                <PermissionToggleDesc>{p.description}</PermissionToggleDesc>
+              <PermissionToggleName>{option.name}</PermissionToggleName>
+              {option.description && (
+                <PermissionToggleDesc>{option.description}</PermissionToggleDesc>
               )}
             </PermissionToggleInfo>
             <input
-              id={`perm-${p.id}`}
+              id={`perm-${option.id}`}
               type="checkbox"
-              checked={selected.has(p.id)}
-              onChange={() => onToggle(p.id)}
+              checked={selected.has(option.id)}
+              onChange={() => onToggle(option.id)}
             />
           </PermissionToggleRow>
         ))}
@@ -77,34 +78,28 @@ const PermissionGroupItem = ({ tag, perms, selected, onToggle, onToggleGroup }: 
   );
 };
 
-export const PermissionsSelector = ({ permissions, selected, onChange }: PermissionsListProps) => {
-  const grouped = groupPermissionsByTag(permissions);
-
-  const togglePermission = useCallback((id: number) => {
-    onChange(((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    })(selected));
+export const PermissionsSelector = ({ groups, selected, onChange }: PermissionsSelectorProps) => {
+  const togglePermission = useCallback((id: UUID) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    onChange(next);
   }, [selected, onChange]);
 
-  const toggleGroup = useCallback((perms: IRoutePermission[]) => {
-    onChange(((prev) => {
-      const next = new Set(prev);
-      const allSelected = perms.every((p) => next.has(p.id));
-      perms.forEach((p) => (allSelected ? next.delete(p.id) : next.add(p.id)));
-      return next;
-    })(selected));
+  const toggleGroup = useCallback((options: IPermissionOption[]) => {
+    const next = new Set(selected);
+    const allSelected = options.every((option) => next.has(option.id));
+    options.forEach((option) => (allSelected ? next.delete(option.id) : next.add(option.id)));
+    onChange(next);
   }, [selected, onChange]);
 
   return (
     <PermissionsList>
-      {Object.entries(grouped).map(([tag, perms]) => (
+      {Object.entries(groups).map(([label, options]) => (
         <PermissionGroupItem
-          key={tag}
-          tag={tag}
-          perms={perms}
+          key={label}
+          label={label}
+          options={options}
           selected={selected}
           onToggle={togglePermission}
           onToggleGroup={toggleGroup}

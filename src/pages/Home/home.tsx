@@ -14,11 +14,11 @@ import {
   HomeContainer,
   HomeContent,
 } from './home.style';
-import { useAuthContext } from '../../contexts/auth';
+import { useMe } from '../../hooks/use-me';
 import { extractFirstName } from '../../utils/extractors';
 
 export const Home: React.FC = () => {
-  const { me } = useAuthContext();
+  const { data: me } = useMe();
 
   return (
     <HomeContainer>

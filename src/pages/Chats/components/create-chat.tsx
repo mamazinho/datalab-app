@@ -1,8 +1,11 @@
 import { useState, useActionState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { createChatAction } from '../actions';
 import { Modal } from '../../../components/UI/Modal/modal';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
+import { chatsQuery } from '../../../queries';
 import {
     CreateChatActions,
     CreateChatButton,
@@ -15,18 +18,21 @@ import {
     CreateChatSubmit,
 } from './chats-components.style';
 
-interface ICreateChatProps {
-    onCreateChat: () => Promise<unknown> | void;
-}
-
-export const CreateChat = ({ onCreateChat }: ICreateChatProps) => {
+export const CreateChat = () => {
     const [isOpen, setIsOpen] = useState(false);
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const [createChatState, createChatFormAction, isCreateChatPending] = useActionState(createChatAction, INITIAL_ACTION_STATE);
 
     useActionFeedback(createChatState, {
-        onSuccess: () => {
-            void onCreateChat();
+        onSuccess: (chat) => {
+            if (!chat) return;
+            // A página de mensagens busca o chat pelo id (GET chats/{id}/), então
+            // não precisamos atualizar a lista aqui — só marcá-la stale para
+            // recarregar quando /ia/conversas montar de novo.
+            void queryClient.invalidateQueries({ queryKey: chatsQuery.queryKey });
             setIsOpen(false);
+            navigate(`/ia/conversas/${chat.id}/mensagens`);
         },
     });
 

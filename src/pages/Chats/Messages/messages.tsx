@@ -1,42 +1,59 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import { Suspense } from 'react';
+import { Navigate, useParams } from 'react-router-dom';
+import axios from 'axios';
+import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
+import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { ChatConversation } from './components/chat-conversation';
-import { AsyncResource } from '../../../components/Tools/async-resource';
-import { DatalabAPI } from '../../../services/datalab-api';
-import type { IChatMessageRead } from '../../../services/datalab-api/chatMessagesResource';
-import { useEnsureChat } from './use-ensure-chat';
-import { ErrorBanner, ErrorLabel, MessagesBody, MessagesContainer, MessagesHeader, MessagesSubtitle, MessagesTitle, MessagesTitleHighlight } from './messages.style';
+import { ServerErrorComponent } from '../../../components/Feedback/ErrorBoundaries/server-error';
+import { LoadingPiece } from '../../../components/Feedback/Loadings/loading';
+import { isUuid, type UUID } from '../../../types/ids';
+import { useChat } from '../../../hooks/use-chat';
+import { useChatMessages } from '../../../hooks/use-chat-messages';
+import { MessagesBody, MessagesContainer, MessagesHeader, MessagesSubtitle, MessagesTitle } from './messages.style';
 
-export const ChatMessages: React.FC = () => {
-    const { chatId } = useParams<{ chatId: string }>();
-    const { isValidatingChat, validationError } = useEnsureChat(chatId);
+// Chat inexistente / de outro usuário (404) manda de volta para a lista;
+// os demais erros seguem para a tela padrão de erro com "Tentar novamente".
+const ChatErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+        return <Navigate to="/ia/conversas" replace />;
+    }
+    return <ServerErrorComponent error={error} resetErrorBoundary={resetErrorBoundary} />;
+};
 
-    const fetchMessages = async (): Promise<IChatMessageRead[]> => {
-        if (!chatId || isValidatingChat) return [];
-
-        return DatalabAPI.ChatMessagesResource.getChatMessages(Number(chatId));
-    };
+const ChatView = ({ chatId }: { chatId: UUID }) => {
+    const { data: chat } = useChat(chatId);
+    const { data: history } = useChatMessages(chatId);
 
     return (
-        <MessagesContainer>
+        <>
             <MessagesHeader>
-                <MessagesTitle>Chat <MessagesTitleHighlight>#{chatId}</MessagesTitleHighlight></MessagesTitle>
+                <MessagesTitle>{chat.title}</MessagesTitle>
                 <MessagesSubtitle>Converse com nossa IA e tire suas dúvidas</MessagesSubtitle>
             </MessagesHeader>
 
             <MessagesBody>
-                <AsyncResource fetcher={fetchMessages} dependencies={[chatId, isValidatingChat]}>
-                    {(history) => (
-                        <ChatConversation chatId={Number(chatId)} history={history} />
-                    )}
-                </AsyncResource>
+                <ChatConversation chatId={chatId} history={history} />
             </MessagesBody>
+        </>
+    );
+};
 
-            {validationError && (
-                <ErrorBanner>
-                    <ErrorLabel>Erro:</ErrorLabel> {validationError}
-                </ErrorBanner>
-            )}
+export const ChatMessages = () => {
+    const { chatId } = useParams<{ chatId: string }>();
+
+    if (!isUuid(chatId)) return <Navigate to="/ia/conversas" replace />;
+
+    return (
+        <MessagesContainer>
+            <QueryErrorResetBoundary>
+                {({ reset }) => (
+                    <ErrorBoundary FallbackComponent={ChatErrorFallback} onReset={reset}>
+                        <Suspense fallback={<LoadingPiece />}>
+                            <ChatView chatId={chatId} />
+                        </Suspense>
+                    </ErrorBoundary>
+                )}
+            </QueryErrorResetBoundary>
         </MessagesContainer>
     );
 };
