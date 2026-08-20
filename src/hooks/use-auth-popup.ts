@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SOCIAL_AUTH_CHANNEL, type AuthChannelEvent } from '../types/auth';
 
-const POPUP_WIDTH = 500;
-const POPUP_HEIGHT = 600;
+// O consentimento do Meta lista portfólios, contas e páginas; a tela de login é compacta.
+const POPUP_SIZES = {
+  login: { width: 500, height: 600 },
+  consent: { width: 720, height: 780 },
+} as const;
+
+export type AuthPopupFlow = keyof typeof POPUP_SIZES;
+
 const POPUP_WATCH_INTERVAL_MS = 500;
 
 /**
@@ -53,14 +59,15 @@ export function useAuthPopup(onMessage: (event: AuthChannelEvent) => void) {
   useEffect(() => stopWatching, [stopWatching]);
 
   const openPopup = useCallback(
-    (url: string, name: string): Window | null => {
-      const left = window.screenLeft + (window.innerWidth - POPUP_WIDTH) / 2;
-      const top = window.screenTop + (window.innerHeight - POPUP_HEIGHT) / 2;
+    (url: string, name: string, flow: AuthPopupFlow = 'login'): Window | null => {
+      const { width, height } = POPUP_SIZES[flow];
+      const left = window.screenLeft + (window.innerWidth - width) / 2;
+      const top = window.screenTop + (window.innerHeight - height) / 2;
 
       const popup = window.open(
         url,
         name,
-        `width=${POPUP_WIDTH},height=${POPUP_HEIGHT},left=${left},top=${top},scrollbars=yes,status=yes,resizable=yes`,
+        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,status=yes,resizable=yes`,
       );
 
       stopWatching();

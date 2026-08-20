@@ -52,7 +52,11 @@ export const useConnectIntegration = ({ onConnected }: IUseConnectIntegrationOpt
           integration.key,
         );
 
-        const popup = openPopup(authorizationUrl, `${integration.provider}_integration_popup`);
+        const popup = openPopup(
+          authorizationUrl,
+          `${integration.provider}_integration_popup`,
+          'consent',
+        );
 
         if (!popup) {
           toast.error('Permita janelas pop-up neste site para conectar sua conta.');
