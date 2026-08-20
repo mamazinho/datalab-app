@@ -3,9 +3,10 @@ import type { UUID } from "../../types/ids";
 
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_DATALAB_API_URL,
+  withCredentials: true,
+  xsrfCookieName: 'csrftoken',
+  xsrfHeaderName: 'X-CSRFToken',
   headers: {
-    xsrfCookieName: 'csrftoken',
-    xsrfHeaderName: 'X-CSRFToken',
     'Content-Type': 'application/json',
   },
 });
