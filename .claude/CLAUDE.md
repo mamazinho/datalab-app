@@ -65,7 +65,32 @@ project-root/
 ### Convenções Importantes
 
 - Sempre usar imports nomeados (absolutos)
-- O código ainda não possui testes, focaremos nisso em outro momento e ai essa linha será removida e os padrões para testes adicionados nesse arquivo, não se preocupe com testes ainda
+
+---
+
+## 🧪 Testes
+
+**Stack:** Vitest (roda pelo mesmo `vite.config.ts`) + Testing Library (React + jest-dom + user-event), ambiente `jsdom`.
+
+```bash
+yarn test            # roda a suíte uma vez (CI)
+yarn test:watch      # modo watch durante o desenvolvimento
+yarn test:coverage   # relatório de cobertura (v8) em coverage/
+```
+
+### Convenções
+
+- Arquivo de teste co-localizado ao lado do código: `password.ts` → `password.test.ts`
+- Imports explícitos do Vitest (`import { describe, it, expect, vi } from 'vitest'`) — o projeto **não** usa `globals: true`
+- Componentes: usar `renderWithProviders` de `src/test/test-utils.tsx`, que já embrulha em QueryClientProvider + ThemeProvider + MemoryRouter. Nunca o `render` puro em componente que dependa de tema, query ou rota
+- Consultar o DOM por papel/rótulo acessível (`getByRole`, `getByLabelText`), não por classe ou test-id
+- Interação sempre via `userEvent` (`await user.click(...)`), não `fireEvent`
+- Serviços de API: mockar pelo `adapter` do axios (ver `src/services/datalab-api/axios.test.ts`), não pelo `vi.mock` do módulo inteiro
+- Testar comportamento observável (o que a tela mostra, o que a função devolve), não detalhe de implementação (estado interno, nome de função privada)
+
+### O que priorizar
+
+Utils e schemas puros, hooks customizados, componentes de UI com lógica (validação, toggle, cooldown) e os interceptors do axios. Componente que é só estilo não precisa de teste.
 
 ---
 
