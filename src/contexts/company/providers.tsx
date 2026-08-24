@@ -40,7 +40,7 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
   }, [currentCompany]);
 
   // Fonte única do usuário na empresa ativa: membership + company + permissões (flat).
-  const { data: currentMembershipData } = useQuery({
+  const { data: currentMembershipData, isLoading: isMembershipLoading } = useQuery({
     ...currentMembershipQuery(currentCompany?.id as UUID),
     enabled: !!currentCompany,
   });
@@ -144,6 +144,7 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
       selectCompanyById,
       clearSelectedCompany,
       currentMembership,
+      isMembershipLoading,
       memberPermissions,
       providerPermissions,
       companyProviderAssets,
@@ -153,7 +154,7 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
       hasAnyAgentsPermission,
       hasAnyCompanyPermission,
     }),
-    [currentCompany, setCurrentCompany, selectCompanyById, clearSelectedCompany, currentMembership, memberPermissions, providerPermissions, companyProviderAssets, hasPermissionByTag, hasPermissionByRoute, hasProviderPermission, hasAnyAgentsPermission, hasAnyCompanyPermission],
+    [currentCompany, setCurrentCompany, selectCompanyById, clearSelectedCompany, currentMembership, isMembershipLoading, memberPermissions, providerPermissions, companyProviderAssets, hasPermissionByTag, hasPermissionByRoute, hasProviderPermission, hasAnyAgentsPermission, hasAnyCompanyPermission],
   );
 
   return (

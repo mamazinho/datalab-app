@@ -81,16 +81,35 @@ yarn test:coverage   # relatório de cobertura (v8) em coverage/
 ### Convenções
 
 - Arquivo de teste co-localizado ao lado do código: `password.ts` → `password.test.ts`
+- **Descrições de teste (`describe`/`it`) sempre em inglês.** Strings de UI dentro das asserções continuam em português, porque são o texto real da tela
+- **Teste não leva comentário.** O nome do `it` descreve o caso; se precisou de comentário, o nome está ruim
 - Imports explícitos do Vitest (`import { describe, it, expect, vi } from 'vitest'`) — o projeto **não** usa `globals: true`
 - Componentes: usar `renderWithProviders` de `src/test/test-utils.tsx`, que já embrulha em QueryClientProvider + ThemeProvider + MemoryRouter. Nunca o `render` puro em componente que dependa de tema, query ou rota
 - Consultar o DOM por papel/rótulo acessível (`getByRole`, `getByLabelText`), não por classe ou test-id
-- Interação sempre via `userEvent` (`await user.click(...)`), não `fireEvent`
-- Serviços de API: mockar pelo `adapter` do axios (ver `src/services/datalab-api/axios.test.ts`), não pelo `vi.mock` do módulo inteiro
+- Interação sempre via `userEvent` (`await user.click(...)`), não `fireEvent`. Em formulário grande, `userEvent.setup({ delay: null })` — cada tecla re-renderiza
 - Testar comportamento observável (o que a tela mostra, o que a função devolve), não detalhe de implementação (estado interno, nome de função privada)
+- **Nunca `vi.mock` de hook, context ou resource.** O que se mocka é a rede, e só ela
+
+### Backend nos testes: MSW
+
+`src/test/msw/handlers.ts` tem o happy path de todos os endpoints; cada teste sobrescreve o que interessa com `server.use(...)`, e o reset é automático. `onUnhandledRequest: 'error'` — endpoint sem handler falha o teste em vez de virar um erro silencioso.
+
+```ts
+server.use(
+  http.post(api('auth/login/'), () =>
+    HttpResponse.json({ detail: 'E-mail ou senha inválidos.' }, { status: 401 }),
+  ),
+);
+```
+
+- Payloads vêm das fábricas de `src/test/factories.ts` (`buildUser`, `buildCompany`, `buildAgent`…), com override parcial: o teste declara só o campo que importa
+- Ids nos testes saem de `uuid(n)` — determinístico e válido para o `isUuid`
+- Para asserir o que foi enviado, capture o corpo dentro do handler e verifique com `waitFor`
+- Estado pendente: prenda a resposta num Promise que o teste solta (ver `login.test.tsx`), nunca um `delay` fixo — senão a corrida decide o resultado
 
 ### O que priorizar
 
-Utils e schemas puros, hooks customizados, componentes de UI com lógica (validação, toggle, cooldown) e os interceptors do axios. Componente que é só estilo não precisa de teste.
+Fluxo crítico de ponta a ponta (login, cadastro, convites, onboarding, permissões de rota), utils e schemas puros, hooks e componentes com lógica. Componente que é só estilo não precisa de teste — teste 1:1 por arquivo não é meta.
 
 ---
 

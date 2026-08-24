@@ -2,12 +2,17 @@ import type { ReactElement, ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, type RenderOptions, type RenderResult } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { ThemeProvider } from 'styled-components';
-import { lightTheme } from '../styles/themes';
+import { ToastContainer } from 'react-toastify';
+import { AuthProvider } from '../contexts/auth';
+import { CompanyProvider } from '../contexts/company';
+import { CustomThemeProvider } from '../contexts/theme';
+import type { IUserCompany } from '../services/datalab-api/usersResource';
 
 interface IRenderWithProvidersOptions extends Omit<RenderOptions, 'wrapper'> {
   /** Rota inicial do MemoryRouter (para componentes que usam Link/useLocation) */
   route?: string;
+  /** Empresas do usuário; uma só é auto-selecionada pelo CompanyProvider */
+  companies?: IUserCompany[];
   queryClient?: QueryClient;
 }
 
@@ -21,19 +26,31 @@ export const createTestQueryClient = (): QueryClient =>
   });
 
 /**
- * Renderiza com os providers globais do app (query, tema, router).
- * Use no lugar do render puro do Testing Library em qualquer componente
- * que dependa de styled-components, react-query ou react-router.
+ * Renderiza com a mesma árvore de providers do App (query, tema, auth, empresa,
+ * router e toasts). Use no lugar do render puro: é o que torna teste de página
+ * possível sem mockar hook nenhum — só a rede, via MSW.
  */
 export function renderWithProviders(
   ui: ReactElement,
-  { route = '/', queryClient = createTestQueryClient(), ...options }: IRenderWithProvidersOptions = {},
+  {
+    route = '/',
+    companies = [],
+    queryClient = createTestQueryClient(),
+    ...options
+  }: IRenderWithProvidersOptions = {},
 ): RenderResult & { queryClient: QueryClient } {
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={lightTheme}>
-        <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
-      </ThemeProvider>
+      <CustomThemeProvider>
+        <AuthProvider>
+          <CompanyProvider companies={companies}>
+            <MemoryRouter initialEntries={[route]}>
+              {children}
+              <ToastContainer autoClose={false} />
+            </MemoryRouter>
+          </CompanyProvider>
+        </AuthProvider>
+      </CustomThemeProvider>
     </QueryClientProvider>
   );
 

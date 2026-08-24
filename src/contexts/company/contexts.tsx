@@ -11,6 +11,8 @@ interface ICompanyContextProps {
   selectCompanyById: (id: UUID) => void;
   clearSelectedCompany: () => void;
   currentMembership: IUserMembership | null;
+  /** true enquanto /memberships/current não respondeu — as permissões ainda não são conclusivas */
+  isMembershipLoading: boolean;
   memberPermissions: IRoutePermission[];
   /** Permissões nos agentes (provider) do usuário na empresa ativa — já resolvidas */
   providerPermissions: IProviderPermission[];
