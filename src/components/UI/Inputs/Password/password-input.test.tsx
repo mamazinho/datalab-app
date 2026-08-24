@@ -6,7 +6,7 @@ const renderInput = (props: Partial<React.ComponentProps<typeof PasswordInput>> 
   renderWithProviders(<PasswordInput aria-label="Senha" {...props} />);
 
 describe('<PasswordInput />', () => {
-  it('esconde o valor por padrão e revela ao clicar no olho', async () => {
+  it('hides the value by default and reveals it on the eye button', async () => {
     const user = userEvent.setup();
     renderInput();
 
@@ -20,7 +20,7 @@ describe('<PasswordInput />', () => {
     expect(input).toHaveAttribute('type', 'password');
   });
 
-  it('repassa o onChange do consumidor', async () => {
+  it('forwards the consumer onChange', async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     renderInput({ onChange });
@@ -30,7 +30,7 @@ describe('<PasswordInput />', () => {
     expect(onChange).toHaveBeenCalledTimes(3);
   });
 
-  it('mostra os requisitos só depois do foco, quando habilitado', async () => {
+  it('shows the requirements only after focus, when enabled', async () => {
     const user = userEvent.setup();
     renderInput({ showRequirements: true });
 
@@ -43,7 +43,7 @@ describe('<PasswordInput />', () => {
     expect(screen.queryByRole('list')).not.toBeInTheDocument();
   });
 
-  it('acusa divergência entre senha e confirmação', async () => {
+  it('flags a mismatch between password and confirmation', async () => {
     const user = userEvent.setup();
     renderInput({ matchValue: 'Senha@123' });
 
@@ -54,7 +54,7 @@ describe('<PasswordInput />', () => {
     expect(screen.queryByText('As senhas não coincidem.')).not.toBeInTheDocument();
   });
 
-  it('bloqueia o submit do form enquanto as senhas divergem', async () => {
+  it('blocks the form submit while the passwords differ', async () => {
     const user = userEvent.setup();
     renderInput({ matchValue: 'Senha@123' });
 
@@ -65,7 +65,7 @@ describe('<PasswordInput />', () => {
     expect(input.validationMessage).toBe('As senhas não coincidem.');
   });
 
-  it('não valida divergência quando enableMatchValidation é false', async () => {
+  it('skips the mismatch check when enableMatchValidation is false', async () => {
     const user = userEvent.setup();
     renderInput({ matchValue: 'Senha@123', enableMatchValidation: false });
 

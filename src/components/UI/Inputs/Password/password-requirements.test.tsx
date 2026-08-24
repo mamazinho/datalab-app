@@ -4,19 +4,19 @@ import { lightTheme } from '../../../../styles/themes';
 import { PasswordRequirements } from './password-requirements';
 
 describe('<PasswordRequirements />', () => {
-  it('lista as quatro regras de senha', () => {
+  it('lists the four password rules', () => {
     renderWithProviders(<PasswordRequirements password="" />);
 
     expect(screen.getAllByRole('listitem')).toHaveLength(4);
   });
 
-  it('anuncia mudanças para leitores de tela', () => {
+  it('announces changes to screen readers', () => {
     renderWithProviders(<PasswordRequirements password="" />);
 
     expect(screen.getByRole('list')).toHaveAttribute('aria-live', 'polite');
   });
 
-  it('destaca em verde apenas as regras já atendidas', () => {
+  it('highlights only the rules already satisfied', () => {
     renderWithProviders(<PasswordRequirements password="senha@123" />);
 
     expect(screen.getByText(/no minimo 8 caracteres/i)).toHaveStyle({ color: lightTheme.colors.success });
@@ -25,7 +25,7 @@ describe('<PasswordRequirements />', () => {
     });
   });
 
-  it('destaca todas as regras quando a senha é válida', () => {
+  it('highlights every rule once the password is valid', () => {
     renderWithProviders(<PasswordRequirements password="Senha@123" />);
 
     screen.getAllByRole('listitem').forEach((item) => {

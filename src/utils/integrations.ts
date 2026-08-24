@@ -135,7 +135,9 @@ export function groupAssetsByContainer<T extends IGroupableAsset>(assets: T[]): 
   assets
     .filter((asset) => !isContainerAsset(asset.asset_type))
     .forEach((asset) => {
-      const parent = asset.parent_name?.trim();
+      // `|| undefined`: parent_name só com espaços vira '' e cairia num grupo
+      // de rótulo vazio — tem que seguir para o balde de órfãos.
+      const parent = asset.parent_name?.trim() || undefined;
       const parentKey = parent
         ? groupKeyByParent.get(normalizeParentKey(parent)) ?? groupKeyByParent.get(parent)
         : undefined;

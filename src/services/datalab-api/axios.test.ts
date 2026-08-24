@@ -24,7 +24,6 @@ const unauthorized = (config: InternalAxiosRequestConfig, detail: string): Axios
 const authorizationOf = (config: InternalAxiosRequestConfig): string =>
   String(config.headers.get('Authorization') ?? '');
 
-/** Adapter da instância autenticada: só responde 200 para o token novo. */
 const buildPrivateAdapter = (detail = 'Token has expired') =>
   vi.fn<AxiosAdapter>(async (config) => {
     if (authorizationOf(config) === `Bearer ${NEW_TOKEN}`) {
@@ -47,16 +46,14 @@ afterEach(() => {
   setSessionExpiredHandler(null);
 });
 
-describe('configuração das instâncias', () => {
-  // O cookie httpOnly refresh_token só viaja em requisição cross-origin com
-  // withCredentials — sem isso o refresh silencioso desloga todo mundo.
-  it('envia credenciais e usa as opções de CSRF no nível certo da config', () => {
+describe('instance configuration', () => {
+  it('sends credentials and keeps the CSRF options at the right config level', () => {
     expect(axiosInstance.defaults.withCredentials).toBe(true);
     expect(axiosInstance.defaults.xsrfCookieName).toBe('csrftoken');
     expect(axiosInstance.defaults.xsrfHeaderName).toBe('X-CSRFToken');
   });
 
-  it('propaga a configuração para as instâncias autenticadas', () => {
+  it('propagates the configuration to the authenticated instances', () => {
     [axiosPrivateInstance, axiosCompanyInstance].forEach((instance) => {
       expect(instance.defaults.withCredentials).toBe(true);
       expect(instance.defaults.xsrfCookieName).toBe('csrftoken');
@@ -64,8 +61,8 @@ describe('configuração das instâncias', () => {
   });
 });
 
-describe('interceptor de autenticação', () => {
-  it('injeta o access token do localStorage', async () => {
+describe('auth interceptor', () => {
+  it('injects the access token from localStorage', async () => {
     localStorage.setItem('accessToken', NEW_TOKEN);
     const adapter = buildPrivateAdapter();
     axiosPrivateInstance.defaults.adapter = adapter;
@@ -76,8 +73,8 @@ describe('interceptor de autenticação', () => {
   });
 });
 
-describe('refresh silencioso no 401', () => {
-  it('renova o token e repete a requisição original', async () => {
+describe('silent refresh on 401', () => {
+  it('renews the token and replays the original request', async () => {
     localStorage.setItem('accessToken', 'token-velho');
     const privateAdapter = buildPrivateAdapter();
     const refreshAdapter = buildRefreshAdapter();
@@ -93,7 +90,7 @@ describe('refresh silencioso no 401', () => {
     expect(response.data).toEqual({ ok: true });
   });
 
-  it('faz um único refresh para várias requisições simultâneas', async () => {
+  it('refreshes only once for concurrent requests', async () => {
     localStorage.setItem('accessToken', 'token-velho');
     const refreshAdapter = buildRefreshAdapter();
     axiosPrivateInstance.defaults.adapter = buildPrivateAdapter();
@@ -108,7 +105,7 @@ describe('refresh silencioso no 401', () => {
     expect(refreshAdapter).toHaveBeenCalledOnce();
   });
 
-  it('não tenta refresh mais de uma vez para a mesma requisição', async () => {
+  it('never retries the same request more than once', async () => {
     const privateAdapter = vi.fn<AxiosAdapter>(async (config) => {
       throw unauthorized(config, 'Token has expired');
     });
@@ -121,7 +118,7 @@ describe('refresh silencioso no 401', () => {
     expect(privateAdapter).toHaveBeenCalledTimes(2);
   });
 
-  it('encerra a sessão quando o refresh falha', async () => {
+  it('ends the session when the refresh itself fails', async () => {
     const onSessionExpired = vi.fn();
     setSessionExpiredHandler(onSessionExpired);
     axiosPrivateInstance.defaults.adapter = buildPrivateAdapter();
@@ -134,7 +131,7 @@ describe('refresh silencioso no 401', () => {
     expect(onSessionExpired).toHaveBeenCalledOnce();
   });
 
-  it('encerra a sessão direto em 401 que não é de token expirado', async () => {
+  it('ends the session straight away on a 401 that is not an expired token', async () => {
     const onSessionExpired = vi.fn();
     setSessionExpiredHandler(onSessionExpired);
     const refreshAdapter = buildRefreshAdapter();
@@ -148,8 +145,8 @@ describe('refresh silencioso no 401', () => {
   });
 });
 
-describe('tratamento de erro da instância pública', () => {
-  it('usa o detail do backend como mensagem', async () => {
+describe('public instance error handling', () => {
+  it('uses the backend detail as the error message', async () => {
     axiosInstance.defaults.adapter = vi.fn<AxiosAdapter>(async (config) => {
       throw new AxiosError('Request failed', 'ERR_BAD_REQUEST', config, undefined, {
         data: { detail: 'E-mail ou senha inválidos.' },
@@ -163,7 +160,7 @@ describe('tratamento de erro da instância pública', () => {
     await expect(axiosInstance.post('auth/login/')).rejects.toThrow('E-mail ou senha inválidos.');
   });
 
-  it('traduz falha de rede para uma mensagem legível', async () => {
+  it('translates a network failure into a readable message', async () => {
     axiosInstance.defaults.adapter = vi.fn<AxiosAdapter>(async (config) => {
       throw new AxiosError('Network Error', 'ERR_NETWORK', config, {});
     });

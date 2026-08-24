@@ -68,7 +68,7 @@ export const TimedButton = ({
     const [clicked, setClicked] = useState(false);
     
     useEffect(() => {
-        let interval: number;
+        let interval: ReturnType<typeof setInterval>;
         if (timer > 0) {
             interval = setInterval(() => {
                 setTimer((prev) => prev - 1);

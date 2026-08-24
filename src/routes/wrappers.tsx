@@ -2,7 +2,20 @@ import { Navigate, Outlet, useLocation, useParams } from "react-router-dom";
 import { useAuthContext } from "../contexts/auth";
 import { useCompanyContext } from "../contexts/company";
 import { PrivateLayout } from "../components/UI/Layout/private-layout/layout";
+import { LoadingPiece } from "../components/Feedback/Loadings/loading";
 import { AuthGate } from "./auth-gate";
+
+/**
+ * Negar acesso só depois que /memberships/current respondeu: as permissões
+ * chegam vazias no primeiro render e um membro que abre a rota direto seria
+ * redirecionado para "/" antes de o backend dizer o que ele pode. Quem já está
+ * liberado (owner, pela role embutida) entra na hora, sem passar pelo spinner.
+ */
+const guard = (allowed: boolean, isLoading: boolean) => {
+    if (allowed) return <Outlet />;
+    if (isLoading) return <LoadingPiece />;
+    return <Navigate to="/" replace />;
+};
 
 
 // Com o /me já resolvido pelo AuthGate, decide empresa ANTES de montar o layout:
@@ -71,43 +84,38 @@ interface IPermissionRouteProps {
 }
 
 export const PermissionRoute = ({ tag }: IPermissionRouteProps) => {
-    const { hasPermissionByTag } = useCompanyContext();
+    const { hasPermissionByTag, isMembershipLoading } = useCompanyContext();
 
-    return hasPermissionByTag(tag)
-        ? <Outlet />
-        : <Navigate to="/" replace />;
+    return guard(hasPermissionByTag(tag), isMembershipLoading);
 };
 
 // Seção IA: acessível com permissão de chat OU alguma permissão de agents
 export const IaRoute = () => {
-    const { hasPermissionByTag, hasAnyAgentsPermission } = useCompanyContext();
+    const { hasPermissionByTag, hasAnyAgentsPermission, isMembershipLoading } = useCompanyContext();
 
-    return hasPermissionByTag('chat') || hasAnyAgentsPermission
-        ? <Outlet />
-        : <Navigate to="/" replace />;
+    return guard(hasPermissionByTag('chat') || hasAnyAgentsPermission, isMembershipLoading);
 };
 
 // Aba de agentes: exige alguma permissão de rota de agents (owners sempre passam)
 export const AgentsRoute = () => {
-    const { hasAnyAgentsPermission } = useCompanyContext();
+    const { hasAnyAgentsPermission, isMembershipLoading } = useCompanyContext();
 
-    return hasAnyAgentsPermission
-        ? <Outlet />
-        : <Navigate to="/" replace />;
+    return guard(hasAnyAgentsPermission, isMembershipLoading);
 };
 
 // Aba de empresa: exige permissão de editar OU deletar company (owners sempre passam)
 export const CompanyManagementRoute = () => {
-    const { hasAnyCompanyPermission } = useCompanyContext();
+    const { hasAnyCompanyPermission, isMembershipLoading } = useCompanyContext();
 
-    return hasAnyCompanyPermission
-        ? <Outlet />
-        : <Navigate to="/" replace />;
+    return guard(hasAnyCompanyPermission, isMembershipLoading);
 };
 
 // Index de /ia: cai na primeira aba que o usuário pode ver
 export const IaIndexRedirect = () => {
-    const { hasPermissionByTag } = useCompanyContext();
+    const { hasPermissionByTag, isMembershipLoading } = useCompanyContext();
+
+    // Escolher a aba antes das permissões chegarem manda todo membro para agentes.
+    if (isMembershipLoading) return <LoadingPiece />;
 
     return <Navigate to={hasPermissionByTag('chat') ? '/ia/conversas' : '/ia/agentes'} replace />;
 };

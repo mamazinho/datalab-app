@@ -15,6 +15,10 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
     restoreMocks: true,
+    // Teste de página monta a árvore inteira e digita formulário: 5s aperta
+    // quando a suíte roda em paralelo, e a instrumentação de cobertura dobra o
+    // custo de cada render.
+    testTimeout: 30_000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
