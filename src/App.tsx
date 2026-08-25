@@ -15,17 +15,14 @@ import type { ReactNode } from "react";
 
 const apiUrl = import.meta.env.VITE_DATALAB_API_URL;
 
-// O token do Logfire não pode viver no bundle: o navegador exporta para a API e ela é quem assina.
 logfire.configure({
     traceUrl: `${apiUrl}/telemetry/v1/traces`,
     serviceName: "datalab-app",
     environment: import.meta.env.MODE,
     autoInstrumentations: {
-        // Sem propagar o traceparent a API abre um trace novo e o clique some do meio do caminho.
         "@opentelemetry/instrumentation-xml-http-request": {
             propagateTraceHeaderCorsUrls: [new RegExp(`^${apiUrl}`)],
         },
-        // Um span por clique estoura a cota antes de dizer qualquer coisa útil.
         "@opentelemetry/instrumentation-user-interaction": { enabled: false },
     },
     rum: { webVitals: true },
