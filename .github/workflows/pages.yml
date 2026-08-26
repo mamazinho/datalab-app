@@ -1,0 +1,64 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  # Permite republicar a mesma tag pela aba Actions sem precisar criar uma nova.
+  workflow_dispatch:
+
+# O deploy do Pages usa OIDC; sem `pages: write` e `id-token: write` o deploy-pages falha.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Uma publicação por vez. `cancel-in-progress: false` porque cancelar um deploy
+# no meio deixaria o site publicado num estado parcial.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        env:
+          # Repository variable, não secret: o valor acaba dentro do bundle de qualquer forma.
+          VITE_DATALAB_API_URL: ${{ vars.VITE_DATALAB_API_URL }}
+        run: |
+          if [ -z "$VITE_DATALAB_API_URL" ]; then
+            echo "::error::A variable VITE_DATALAB_API_URL não está definida em Settings → Secrets and variables → Actions → Variables. Sem ela a SPA sobe apontando para lugar nenhum."
+            exit 1
+          fi
+          yarn build
+
+      - name: SPA fallback for deep links
+        # O Pages não tem rewrite de SPA: sem um 404.html, dar F5 em /chat devolve a página de
+        # erro do GitHub. Servindo o mesmo index.html no 404, o React Router resolve no cliente.
+        run: cp dist/index.html dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
