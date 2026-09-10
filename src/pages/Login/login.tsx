@@ -48,7 +48,7 @@ export const Login: React.FC = () => {
         <LoginCard>
           <LoginHeader>
             <LoginTitle>DataLab <span>App</span></LoginTitle>
-            <LoginSubtitle>Benvindo de volta!</LoginSubtitle>
+            <LoginSubtitle>Bem vindo de volta!</LoginSubtitle>
           </LoginHeader>
 
           <LoginForm action={loginFormAction}>
