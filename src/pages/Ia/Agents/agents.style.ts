@@ -1,5 +1,6 @@
 import styled, { css } from 'styled-components';
 import { Avatar } from '../../../components/UI/Avatar';
+import { TruncatedText } from '../../../components/UI/TruncatedText';
 
 export const AgentsPageContainer = styled.div`
   display: flex;
@@ -92,14 +93,11 @@ export const AgentKey = styled.span`
   font-family: monospace;
 `;
 
-export const AgentDescription = styled.span`
-  display: block;
+export const AgentDescription = styled(TruncatedText)`
   max-width: 22rem;
   font-size: 0.84rem;
+  line-height: 1.4;
   color: ${({ theme }) => theme.colors.textSecondary};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 `;
 
 export const AgentModel = styled.span`
@@ -108,10 +106,9 @@ export const AgentModel = styled.span`
   font-family: monospace;
 `;
 
-export const AgentBadges = styled.div`
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
+export const AgentOwner = styled.span`
+  font-size: 0.84rem;
+  color: ${({ theme }) => theme.colors.text};
 `;
 
 type AgentBadgeVariant = 'system' | 'active' | 'company-disabled' | 'user-disabled';

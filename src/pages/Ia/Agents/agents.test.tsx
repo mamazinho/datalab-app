@@ -82,11 +82,16 @@ describe('<Agents />', () => {
     expect(await screen.findByText(label)).toBeInTheDocument();
   });
 
-  it('marks a system agent as such', async () => {
-    givenAgents([buildAgent({ is_system: true })]);
+  it('shows who manages each agent', async () => {
+    givenAgents([
+      buildAgent({ id: uuid(10), name: 'Especialista GA4', is_system: true }),
+      buildAgent({ id: uuid(11), name: 'Especialista Meta' }),
+    ]);
     renderAgents();
 
-    expect(await screen.findByText('Sistema')).toBeInTheDocument();
+    expect(await screen.findByRole('columnheader', { name: 'Gerenciado por' })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: 'Sistema' })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: 'Acme' })).toBeInTheDocument();
   });
 
   describe('permissions', () => {

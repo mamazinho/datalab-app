@@ -11,13 +11,13 @@ import { agentsQuery } from '../../../../queries';
 import {
   AgentAvatar,
   AgentBadge,
-  AgentBadges,
   AgentCell,
   AgentDescription,
   AgentIdentity,
   AgentKey,
   AgentModel,
   AgentName,
+  AgentOwner,
   AgentsEmpty,
 } from '../agents.style';
 
@@ -26,23 +26,19 @@ interface IAgentsTableProps {
   onEdit: (agent: IRetrieveAgentWithState) => void;
 }
 
-const renderStatusBadges = (agent: IRetrieveAgentWithState) => (
-  <AgentBadges>
-    {agent.is_system && <AgentBadge $variant="system">Sistema</AgentBadge>}
-    {agent.disabled_by_company ? (
-      <AgentBadge $variant="company-disabled">Desativado pela empresa</AgentBadge>
-    ) : agent.disabled_by_user ? (
-      <AgentBadge $variant="user-disabled">Desativado por você</AgentBadge>
-    ) : agent.is_enabled ? (
-      <AgentBadge $variant="active">Ativo</AgentBadge>
-    ) : (
-      <AgentBadge $variant="user-disabled">Inativo</AgentBadge>
-    )}
-  </AgentBadges>
-);
+const renderStatusBadge = (agent: IRetrieveAgentWithState) =>
+  agent.disabled_by_company ? (
+    <AgentBadge $variant="company-disabled">Desativado pela empresa</AgentBadge>
+  ) : agent.disabled_by_user ? (
+    <AgentBadge $variant="user-disabled">Desativado por você</AgentBadge>
+  ) : agent.is_enabled ? (
+    <AgentBadge $variant="active">Ativo</AgentBadge>
+  ) : (
+    <AgentBadge $variant="user-disabled">Inativo</AgentBadge>
+  );
 
 export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
-  const { hasPermissionByRoute } = useCompanyContext();
+  const { currentCompany, hasPermissionByRoute } = useCompanyContext();
   const queryClient = useQueryClient();
   const [removingId, setRemovingId] = useState<UUID | null>(null);
   const [togglingId, setTogglingId] = useState<UUID | null>(null);
@@ -109,6 +105,7 @@ export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
         <th>Descrição</th>
         <th>Modelo</th>
         <th>Status</th>
+        <th>Gerenciado por</th>
       </TableHeaders>
 
       {agents.map((agent) => {
@@ -128,14 +125,19 @@ export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
               </AgentCell>
             </td>
             <td>
-              <AgentDescription title={agent.description}>
-                {agent.description || '—'}
-              </AgentDescription>
+              <AgentDescription text={agent.description} lines={3} />
             </td>
             <td>
               <AgentModel>{agent.model_name || '—'}</AgentModel>
             </td>
-            <td>{renderStatusBadges(agent)}</td>
+            <td>{renderStatusBadge(agent)}</td>
+            <td>
+              {agent.is_system ? (
+                <AgentBadge $variant="system">Sistema</AgentBadge>
+              ) : (
+                <AgentOwner>{currentCompany?.name ?? '—'}</AgentOwner>
+              )}
+            </td>
             <td>
               <TableActions>
                 {canEditAgent && (

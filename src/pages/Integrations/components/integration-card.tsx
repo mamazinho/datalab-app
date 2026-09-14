@@ -41,8 +41,6 @@ interface IIntegrationCardProps {
   onManageAssets: (integration: IIntegrationStatus) => void;
 }
 
-const formatDate = (value: string) => new Date(value).toLocaleDateString('pt-BR');
-
 const isExpired = (value: string | null) => !!value && new Date(value).getTime() <= Date.now();
 
 export const IntegrationCard = ({
@@ -139,20 +137,12 @@ export const IntegrationCard = ({
 
       <IntegrationDescription>{integration.description}</IntegrationDescription>
 
-      {(integration.connected_account_email || integration.token_expires_at) && (
+      {integration.connected_account_email && (
         <IntegrationMeta>
-          {integration.connected_account_email && (
-            <IntegrationMetaRow>
-              <dt>Conta:</dt>
-              <dd>{integration.connected_account_email}</dd>
-            </IntegrationMetaRow>
-          )}
-          {integration.token_expires_at && (
-            <IntegrationMetaRow>
-              <dt>{expired ? 'Expirou em:' : 'Válido até:'}</dt>
-              <dd>{formatDate(integration.token_expires_at)}</dd>
-            </IntegrationMetaRow>
-          )}
+          <IntegrationMetaRow>
+            <dt>Conta:</dt>
+            <dd>{integration.connected_account_email}</dd>
+          </IntegrationMetaRow>
         </IntegrationMeta>
       )}
 

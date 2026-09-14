@@ -121,7 +121,7 @@ describe('<Integrations />', () => {
 
       expect(await screen.findByText('Conectado')).toBeInTheDocument();
       expect(screen.getByText('ana@datalab.com')).toBeInTheDocument();
-      expect(screen.getByText('Válido até:')).toBeInTheDocument();
+      expect(screen.queryByText('Válido até:')).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Reconectar' })).toBeInTheDocument();
     });
 
@@ -132,7 +132,6 @@ describe('<Integrations />', () => {
       renderIntegrations();
 
       expect(await screen.findByText('Token expirado')).toBeInTheDocument();
-      expect(screen.getByText('Expirou em:')).toBeInTheDocument();
     });
 
     it('asks for the missing scopes when the grant is partial', async () => {
