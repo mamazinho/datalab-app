@@ -1,4 +1,4 @@
-import axios, { type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosError, type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 import type { UUID } from "../../types/ids";
 
 export const axiosInstance = axios.create({
@@ -106,13 +106,21 @@ function extractErrorMessage(data: unknown): string {
   return typeof detail === 'string' ? detail : '';
 }
 
+function describeMissingResponse(error: AxiosError): void {
+  if (error.code === AxiosError.ECONNABORTED || error.code === AxiosError.ETIMEDOUT) {
+    error.message = 'O servidor demorou demais para responder. Tente novamente.';
+  } else if (error.request) {
+    error.message = 'Não foi possível conectar ao servidor. Verifique sua internet.';
+  }
+}
+
 const handlePublicAxiosError = (error: Error): Promise<never> => {
   if (axios.isAxiosError(error)) {
     if (error.response) {
       const msg = extractErrorMessage(error.response.data);
       if (msg) error.message = msg;
-    } else if (error.request) {
-      error.message = 'Não foi possível conectar ao servidor. Verifique sua internet.';
+    } else {
+      describeMissingResponse(error);
     }
   } else {
     error.message = 'Ocorreu um erro inesperado. Tente novamente mais tarde.';
@@ -125,7 +133,7 @@ function createAuthenticatedErrorHandler(instance: AxiosInstance) {
     if (!axios.isAxiosError(error)) return Promise.reject(error);
 
     if (!error.response) {
-      if (error.request) error.message = 'Não foi possível conectar ao servidor. Verifique sua internet.';
+      describeMissingResponse(error);
       return Promise.reject(error);
     }
 

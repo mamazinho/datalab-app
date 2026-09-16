@@ -32,6 +32,8 @@ const timelineReducer = (items: TimelineItem[], action: TimelineAction): Timelin
   }
 };
 
+const STREAM_INTERRUPTED_MESSAGE = 'A conexão com o servidor caiu no meio da resposta. Tente novamente.';
+
 const getErrorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error && error.message ? error.message : fallback;
 
@@ -87,12 +89,9 @@ export const useChatStream = (chatId: UUID, initialHistory: IChatMessageRead[]) 
         if (generationRef.current !== generation) return;
         dispatch({ type: 'stream_event', event });
       }
-    } catch (streamError) {
+    } catch {
       if (generationRef.current !== generation) return;
-      dispatch({
-        type: 'stream_event',
-        event: { type: 'error', content: getErrorMessage(streamError, 'A conexão com o servidor foi interrompida.') },
-      });
+      dispatch({ type: 'stream_event', event: { type: 'error', content: STREAM_INTERRUPTED_MESSAGE } });
     } finally {
       if (generationRef.current === generation) {
         // Fecha a bolha em streaming mesmo se o backend encerrar sem evento "done"

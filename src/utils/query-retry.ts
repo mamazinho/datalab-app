@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 /** Máximo de novas tentativas para queries que falham por erro transitório. */
-export const MAX_QUERY_RETRIES = 10;
+export const MAX_QUERY_RETRIES = 5;
 
 /** Intervalo fixo entre tentativas (ms). */
 export const QUERY_RETRY_DELAY_MS = 3000;

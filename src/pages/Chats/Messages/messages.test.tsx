@@ -176,6 +176,30 @@ describe('<ChatMessages />', () => {
       expect(await screen.findByText('O agente ficou sem contexto.')).toBeInTheDocument();
     });
 
+    it('explains a connection that drops in the middle of the answer', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/messages/`), () => {
+          const stream = new ReadableStream({
+            start(controller) {
+              controller.error(new TypeError('network error'));
+            },
+          });
+
+          return new HttpResponse(stream, { headers: { 'Content-Type': 'application/x-ndjson' } });
+        }),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Qual foi a receita?');
+
+      expect(
+        await screen.findByText('A conexão com o servidor caiu no meio da resposta. Tente novamente.'),
+      ).toBeInTheDocument();
+      expect(screen.queryByText('network error')).not.toBeInTheDocument();
+    });
+
     it('reports a request that never became a stream', async () => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);

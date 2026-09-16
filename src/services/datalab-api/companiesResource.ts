@@ -3,6 +3,7 @@ import { axiosCompanyInstance, axiosPrivateInstance } from "./axios";
 import type { UUID } from "../../types/ids";
 import type { AssetType, IntegrationKey, Provider } from "../../types/integrations";
 import type { CompanyMembershipRole, CompanyMembershipStatus, IUserCompany } from "./usersResource";
+const AVAILABLE_ASSETS_TIMEOUT_MS = 30_000;
 
 export interface ICreateCompanyRequest {
   name: string;
@@ -107,7 +108,7 @@ export const CompaniesResource = {
   ): Promise<IAvailableProviderAssets> {
     const response = await axiosCompanyInstance.get(
       `companies/${companyId}/provider-assets/available/`,
-      { params: { integration } },
+      { params: { integration }, timeout: AVAILABLE_ASSETS_TIMEOUT_MS },
     );
     return response.data as IAvailableProviderAssets;
   },

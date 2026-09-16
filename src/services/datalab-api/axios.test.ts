@@ -167,4 +167,30 @@ describe('public instance error handling', () => {
 
     await expect(axiosInstance.get('health/')).rejects.toThrow(/Verifique sua internet/);
   });
+
+  it('tells a timeout apart from a network failure', async () => {
+    axiosInstance.defaults.adapter = vi.fn<AxiosAdapter>(async (config) => {
+      throw new AxiosError('timeout of 30000ms exceeded', 'ECONNABORTED', config, {});
+    });
+
+    await expect(axiosInstance.get('health/')).rejects.toThrow(/demorou demais para responder/);
+  });
+});
+
+describe('authenticated instance error handling', () => {
+  it('tells a timeout apart from a network failure', async () => {
+    axiosPrivateInstance.defaults.adapter = vi.fn<AxiosAdapter>(async (config) => {
+      throw new AxiosError('timeout of 30000ms exceeded', 'ECONNABORTED', config, {});
+    });
+
+    await expect(axiosPrivateInstance.get('me/')).rejects.toThrow(/demorou demais para responder/);
+  });
+
+  it('translates a network failure into a readable message', async () => {
+    axiosPrivateInstance.defaults.adapter = vi.fn<AxiosAdapter>(async (config) => {
+      throw new AxiosError('Network Error', 'ERR_NETWORK', config, {});
+    });
+
+    await expect(axiosPrivateInstance.get('me/')).rejects.toThrow(/Verifique sua internet/);
+  });
 });
