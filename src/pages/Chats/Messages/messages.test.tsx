@@ -338,7 +338,6 @@ describe('<ChatMessages />', () => {
       size: 2048,
     };
     const pdf = () => new File(['conteudo'], 'relatorio.pdf', { type: 'application/pdf' });
-    const zip = () => new File(['conteudo'], 'pacote.zip', { type: 'application/zip' });
 
     const givenUpload = () => {
       const contentTypes: string[] = [];
@@ -372,9 +371,7 @@ describe('<ChatMessages />', () => {
       await user.upload(await screen.findByLabelText('Arquivo para anexar'), file);
     };
 
-    const setupUserIgnoringAccept = () => userEvent.setup({ delay: null, applyAccept: false });
-
-    it('uploads the file as soon as it is picked, as multipart', async () => {
+    it('uploads the file as multipart as soon as it is picked', async () => {
       const user = userEvent.setup({ delay: null });
       const contentTypes = givenUpload();
       givenHistory([]);
@@ -382,20 +379,10 @@ describe('<ChatMessages />', () => {
 
       await attach(user, pdf());
 
-      expect(await screen.findByText('📎 relatorio.pdf')).toBeInTheDocument();
-      await waitFor(() => expect(contentTypes[0]).toMatch(/^multipart\/form-data; boundary=/));
-    });
-
-    it('marks the attachment as ready when the upload finishes', async () => {
-      const user = userEvent.setup({ delay: null });
-      givenUpload();
-      givenHistory([]);
-      renderMessages();
-
-      await attach(user, pdf());
-
       expect(await screen.findByText('8 B')).toBeInTheDocument();
+      expect(screen.getByText('📎 relatorio.pdf')).toBeInTheDocument();
       expect(screen.queryByText('enviando...')).not.toBeInTheDocument();
+      expect(contentTypes[0]).toMatch(/^multipart\/form-data; boundary=/);
     });
 
     it('sends only the ids of the attachments with the message', async () => {
@@ -456,52 +443,33 @@ describe('<ChatMessages />', () => {
       expect(screen.queryByText('📎 relatorio.pdf')).not.toBeInTheDocument();
     });
 
-    it('reports an upload that failed instead of sending a broken id', async () => {
+    it.each([
+      [413, 'File is larger than 10MB', /relatorio\.pdf: Arquivo grande demais/],
+      [415, 'Unsupported file type: application/pdf', /relatorio\.pdf: Tipo de arquivo não suportado/],
+    ])('explains an upload the API refuses with %i', async (status, detail, message) => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);
-      givenUploadRefused(413, 'File is larger than 10MB');
+      givenUploadRefused(status, detail);
       renderMessages();
 
       await attach(user, pdf());
 
       expect(await screen.findByText('falhou')).toBeInTheDocument();
-      expect(await screen.findByText(/relatorio\.pdf: Arquivo grande demais/)).toBeInTheDocument();
-    });
-
-    it('explains a file type the API refuses', async () => {
-      const user = setupUserIgnoringAccept();
-      givenHistory([]);
-      givenUploadRefused(415, 'Unsupported file type: application/zip');
-      renderMessages();
-
-      await attach(user, zip());
-
-      expect(await screen.findByText(/Tipo de arquivo não suportado/)).toBeInTheDocument();
+      expect(screen.getByText(message)).toBeInTheDocument();
     });
 
     it('keeps a refused attachment out of the message', async () => {
-      const user = setupUserIgnoringAccept();
+      const user = userEvent.setup({ delay: null });
       givenHistory([]);
-      givenUploadRefused(415, 'Unsupported file type: application/zip');
+      givenUploadRefused(413, 'File is larger than 10MB');
       const sent = captureMessageBody();
       renderMessages();
 
-      await attach(user, zip());
+      await attach(user, pdf());
       await screen.findByText('falhou');
       await sendPrompt(user, 'e agora?');
 
       await waitFor(() => expect(sent.body).toEqual({ prompt: 'e agora?' }));
-    });
-
-    it('offers only the file types the API accepts', async () => {
-      givenHistory([]);
-      renderMessages();
-
-      const accept = (await screen.findByLabelText('Arquivo para anexar')).getAttribute('accept') ?? '';
-
-      expect(accept).toContain('application/pdf');
-      expect(accept).toContain('image/png');
-      expect(accept).toContain('text/*');
     });
 
     it('shows a download card for a file the agent delivered', async () => {

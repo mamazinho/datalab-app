@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import axios from 'axios';
-import { DatalabAPI } from '../services/datalab-api';
-import type { IChatFileRef } from '../services/datalab-api/chatFilesResource';
-import type { UUID } from '../types/ids';
+import { DatalabAPI } from '../../../services/datalab-api';
+import type { IChatFileRef } from '../../../services/datalab-api/chatFilesResource';
+import type { UUID } from '../../../types/ids';
 
 export interface IPendingAttachment {
   localId: string;

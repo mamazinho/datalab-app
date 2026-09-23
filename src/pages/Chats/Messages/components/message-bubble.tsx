@@ -1,6 +1,6 @@
 import ReactMarkdown from 'react-markdown';
 import type { IChatFileRef } from '../../../../services/datalab-api/chatFilesResource';
-import { SentAttachmentChips } from './attachment-chips';
+import { AttachmentChip } from './attachment-chip';
 import { AttachmentsInBubble, Bubble, MainContent, MessageRow, StreamingCursor } from '../messages.style';
 
 interface MessageBubbleProps {
@@ -19,7 +19,9 @@ export const MessageBubble = ({ content, isUser, isStreaming = false, attachment
             </MainContent>
             {attachments.length > 0 && (
                 <AttachmentsInBubble>
-                    <SentAttachmentChips attachments={attachments} />
+                    {attachments.map((file) => (
+                        <AttachmentChip key={file.id} filename={file.filename} size={file.size} />
+                    ))}
                 </AttachmentsInBubble>
             )}
         </Bubble>

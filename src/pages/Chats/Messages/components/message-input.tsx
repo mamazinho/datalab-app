@@ -1,7 +1,7 @@
 import { useRef } from 'react';
-import type { IPendingAttachment } from '../../../../hooks/use-chat-attachments';
+import type { IPendingAttachment } from '../use-chat-attachments';
 import { ACCEPTED_FILE_TYPES } from '../../../../services/datalab-api/chatFilesResource';
-import { PendingAttachmentChips } from './attachment-chips';
+import { AttachmentChip } from './attachment-chip';
 import {
     AttachButton,
     AttachmentError,
@@ -54,11 +54,17 @@ export const MessageInput = ({
         >
             {attachments.length > 0 && (
                 <AttachmentTray>
-                    <PendingAttachmentChips
-                        attachments={attachments}
-                        onRemove={onRemoveAttachment}
-                        isDisabled={isDisabled}
-                    />
+                    {attachments.map((attachment) => (
+                        <AttachmentChip
+                            key={attachment.localId}
+                            filename={attachment.filename}
+                            size={attachment.size}
+                            status={attachment.status}
+                            error={attachment.error}
+                            onRemove={() => onRemoveAttachment(attachment.localId)}
+                            isDisabled={isDisabled}
+                        />
+                    ))}
                 </AttachmentTray>
             )}
 

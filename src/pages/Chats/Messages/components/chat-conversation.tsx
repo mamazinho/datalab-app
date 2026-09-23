@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { IChatMessageRead } from '../../../../services/datalab-api/chatMessagesResource';
 import type { UUID } from '../../../../types/ids';
-import { useChatAttachments } from '../../../../hooks/use-chat-attachments';
+import { useChatAttachments } from '../use-chat-attachments';
 import { useChatStream } from '../use-chat-stream';
 import { MessageList } from './message-list';
 import { MessageInput } from './message-input';

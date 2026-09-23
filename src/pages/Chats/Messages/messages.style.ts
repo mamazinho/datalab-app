@@ -296,7 +296,7 @@ export const ClarificationAnswered = styled.div`
 `;
 
 /* Anexos */
-export const AttachmentChip = styled.span<{ $variant: 'input' | 'bubble'; $failed?: boolean }>`
+export const AttachmentChipBox = styled.span<{ $variant: 'input' | 'bubble'; $failed?: boolean }>`
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
@@ -396,24 +396,10 @@ export const AttachmentError = styled.p`
 `;
 
 /* Arquivo gerado por agente */
-export const FileCardRow = styled.div`
-  display: flex;
-  width: 100%;
-  margin-bottom: 0.85rem;
-  justify-content: flex-start;
-`;
-
-export const FileCard = styled.div`
+export const FileCardForm = styled.form`
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  max-width: 85%;
-  border-radius: 1rem;
-  border-bottom-left-radius: 0.35rem;
-  border: 1px solid ${({ theme }) => theme.colors.primary};
-  background: ${({ theme }) => theme.colors.surface};
-  box-shadow: 0 6px 12px ${({ theme }) => theme.colors.shadow};
-  padding: 0.7rem 0.9rem;
 `;
 
 export const FileCardIcon = styled.span`
