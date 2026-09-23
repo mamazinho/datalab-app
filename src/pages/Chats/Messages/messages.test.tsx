@@ -315,5 +315,232 @@ describe('<ChatMessages />', () => {
 
       expect(await screen.findByRole('button', { name: 'Últimos 7 dias' })).toBeEnabled();
     });
+
+    it('turns the paperclip off while a question waits', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      givenStreamedAnswer(clarificationEvents);
+      renderMessages();
+
+      await sendPrompt(user, 'Qual foi a receita?');
+      await screen.findByText('De qual período?');
+
+      expect(screen.getByRole('button', { name: 'Anexar arquivo' })).toBeDisabled();
+    });
+  });
+
+  describe('files', () => {
+    const FILE_ID = uuid(70);
+    const fileRef = {
+      id: FILE_ID,
+      filename: 'relatorio.pdf',
+      media_type: 'application/pdf',
+      size: 2048,
+    };
+    const pdf = () => new File(['conteudo'], 'relatorio.pdf', { type: 'application/pdf' });
+    const zip = () => new File(['conteudo'], 'pacote.zip', { type: 'application/zip' });
+
+    const givenUpload = () => {
+      const contentTypes: string[] = [];
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/files/`), ({ request }) => {
+          contentTypes.push(request.headers.get('content-type') ?? '');
+          return HttpResponse.json(fileRef, { status: 201 });
+        }),
+      );
+      return contentTypes;
+    };
+
+    const givenUploadRefused = (status: number, detail: string) => {
+      server.use(http.post(api(`chats/${CHAT_ID}/files/`), () => HttpResponse.json({ detail }, { status })));
+    };
+
+    const captureMessageBody = () => {
+      const sent: { body?: unknown } = {};
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/messages/`), async ({ request }) => {
+          sent.body = await request.json();
+          return new HttpResponse(encoder.encode('{"type":"done"}\n'), {
+            headers: { 'Content-Type': 'application/x-ndjson' },
+          });
+        }),
+      );
+      return sent;
+    };
+
+    const attach = async (user: User, file: File) => {
+      await user.upload(await screen.findByLabelText('Arquivo para anexar'), file);
+    };
+
+    const setupUserIgnoringAccept = () => userEvent.setup({ delay: null, applyAccept: false });
+
+    it('uploads the file as soon as it is picked, as multipart', async () => {
+      const user = userEvent.setup({ delay: null });
+      const contentTypes = givenUpload();
+      givenHistory([]);
+      renderMessages();
+
+      await attach(user, pdf());
+
+      expect(await screen.findByText('📎 relatorio.pdf')).toBeInTheDocument();
+      await waitFor(() => expect(contentTypes[0]).toMatch(/^multipart\/form-data; boundary=/));
+    });
+
+    it('marks the attachment as ready when the upload finishes', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenUpload();
+      givenHistory([]);
+      renderMessages();
+
+      await attach(user, pdf());
+
+      expect(await screen.findByText('8 B')).toBeInTheDocument();
+      expect(screen.queryByText('enviando...')).not.toBeInTheDocument();
+    });
+
+    it('sends only the ids of the attachments with the message', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenUpload();
+      givenHistory([]);
+      const sent = captureMessageBody();
+      renderMessages();
+
+      await attach(user, pdf());
+      await screen.findByText('8 B');
+      await sendPrompt(user, 'Resuma este arquivo');
+
+      await waitFor(() => expect(sent.body).toEqual({ prompt: 'Resuma este arquivo', file_ids: [FILE_ID] }));
+    });
+
+    it('sends an attachment with no text typed', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenUpload();
+      givenHistory([]);
+      const sent = captureMessageBody();
+      renderMessages();
+
+      await attach(user, pdf());
+      await screen.findByText('8 B');
+      await user.click(screen.getByRole('button', { name: /Enviar/ }));
+
+      await waitFor(() =>
+        expect(sent.body).toEqual({ prompt: 'Analise o arquivo anexado.', file_ids: [FILE_ID] }),
+      );
+    });
+
+    it('keeps the tray empty after sending', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenUpload();
+      givenHistory([]);
+      givenStreamedAnswer([{ type: 'done' }]);
+      renderMessages();
+
+      await attach(user, pdf());
+      await screen.findByText('8 B');
+      await sendPrompt(user, 'Resuma');
+
+      await waitFor(() =>
+        expect(screen.queryByRole('button', { name: 'Remover relatorio.pdf' })).not.toBeInTheDocument(),
+      );
+    });
+
+    it('lets the user drop an attachment before sending', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenUpload();
+      givenHistory([]);
+      renderMessages();
+
+      await attach(user, pdf());
+      await user.click(await screen.findByRole('button', { name: 'Remover relatorio.pdf' }));
+
+      expect(screen.queryByText('📎 relatorio.pdf')).not.toBeInTheDocument();
+    });
+
+    it('reports an upload that failed instead of sending a broken id', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      givenUploadRefused(413, 'File is larger than 10MB');
+      renderMessages();
+
+      await attach(user, pdf());
+
+      expect(await screen.findByText('falhou')).toBeInTheDocument();
+      expect(await screen.findByText(/relatorio\.pdf: Arquivo grande demais/)).toBeInTheDocument();
+    });
+
+    it('explains a file type the API refuses', async () => {
+      const user = setupUserIgnoringAccept();
+      givenHistory([]);
+      givenUploadRefused(415, 'Unsupported file type: application/zip');
+      renderMessages();
+
+      await attach(user, zip());
+
+      expect(await screen.findByText(/Tipo de arquivo não suportado/)).toBeInTheDocument();
+    });
+
+    it('keeps a refused attachment out of the message', async () => {
+      const user = setupUserIgnoringAccept();
+      givenHistory([]);
+      givenUploadRefused(415, 'Unsupported file type: application/zip');
+      const sent = captureMessageBody();
+      renderMessages();
+
+      await attach(user, zip());
+      await screen.findByText('falhou');
+      await sendPrompt(user, 'e agora?');
+
+      await waitFor(() => expect(sent.body).toEqual({ prompt: 'e agora?' }));
+    });
+
+    it('offers only the file types the API accepts', async () => {
+      givenHistory([]);
+      renderMessages();
+
+      const accept = (await screen.findByLabelText('Arquivo para anexar')).getAttribute('accept') ?? '';
+
+      expect(accept).toContain('application/pdf');
+      expect(accept).toContain('image/png');
+      expect(accept).toContain('text/*');
+    });
+
+    it('shows a download card for a file the agent delivered', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      givenStreamedAnswer([
+        { type: 'file', channel: 'main', author: 'supervisor', content: 'Arquivo gerado.', file: fileRef },
+        { type: 'done' },
+      ]);
+      renderMessages();
+
+      await sendPrompt(user, 'Me manda em PDF');
+
+      expect(await screen.findByText('relatorio.pdf')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Baixar' })).toBeEnabled();
+    });
+
+    it('rebuilds the download card from the history', async () => {
+      givenHistory([
+        buildHistoryMessage({
+          id: uuid(33),
+          author: 'supervisor',
+          message_type: 'file',
+          content: 'Arquivo gerado.',
+          file: fileRef,
+        }),
+      ]);
+      renderMessages();
+
+      expect(await screen.findByRole('button', { name: 'Baixar' })).toBeEnabled();
+    });
+
+    it('shows the attachments of a past turn on the user bubble', async () => {
+      givenHistory([
+        buildHistoryMessage({ id: uuid(34), author: 'user', content: 'Resuma', attachments: [fileRef] }),
+      ]);
+      renderMessages();
+
+      expect(await screen.findByText('📎 relatorio.pdf')).toBeInTheDocument();
+    });
   });
 });

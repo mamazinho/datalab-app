@@ -1,3 +1,4 @@
+import type { IChatFileRef } from '../services/datalab-api/chatFilesResource';
 import type { IChatMessageRead, IChatStreamEvent } from '../services/datalab-api/chatMessagesResource';
 
 export type ClarificationStatus = 'pending' | 'answered' | 'historic';
@@ -13,6 +14,13 @@ export interface IUserMessageItem {
   kind: 'user_message';
   id: string;
   content: string;
+  attachments: IChatFileRef[];
+}
+
+export interface IFileCardItem {
+  kind: 'file_card';
+  id: string;
+  file: IChatFileRef;
 }
 
 export interface IAssistantBubbleItem {
@@ -51,6 +59,7 @@ export type TimelineItem =
   | IAssistantBubbleItem
   | IThreadBoxItem
   | IClarificationItem
+  | IFileCardItem
   | IStreamErrorItem;
 
 let itemIdCounter = 0;
@@ -108,6 +117,12 @@ export const mapHistoryToTimeline = (messages: IChatMessageRead[]): TimelineItem
       continue;
     }
 
+    if (message.message_type === 'file' && message.file) {
+      lastClarification = null;
+      items = [...items, { kind: 'file_card', id: `hist-${message.id}`, file: message.file }];
+      continue;
+    }
+
     if (message.message_type === 'clarification') {
       const clarification: IClarificationItem = {
         kind: 'clarification',
@@ -123,10 +138,11 @@ export const mapHistoryToTimeline = (messages: IChatMessageRead[]): TimelineItem
     }
 
     lastClarification = null;
-    if (!content) continue;
+    const attachments = message.attachments ?? [];
+    if (!content && attachments.length === 0) continue;
 
     if (message.author === 'user') {
-      items = [...items, { kind: 'user_message', id: `hist-${message.id}`, content }];
+      items = [...items, { kind: 'user_message', id: `hist-${message.id}`, content, attachments }];
       continue;
     }
 
@@ -180,6 +196,10 @@ export const applyStreamEvent = (items: TimelineItem[], event: IChatStreamEvent)
       ];
     }
 
+    case 'file': {
+      return [...closeStreamingBubble(items), { kind: 'file_card', id: nextItemId('file'), file: event.file }];
+    }
+
     case 'error': {
       return [
         ...closeStreamingBubble(items),
@@ -195,9 +215,13 @@ export const applyStreamEvent = (items: TimelineItem[], event: IChatStreamEvent)
   }
 };
 
-export const appendUserMessage = (items: TimelineItem[], content: string): TimelineItem[] => [
+export const appendUserMessage = (
+  items: TimelineItem[],
+  content: string,
+  attachments: IChatFileRef[] = [],
+): TimelineItem[] => [
   ...items,
-  { kind: 'user_message', id: nextItemId('user'), content },
+  { kind: 'user_message', id: nextItemId('user'), content, attachments },
 ];
 
 export const setClarificationStatus = (

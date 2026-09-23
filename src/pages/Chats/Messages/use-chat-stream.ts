@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { DatalabAPI } from '../../../services/datalab-api';
+import type { IChatFileRef } from '../../../services/datalab-api/chatFilesResource';
 import type { IChatMessageRead, IChatStreamEvent } from '../../../services/datalab-api/chatMessagesResource';
 import { parseChatStream } from '../../../utils/process-stream';
 import type { UUID } from '../../../types/ids';
@@ -15,7 +16,7 @@ import {
 
 type TimelineAction =
   | { type: 'reset'; history: IChatMessageRead[] }
-  | { type: 'user_prompt'; content: string }
+  | { type: 'user_prompt'; content: string; attachments: IChatFileRef[] }
   | { type: 'stream_event'; event: IChatStreamEvent }
   | { type: 'clarification_status'; toolCallId: string; status: ClarificationStatus; answer?: string };
 
@@ -24,7 +25,7 @@ const timelineReducer = (items: TimelineItem[], action: TimelineAction): Timelin
     case 'reset':
       return mapHistoryToTimeline(action.history);
     case 'user_prompt':
-      return appendUserMessage(items, action.content);
+      return appendUserMessage(items, action.content, action.attachments);
     case 'stream_event':
       return applyStreamEvent(items, action.event);
     case 'clarification_status':
@@ -33,6 +34,8 @@ const timelineReducer = (items: TimelineItem[], action: TimelineAction): Timelin
 };
 
 const STREAM_INTERRUPTED_MESSAGE = 'A conexão com o servidor caiu no meio da resposta. Tente novamente.';
+
+const EMPTY_PROMPT_WITH_ATTACHMENTS = 'Analise o arquivo anexado.';
 
 const getErrorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error && error.message ? error.message : fallback;
@@ -55,10 +58,14 @@ export const useChatStream = (chatId: UUID, initialHistory: IChatMessageRead[]) 
 
   const pendingClarification = useMemo(() => findPendingClarification(items), [items]);
 
-  const submitPrompt = useCallback(async (prompt: string, answerToToolCallId?: string) => {
+  const submitPrompt = useCallback(async (
+    prompt: string,
+    attachments: IChatFileRef[] = [],
+    answerToToolCallId?: string,
+  ) => {
     const generation = ++generationRef.current;
 
-    dispatch({ type: 'user_prompt', content: prompt });
+    dispatch({ type: 'user_prompt', content: prompt, attachments });
     if (answerToToolCallId) {
       dispatch({ type: 'clarification_status', toolCallId: answerToToolCallId, status: 'answered', answer: prompt });
     }
@@ -69,6 +76,7 @@ export const useChatStream = (chatId: UUID, initialHistory: IChatMessageRead[]) 
       stream = await DatalabAPI.ChatMessagesResource.sendMessage(chatId, {
         prompt,
         ...(answerToToolCallId ? { answer_to_tool_call_id: answerToToolCallId } : {}),
+        ...(attachments.length ? { file_ids: attachments.map((file) => file.id) } : {}),
       });
     } catch (requestError) {
       if (generationRef.current !== generation) return;
@@ -101,17 +109,21 @@ export const useChatStream = (chatId: UUID, initialHistory: IChatMessageRead[]) 
     }
   }, [chatId]);
 
-  const sendPrompt = useCallback(async (prompt: string) => {
+  const sendPrompt = useCallback(async (prompt: string, attachments: IChatFileRef[] = []) => {
     const trimmedPrompt = prompt.trim();
-    if (!trimmedPrompt || isStreaming) return;
+    if ((!trimmedPrompt && attachments.length === 0) || isStreaming) return;
 
     // Com clarification pendente, texto livre também é resposta a ela (sempre permitido)
-    await submitPrompt(trimmedPrompt, pendingClarification?.toolCallId ?? undefined);
+    await submitPrompt(
+      trimmedPrompt || EMPTY_PROMPT_WITH_ATTACHMENTS,
+      attachments,
+      pendingClarification?.toolCallId ?? undefined,
+    );
   }, [isStreaming, pendingClarification, submitPrompt]);
 
   const answerClarification = useCallback(async (answer: string) => {
     if (!pendingClarification?.toolCallId || isStreaming) return;
-    await submitPrompt(answer, pendingClarification.toolCallId);
+    await submitPrompt(answer, [], pendingClarification.toolCallId);
   }, [isStreaming, pendingClarification, submitPrompt]);
 
   return { items, isStreaming, pendingClarification, sendPrompt, answerClarification };

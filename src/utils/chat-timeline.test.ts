@@ -12,7 +12,9 @@ import {
   setClarificationStatus,
   type IAssistantBubbleItem,
   type IClarificationItem,
+  type IFileCardItem,
   type IThreadBoxItem,
+  type IUserMessageItem,
   type TimelineItem,
 } from './chat-timeline';
 
@@ -243,5 +245,63 @@ describe('appendUserMessage', () => {
 
     expect(kinds(second)).toEqual(['user_message', 'user_message']);
     expect(second[0].id).not.toBe(second[1].id);
+  });
+});
+
+describe('files in the timeline', () => {
+  const fileRef = {
+    id: uuid(90),
+    filename: 'relatorio.pdf',
+    media_type: 'application/pdf',
+    size: 2048,
+  };
+
+  it('keeps the attachments of a user turn on the bubble', () => {
+    const items = mapHistoryToTimeline([
+      buildMessage({ author: 'user', content: 'Resuma isto', attachments: [fileRef] }),
+    ]);
+
+    expect((items[0] as IUserMessageItem).attachments).toEqual([fileRef]);
+  });
+
+  it('keeps a user turn that is only an attachment', () => {
+    const items = mapHistoryToTimeline([
+      buildMessage({ author: 'user', content: '', attachments: [fileRef] }),
+    ]);
+
+    expect(kinds(items)).toEqual(['user_message']);
+  });
+
+  it('turns a delivered file into a download card', () => {
+    const items = mapHistoryToTimeline([
+      buildMessage({ author: 'supervisor', message_type: 'file', content: 'Arquivo gerado.', file: fileRef }),
+    ]);
+
+    expect(kinds(items)).toEqual(['file_card']);
+    expect((items[0] as IFileCardItem).file).toEqual(fileRef);
+  });
+
+  it('drops a file message with no file reference', () => {
+    const items = mapHistoryToTimeline([
+      buildMessage({ author: 'supervisor', message_type: 'file', content: '', file: null }),
+    ]);
+
+    expect(items).toEqual([]);
+  });
+
+  it('closes the streaming bubble when a file arrives mid-answer', () => {
+    const items = applyStreamEvent(streamBubble('Gerando'), {
+      type: 'file',
+      file: fileRef,
+    } as IChatStreamEvent);
+
+    expect(kinds(items)).toEqual(['assistant_bubble', 'file_card']);
+    expect((items[0] as IAssistantBubbleItem).isStreaming).toBe(false);
+  });
+
+  it('carries the attachments into the optimistic user bubble', () => {
+    const items = appendUserMessage([], 'Resuma', [fileRef]);
+
+    expect((items[0] as IUserMessageItem).attachments).toEqual([fileRef]);
   });
 });

@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react';
 import type { TimelineItem } from '../../../../utils/chat-timeline';
+import type { UUID } from '../../../../types/ids';
 import { MessageBubble } from './message-bubble';
 import { ThreadBox } from './thread-box';
 import { ClarificationCard } from './clarification-card';
+import { FileCard } from './file-card';
 import {
     Conversation,
     EmptyEmoji,
@@ -15,25 +17,29 @@ import {
 } from '../messages.style';
 
 interface IMessageListProps {
+    chatId: UUID;
     items: TimelineItem[];
     isStreaming: boolean;
     onAnswerClarification: (answer: string) => void;
 }
 
 const renderItem = (
+    chatId: UUID,
     item: TimelineItem,
     isStreaming: boolean,
     onAnswerClarification: (answer: string) => void,
 ) => {
     switch (item.kind) {
         case 'user_message':
-            return <MessageBubble key={item.id} content={item.content} isUser />;
+            return <MessageBubble key={item.id} content={item.content} isUser attachments={item.attachments} />;
         case 'assistant_bubble':
             return <MessageBubble key={item.id} content={item.content} isUser={false} isStreaming={item.isStreaming} />;
         case 'thread_box':
             return <ThreadBox key={item.id} item={item} />;
         case 'clarification':
             return <ClarificationCard key={item.id} item={item} onAnswer={onAnswerClarification} disabled={isStreaming} />;
+        case 'file_card':
+            return <FileCard key={item.id} chatId={chatId} item={item} />;
         case 'stream_error':
             return (
                 <StreamErrorRow key={item.id}>
@@ -45,7 +51,7 @@ const renderItem = (
     }
 };
 
-export const MessageList = ({ items, isStreaming, onAnswerClarification }: IMessageListProps) => {
+export const MessageList = ({ chatId, items, isStreaming, onAnswerClarification }: IMessageListProps) => {
     const conversationRef = useRef<HTMLDivElement>(null);
 
     // Auto-scroll para o fim quando chegam itens/deltas novos
@@ -64,7 +70,7 @@ export const MessageList = ({ items, isStreaming, onAnswerClarification }: IMess
                     <EmptyText>Comece uma conversa digitando sua pergunta abaixo!</EmptyText>
                 </EmptyState>
             ) : (
-                items.map((item) => renderItem(item, isStreaming, onAnswerClarification))
+                items.map((item) => renderItem(chatId, item, isStreaming, onAnswerClarification))
             )}
         </Conversation>
     );

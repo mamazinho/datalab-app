@@ -1,9 +1,10 @@
 import { axiosCompanyInstance } from "./axios";
+import type { IChatFileRef } from "./chatFilesResource";
 import type { UUID } from "../../types/ids";
 
 export type ChatChannel = 'main' | 'thread';
 export type ChatAuthor = 'user' | 'supervisor' | 'specialist';
-export type ChatMessageType = 'chat' | 'agent_event' | 'clarification';
+export type ChatMessageType = 'chat' | 'agent_event' | 'clarification' | 'file';
 
 export interface IChatMessageRead {
   id: UUID;
@@ -16,18 +17,22 @@ export interface IChatMessageRead {
   channel: ChatChannel;
   tool_call_id?: string | null;
   options?: string[] | null;
+  attachments?: IChatFileRef[] | null;
+  file?: IChatFileRef | null;
 }
 
 export type IChatStreamEvent =
   | { type: 'text_delta'; channel: 'main'; author?: ChatAuthor; content: string }
   | { type: 'agent_event'; channel: 'thread'; thread_id: string; author: 'supervisor' | 'specialist'; agent_key: string; content: string }
   | { type: 'clarification'; channel?: ChatChannel; question: string; options?: string[]; tool_call_id: string }
+  | { type: 'file'; channel?: ChatChannel; author?: ChatAuthor; content?: string; file: IChatFileRef }
   | { type: 'error'; content?: string }
   | { type: 'done' };
 
 export interface IUserPrompt {
   prompt: string;
   answer_to_tool_call_id?: string;
+  file_ids?: UUID[];
 }
 
 export const ChatMessagesResource = {

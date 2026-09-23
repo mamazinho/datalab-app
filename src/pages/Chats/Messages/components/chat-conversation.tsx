@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { IChatMessageRead } from '../../../../services/datalab-api/chatMessagesResource';
 import type { UUID } from '../../../../types/ids';
+import { useChatAttachments } from '../../../../hooks/use-chat-attachments';
 import { useChatStream } from '../use-chat-stream';
 import { MessageList } from './message-list';
 import { MessageInput } from './message-input';
@@ -13,19 +14,26 @@ interface ChatConversationProps {
 export const ChatConversation = ({ chatId, history }: ChatConversationProps) => {
     const { items, isStreaming, pendingClarification, sendPrompt, answerClarification } =
         useChatStream(chatId, history);
+    const { attachments, readyFiles, isUploading, addFiles, remove, clear } = useChatAttachments(chatId);
     const [prompt, setPrompt] = useState('');
 
+    const canAttach = !pendingClarification;
+    const canSubmit = (prompt.trim().length > 0 || readyFiles.length > 0) && !isUploading;
+
     const handleSubmit = () => {
-        if (!prompt.trim() || isStreaming) return;
+        if (!canSubmit || isStreaming) return;
 
         const currentPrompt = prompt;
+        const currentFiles = readyFiles;
         setPrompt('');
-        void sendPrompt(currentPrompt);
+        clear();
+        void sendPrompt(currentPrompt, currentFiles);
     };
 
     return (
         <>
             <MessageList
+                chatId={chatId}
                 items={items}
                 isStreaming={isStreaming}
                 onAnswerClarification={(answer) => void answerClarification(answer)}
@@ -39,6 +47,11 @@ export const ChatConversation = ({ chatId, history }: ChatConversationProps) => 
                 placeholder={pendingClarification
                     ? 'Responda à pergunta acima ou escolha uma das opções...'
                     : undefined}
+                attachments={attachments}
+                onAttach={(files) => void addFiles(files)}
+                onRemoveAttachment={remove}
+                canAttach={canAttach}
+                canSubmit={canSubmit}
             />
         </>
     );

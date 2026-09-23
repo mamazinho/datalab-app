@@ -295,6 +295,174 @@ export const ClarificationAnswered = styled.div`
   color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
+/* Anexos */
+export const AttachmentChip = styled.span<{ $variant: 'input' | 'bubble'; $failed?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  padding: 0.25rem 0.6rem;
+
+  ${({ theme, $variant, $failed }) =>
+    $variant === 'input'
+      ? css`
+          border: 1px solid ${$failed ? theme.colors.error : theme.colors.border};
+          background: ${theme.colors.inputBackground};
+          color: ${$failed ? theme.colors.error : theme.colors.text};
+        `
+      : css`
+          border: 1px solid #29295a;
+          background: #0f0f22;
+          color: #fffff7;
+        `}
+`;
+
+export const AttachmentName = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 12rem;
+`;
+
+export const AttachmentMeta = styled.span`
+  opacity: 0.7;
+  flex-shrink: 0;
+`;
+
+export const AttachmentRemove = styled.button`
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.6;
+
+  &:hover:enabled {
+    opacity: 1;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+`;
+
+export const AttachmentsInBubble = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+`;
+
+export const AttachButton = styled.button`
+  flex-shrink: 0;
+  border-radius: 0.7rem;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.inputBackground};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 1rem;
+  padding: 0 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+
+  &:hover:enabled {
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+`;
+
+export const HiddenFileInput = styled.input`
+  display: none;
+`;
+
+export const AttachmentTray = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+`;
+
+export const AttachmentError = styled.p`
+  margin: 0 0 0.5rem;
+  font-size: 0.74rem;
+  color: ${({ theme }) => theme.colors.error};
+`;
+
+/* Arquivo gerado por agente */
+export const FileCardRow = styled.div`
+  display: flex;
+  width: 100%;
+  margin-bottom: 0.85rem;
+  justify-content: flex-start;
+`;
+
+export const FileCard = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  max-width: 85%;
+  border-radius: 1rem;
+  border-bottom-left-radius: 0.35rem;
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => theme.colors.surface};
+  box-shadow: 0 6px 12px ${({ theme }) => theme.colors.shadow};
+  padding: 0.7rem 0.9rem;
+`;
+
+export const FileCardIcon = styled.span`
+  font-size: 1.5rem;
+  line-height: 1;
+`;
+
+export const FileCardInfo = styled.div`
+  min-width: 0;
+  flex: 1;
+`;
+
+export const FileCardName = styled.div`
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text};
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const FileCardMeta = styled.div`
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: ${({ theme }) => theme.colors.textSecondary};
+`;
+
+export const FileCardDownload = styled.button`
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 0.7rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.primaryText};
+  background: ${({ theme }) => theme.colors.primary};
+  cursor: pointer;
+  transition: filter 0.16s ease;
+
+  &:hover:enabled {
+    filter: brightness(0.95);
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+`;
+
 /* Erro ocorrido durante o stream, exibido na própria timeline */
 export const StreamErrorRow = styled.div`
   display: flex;
