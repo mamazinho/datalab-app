@@ -5,7 +5,9 @@ import { MessageBubble } from './message-bubble';
 import { ThreadBox } from './thread-box';
 import { ClarificationCard } from './clarification-card';
 import { FileCard } from './file-card';
+import { AttachmentChip } from './attachment-chip';
 import {
+    AttachmentsInBubble,
     Conversation,
     EmptyEmoji,
     EmptyState,
@@ -31,15 +33,27 @@ const renderItem = (
 ) => {
     switch (item.kind) {
         case 'user_message':
-            return <MessageBubble key={item.id} content={item.content} isUser attachments={item.attachments} />;
+            return (
+                <MessageBubble key={item.id} content={item.content} isUser>
+                    {item.attachments.length > 0 && (
+                        <AttachmentsInBubble>
+                            {item.attachments.map((file) => (
+                                <AttachmentChip key={file.id} filename={file.filename} size={file.size} />
+                            ))}
+                        </AttachmentsInBubble>
+                    )}
+                </MessageBubble>
+            );
         case 'assistant_bubble':
-            return <MessageBubble key={item.id} content={item.content} isUser={false} isStreaming={item.isStreaming} />;
+            return (
+                <MessageBubble key={item.id} content={item.content} isUser={false} isStreaming={item.isStreaming}>
+                    {item.files.map((file) => <FileCard key={file.id} chatId={chatId} file={file} />)}
+                </MessageBubble>
+            );
         case 'thread_box':
             return <ThreadBox key={item.id} item={item} />;
         case 'clarification':
             return <ClarificationCard key={item.id} item={item} onAnswer={onAnswerClarification} disabled={isStreaming} />;
-        case 'file_card':
-            return <FileCard key={item.id} chatId={chatId} item={item} />;
         case 'stream_error':
             return (
                 <StreamErrorRow key={item.id}>

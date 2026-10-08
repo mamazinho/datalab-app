@@ -12,7 +12,6 @@ import {
   setClarificationStatus,
   type IAssistantBubbleItem,
   type IClarificationItem,
-  type IFileCardItem,
   type IThreadBoxItem,
   type IUserMessageItem,
   type TimelineItem,
@@ -258,7 +257,7 @@ describe('files in the timeline', () => {
 
   it('keeps the attachments of a user turn on the bubble', () => {
     const items = mapHistoryToTimeline([
-      buildMessage({ author: 'user', content: 'Resuma isto', attachments: [fileRef] }),
+      buildMessage({ author: 'user', content: 'Resuma isto', files: [fileRef] }),
     ]);
 
     expect((items[0] as IUserMessageItem).attachments).toEqual([fileRef]);
@@ -266,37 +265,58 @@ describe('files in the timeline', () => {
 
   it('keeps a user turn that is only an attachment', () => {
     const items = mapHistoryToTimeline([
-      buildMessage({ author: 'user', content: '', attachments: [fileRef] }),
+      buildMessage({ author: 'user', content: '', files: [fileRef] }),
     ]);
 
     expect(kinds(items)).toEqual(['user_message']);
   });
 
-  it('turns a delivered file into a download card', () => {
+  it('puts a delivered file inside the answer that precedes it', () => {
     const items = mapHistoryToTimeline([
-      buildMessage({ author: 'supervisor', message_type: 'file', content: 'Arquivo gerado.', file: fileRef }),
+      buildMessage({ author: 'supervisor', content: 'Segue o relatório.' }),
+      buildMessage({ author: 'supervisor', message_type: 'file', content: "Arquivo 'relatorio.pdf' disponível para download.", files: [fileRef] }),
     ]);
 
-    expect(kinds(items)).toEqual(['file_card']);
-    expect((items[0] as IFileCardItem).file).toEqual(fileRef);
+    expect(items).toEqual([expect.objectContaining({ kind: 'assistant_bubble', content: 'Segue o relatório.', files: [fileRef] })]);
+  });
+
+  it('opens a bubble with the delivery text when no answer precedes the file', () => {
+    const items = mapHistoryToTimeline([
+      buildMessage({ author: 'user', content: 'Me manda em PDF' }),
+      buildMessage({ author: 'supervisor', message_type: 'file', content: "Arquivo 'relatorio.pdf' disponível para download.", files: [fileRef] }),
+    ]);
+
+    expect(items[1]).toEqual(expect.objectContaining({
+      kind: 'assistant_bubble',
+      content: "Arquivo 'relatorio.pdf' disponível para download.",
+      files: [fileRef],
+    }));
   });
 
   it('drops a file message with no file reference', () => {
     const items = mapHistoryToTimeline([
-      buildMessage({ author: 'supervisor', message_type: 'file', content: '', file: null }),
+      buildMessage({ author: 'supervisor', message_type: 'file', content: '', files: null }),
     ]);
 
     expect(items).toEqual([]);
   });
 
-  it('closes the streaming bubble when a file arrives mid-answer', () => {
+  it('closes the streaming bubble and attaches the file to it', () => {
     const items = applyStreamEvent(streamBubble('Gerando'), {
       type: 'file',
-      file: fileRef,
-    } as IChatStreamEvent);
+      author: 'supervisor',
+      files: [fileRef],
+    });
 
-    expect(kinds(items)).toEqual(['assistant_bubble', 'file_card']);
-    expect((items[0] as IAssistantBubbleItem).isStreaming).toBe(false);
+    expect(items).toEqual([expect.objectContaining({ content: 'Gerando', isStreaming: false, files: [fileRef] })]);
+  });
+
+  it('opens an empty bubble for a delivery with no answer before it', () => {
+    const csv = { ...fileRef, id: uuid(91), filename: 'dados.csv', media_type: 'text/csv' };
+
+    const items = applyStreamEvent([], { type: 'file', author: 'supervisor', files: [fileRef, csv] });
+
+    expect(items).toEqual([expect.objectContaining({ kind: 'assistant_bubble', content: '', files: [fileRef, csv] })]);
   });
 
   it('carries the attachments into the optimistic user bubble', () => {

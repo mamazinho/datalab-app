@@ -17,15 +17,14 @@ export interface IChatMessageRead {
   channel: ChatChannel;
   tool_call_id?: string | null;
   options?: string[] | null;
-  attachments?: IChatFileRef[] | null;
-  file?: IChatFileRef | null;
+  files?: IChatFileRef[] | null;
 }
 
 export type IChatStreamEvent =
   | { type: 'text_delta'; channel: 'main'; author?: ChatAuthor; content: string }
   | { type: 'agent_event'; channel: 'thread'; thread_id: string; author: 'supervisor' | 'specialist'; agent_key: string; content: string }
   | { type: 'clarification'; channel?: ChatChannel; question: string; options?: string[]; tool_call_id: string }
-  | { type: 'file'; channel?: ChatChannel; author?: ChatAuthor; content?: string; file: IChatFileRef }
+  | { type: 'file'; channel?: ChatChannel; author?: ChatAuthor; files?: IChatFileRef[] }
   | { type: 'error'; content?: string }
   | { type: 'done' };
 

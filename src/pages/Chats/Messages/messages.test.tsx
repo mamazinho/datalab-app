@@ -476,7 +476,7 @@ describe('<ChatMessages />', () => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);
       givenStreamedAnswer([
-        { type: 'file', channel: 'main', author: 'supervisor', content: 'Arquivo gerado.', file: fileRef },
+        { type: 'file', channel: 'main', author: 'supervisor', files: [fileRef] },
         { type: 'done' },
       ]);
       renderMessages();
@@ -493,8 +493,8 @@ describe('<ChatMessages />', () => {
           id: uuid(33),
           author: 'supervisor',
           message_type: 'file',
-          content: 'Arquivo gerado.',
-          file: fileRef,
+          content: "Arquivo 'relatorio.pdf' disponível para download.",
+          files: [fileRef],
         }),
       ]);
       renderMessages();
@@ -504,7 +504,7 @@ describe('<ChatMessages />', () => {
 
     it('shows the attachments of a past turn on the user bubble', async () => {
       givenHistory([
-        buildHistoryMessage({ id: uuid(34), author: 'user', content: 'Resuma', attachments: [fileRef] }),
+        buildHistoryMessage({ id: uuid(34), author: 'user', content: 'Resuma', files: [fileRef] }),
       ]);
       renderMessages();
 

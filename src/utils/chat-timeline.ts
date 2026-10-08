@@ -17,17 +17,12 @@ export interface IUserMessageItem {
   attachments: IChatFileRef[];
 }
 
-export interface IFileCardItem {
-  kind: 'file_card';
-  id: string;
-  file: IChatFileRef;
-}
-
 export interface IAssistantBubbleItem {
   kind: 'assistant_bubble';
   id: string;
   content: string;
   isStreaming: boolean;
+  files: IChatFileRef[];
 }
 
 export interface IThreadBoxItem {
@@ -59,7 +54,6 @@ export type TimelineItem =
   | IAssistantBubbleItem
   | IThreadBoxItem
   | IClarificationItem
-  | IFileCardItem
   | IStreamErrorItem;
 
 let itemIdCounter = 0;
@@ -101,6 +95,22 @@ const closeStreamingBubble = (items: TimelineItem[]): TimelineItem[] => {
   return [...items.slice(0, -1), { ...lastItem, isStreaming: false }];
 };
 
+// O backend entrega o arquivo numa mensagem própria, logo depois do texto do supervisor
+const attachFilesToLastBubble = (
+  items: TimelineItem[],
+  files: IChatFileRef[] | null | undefined,
+  newBubble: () => IAssistantBubbleItem,
+): TimelineItem[] => {
+  if (!files?.length) return items;
+
+  const closed = closeStreamingBubble(items);
+  const lastItem = closed[closed.length - 1];
+  if (lastItem?.kind === 'assistant_bubble') {
+    return [...closed.slice(0, -1), { ...lastItem, files: [...lastItem.files, ...files] }];
+  }
+  return [...closed, { ...newBubble(), files }];
+};
+
 export const mapHistoryToTimeline = (messages: IChatMessageRead[]): TimelineItem[] => {
   let items: TimelineItem[] = [];
   let lastClarification: IClarificationItem | null = null;
@@ -117,9 +127,15 @@ export const mapHistoryToTimeline = (messages: IChatMessageRead[]): TimelineItem
       continue;
     }
 
-    if (message.message_type === 'file' && message.file) {
+    if (message.message_type === 'file') {
       lastClarification = null;
-      items = [...items, { kind: 'file_card', id: `hist-${message.id}`, file: message.file }];
+      items = attachFilesToLastBubble(items, message.files, () => ({
+        kind: 'assistant_bubble',
+        id: `hist-${message.id}`,
+        content,
+        isStreaming: false,
+        files: [],
+      }));
       continue;
     }
 
@@ -138,7 +154,7 @@ export const mapHistoryToTimeline = (messages: IChatMessageRead[]): TimelineItem
     }
 
     lastClarification = null;
-    const attachments = message.attachments ?? [];
+    const attachments = message.files ?? [];
     if (!content && attachments.length === 0) continue;
 
     if (message.author === 'user') {
@@ -146,7 +162,7 @@ export const mapHistoryToTimeline = (messages: IChatMessageRead[]): TimelineItem
       continue;
     }
 
-    items = [...items, { kind: 'assistant_bubble', id: `hist-${message.id}`, content, isStreaming: false }];
+    items = [...items, { kind: 'assistant_bubble', id: `hist-${message.id}`, content, isStreaming: false, files: [] }];
   }
 
   // Clarification no fim do histórico ainda não respondida → reidrata o card interativo
@@ -170,7 +186,7 @@ export const applyStreamEvent = (items: TimelineItem[], event: IChatStreamEvent)
 
       return [
         ...items,
-        { kind: 'assistant_bubble', id: nextItemId('bubble'), content: event.content, isStreaming: true },
+        { kind: 'assistant_bubble', id: nextItemId('bubble'), content: event.content, isStreaming: true, files: [] },
       ];
     }
 
@@ -197,7 +213,13 @@ export const applyStreamEvent = (items: TimelineItem[], event: IChatStreamEvent)
     }
 
     case 'file': {
-      return [...closeStreamingBubble(items), { kind: 'file_card', id: nextItemId('file'), file: event.file }];
+      return attachFilesToLastBubble(items, event.files, () => ({
+        kind: 'assistant_bubble',
+        id: nextItemId('bubble'),
+        content: '',
+        isStreaming: false,
+        files: [],
+      }));
     }
 
     case 'error': {

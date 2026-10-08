@@ -400,6 +400,14 @@ export const FileCardForm = styled.form`
   display: flex;
   align-items: center;
   gap: 0.7rem;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 0.7rem;
+  padding: 0.55rem 0.7rem;
+
+  & + &,
+  ${MainContent} + & {
+    margin-top: 0.6rem;
+  }
 `;
 
 export const FileCardIcon = styled.span`
