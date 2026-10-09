@@ -2,13 +2,13 @@ import { createContext, useContext, useMemo } from "react";
 import type { IProviderPermission, IUserCompany, IUserMembership, IRoutePermission } from "../../services/datalab-api/usersResource";
 import type { ICompanyProviderAsset } from "../../services/datalab-api/companiesResource";
 import type { IRoutePermissionRef } from "../../utils/route-permissions";
-import type { UUID } from "../../types/ids";
+import type { UUID7 } from "../../types/ids";
 import type { ProviderPermissionKey } from "../../types/integrations";
 
 interface ICompanyContextProps {
   currentCompany: IUserCompany | null;
   setCurrentCompany: (company: IUserCompany) => void;
-  selectCompanyById: (id: UUID) => void;
+  selectCompanyById: (id: UUID7) => void;
   clearSelectedCompany: () => void;
   currentMembership: IUserMembership | null;
   /** true enquanto /memberships/current não respondeu — as permissões ainda não são conclusivas */

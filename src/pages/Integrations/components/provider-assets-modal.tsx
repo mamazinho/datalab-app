@@ -13,7 +13,7 @@ import {
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import type { IIntegrationStatus } from '../../../services/datalab-api/authResource';
-import type { UUID } from '../../../types/ids';
+import type { UUID7 } from '../../../types/ids';
 import { PROVIDER_LABELS } from '../../../utils/integrations';
 import {
   createSaveProviderAssetsAction,
@@ -37,7 +37,7 @@ import {
 interface IProviderAssetsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  companyId: UUID;
+  companyId: UUID7;
   integration: IIntegrationStatus | null;
 }
 
@@ -68,7 +68,7 @@ const AssetsErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => (
 );
 
 interface IProviderAssetsContentProps {
-  companyId: UUID;
+  companyId: UUID7;
   integration: IIntegrationStatus;
   onClose: () => void;
 }

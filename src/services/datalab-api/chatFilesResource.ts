@@ -1,8 +1,8 @@
 import { axiosCompanyInstance } from "./axios";
-import type { UUID } from "../../types/ids";
+import type { UUID7 } from "../../types/ids";
 
 export interface IChatFileRef {
-  id: UUID;
+  id: UUID7;
   filename: string;
   media_type: string;
   size: number;
@@ -22,7 +22,7 @@ export const ACCEPTED_FILE_TYPES = [
 ].join(',');
 
 export const ChatFilesResource = {
-  async uploadFile(chatId: UUID, file: File): Promise<IChatFileRef> {
+  async uploadFile(chatId: UUID7, file: File): Promise<IChatFileRef> {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -34,7 +34,7 @@ export const ChatFilesResource = {
     return response.data as IChatFileRef;
   },
 
-  async downloadFile(chatId: UUID, fileId: UUID): Promise<Blob> {
+  async downloadFile(chatId: UUID7, fileId: UUID7): Promise<Blob> {
     const response = await axiosCompanyInstance.get(`chats/${chatId}/files/${fileId}/download/`, {
       responseType: 'blob',
     });

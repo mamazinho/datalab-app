@@ -6,7 +6,7 @@ import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { ChatConversation } from './components/chat-conversation';
 import { ServerErrorComponent } from '../../../components/Feedback/ErrorBoundaries/server-error';
 import { LoadingPiece } from '../../../components/Feedback/Loadings/loading';
-import { isUuid, type UUID } from '../../../types/ids';
+import { isUuid7, type UUID7 } from '../../../types/ids';
 import { useChat } from '../../../hooks/use-chat';
 import { useChatMessages } from '../../../hooks/use-chat-messages';
 import { MessagesBody, MessagesContainer, MessagesHeader, MessagesSubtitle, MessagesTitle } from './messages.style';
@@ -20,7 +20,7 @@ const ChatErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => {
     return <ServerErrorComponent error={error} resetErrorBoundary={resetErrorBoundary} />;
 };
 
-const ChatView = ({ chatId }: { chatId: UUID }) => {
+const ChatView = ({ chatId }: { chatId: UUID7 }) => {
     const { data: chat } = useChat(chatId);
     const { data: history } = useChatMessages(chatId);
 
@@ -41,7 +41,7 @@ const ChatView = ({ chatId }: { chatId: UUID }) => {
 export const ChatMessages = () => {
     const { chatId } = useParams<{ chatId: string }>();
 
-    if (!isUuid(chatId)) return <Navigate to="/ia/conversas" replace />;
+    if (!isUuid7(chatId)) return <Navigate to="/ia/conversas" replace />;
 
     return (
         <MessagesContainer>

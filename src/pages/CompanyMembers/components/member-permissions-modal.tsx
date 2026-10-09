@@ -15,7 +15,7 @@ import type {
   IMembershipPermission,
   IMembershipProviderPermission,
 } from '../../../services/datalab-api/usersResource';
-import type { UUID } from '../../../types/ids';
+import type { UUID7 } from '../../../types/ids';
 import { providerPermissionGroups, routePermissionGroups } from './permission-options';
 import { PermissionToggles } from './permission-toggles';
 import {
@@ -32,9 +32,9 @@ interface IMemberPermissionsModalProps {
   member: ICompanyMembership | null;
 }
 
-const MemberPermissionsContent = ({ memberId }: { memberId: UUID }) => {
+const MemberPermissionsContent = ({ memberId }: { memberId: UUID7 }) => {
   const queryClient = useQueryClient();
-  const [togglingId, setTogglingId] = useState<UUID | null>(null);
+  const [togglingId, setTogglingId] = useState<UUID7 | null>(null);
 
   const [
     { data: routes },
@@ -69,7 +69,7 @@ const MemberPermissionsContent = ({ memberId }: { memberId: UUID }) => {
 
   // Um toggle por vez: concessões concorrentes embaralhariam o estado otimista.
   const withToggle = useCallback(
-    async (id: UUID, run: () => Promise<void>) => {
+    async (id: UUID7, run: () => Promise<void>) => {
       if (togglingId !== null) return;
       setTogglingId(id);
       try {
@@ -84,7 +84,7 @@ const MemberPermissionsContent = ({ memberId }: { memberId: UUID }) => {
   );
 
   const handleToggleRoute = useCallback(
-    (routeId: UUID, isGranted: boolean) =>
+    (routeId: UUID7, isGranted: boolean) =>
       void withToggle(routeId, async () => {
         const { queryKey } = memberPermissionsQuery(memberId);
         if (isGranted) {
@@ -101,7 +101,7 @@ const MemberPermissionsContent = ({ memberId }: { memberId: UUID }) => {
   );
 
   const handleToggleProvider = useCallback(
-    (providerPermissionId: UUID, isGranted: boolean) =>
+    (providerPermissionId: UUID7, isGranted: boolean) =>
       void withToggle(providerPermissionId, async () => {
         const { queryKey } = memberProviderPermissionsQuery(memberId);
         if (isGranted) {

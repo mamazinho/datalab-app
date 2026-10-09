@@ -5,7 +5,7 @@ import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '
 import { DatalabAPI } from '../../../services/datalab-api';
 import { invitesQuery } from '../../../queries';
 import type { IUserInvite } from '../../../services/datalab-api/usersResource';
-import type { UUID } from '../../../types/ids';
+import type { UUID7 } from '../../../types/ids';
 import { InviteStatusBadge, MembersEmpty, MembersTableCellSecondary } from '../company-members.style';
 
 const statusLabel: Record<string, string> = {
@@ -20,7 +20,7 @@ interface IInvitesListProps {
 
 export const InvitesList = ({ invites }: IInvitesListProps) => {
   const queryClient = useQueryClient();
-  const [removingId, setRemovingId] = useState<UUID | null>(null);
+  const [removingId, setRemovingId] = useState<UUID7 | null>(null);
 
   const handleRemove = useCallback(
     async (invite: IUserInvite) => {

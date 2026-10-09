@@ -1,4 +1,4 @@
-import type { UUID } from '../../../types/ids';
+import type { UUID7 } from '../../../types/ids';
 import type { IPermissionOption } from './permission-options';
 import {
   PermissionGroup,
@@ -13,9 +13,9 @@ import {
 
 interface IPermissionTogglesProps {
   groups: Record<string, IPermissionOption[]>;
-  grantedIds: Set<UUID>;
-  togglingId: UUID | null;
-  onToggle: (id: UUID, isGranted: boolean) => void;
+  grantedIds: Set<UUID7>;
+  togglingId: UUID7 | null;
+  onToggle: (id: UUID7, isGranted: boolean) => void;
 }
 
 // Lista de switches de concessão — serve tanto às permissões de rota quanto às

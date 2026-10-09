@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { IProviderPermission, IRoutePermission } from '../../../services/datalab-api/usersResource';
-import type { UUID } from '../../../types/ids';
+import type { UUID7 } from '../../../types/ids';
 import { groupPermissionsByTag, groupProviderPermissionsByProvider } from '../permissions-helpers';
 import { PermissionToggleMethod } from '../company-members.style';
 
@@ -10,7 +10,7 @@ import { PermissionToggleMethod } from '../company-members.style';
  * independentes e ficam em seções separadas na tela.
  */
 export interface IPermissionOption {
-  id: UUID;
+  id: UUID7;
   name: string;
   description?: ReactNode;
 }

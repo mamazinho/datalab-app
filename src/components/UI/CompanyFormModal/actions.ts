@@ -1,6 +1,6 @@
 import { DatalabAPI } from '../../../services/datalab-api';
 import { createFormAction } from '../../../utils/create-form-action';
-import type { UUID } from '../../../types/ids';
+import type { UUID7 } from '../../../types/ids';
 import { companyNameSchema } from './schemas';
 
 // Retornam void para que criar e editar compartilhem o mesmo ActionState<void>
@@ -14,7 +14,7 @@ export const createCompanyAction = createFormAction(
 );
 
 // Factory: a action de edição nasce já sabendo o id da empresa alvo (a ativa).
-export const createUpdateCompanyAction = (companyId: UUID) =>
+export const createUpdateCompanyAction = (companyId: UUID7) =>
   createFormAction(
     companyNameSchema,
     async ({ name }) => {

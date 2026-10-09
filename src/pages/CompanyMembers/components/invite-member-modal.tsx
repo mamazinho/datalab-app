@@ -23,7 +23,7 @@ import {
 } from '../company-members.style';
 import { PermissionsSelector } from './permissions-list';
 import { providerPermissionGroups, routePermissionGroups } from './permission-options';
-import type { UUID } from '../../../types/ids';
+import type { UUID7 } from '../../../types/ids';
 
 interface IInviteMemberModalProps {
   isOpen: boolean;
@@ -31,8 +31,8 @@ interface IInviteMemberModalProps {
 }
 
 interface IPermissionsFieldProps {
-  selected: Set<UUID>;
-  onChange: (selected: Set<UUID>) => void;
+  selected: Set<UUID7>;
+  onChange: (selected: Set<UUID7>) => void;
 }
 
 const InvitePermissionsField = ({ selected, onChange }: IPermissionsFieldProps) => {
@@ -75,8 +75,8 @@ export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) 
   const queryClient = useQueryClient();
   const [emails, setEmails] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const [selectedPermissions, setSelectedPermissions] = useState<Set<UUID>>(new Set());
-  const [selectedProviderPermissions, setSelectedProviderPermissions] = useState<Set<UUID>>(new Set());
+  const [selectedPermissions, setSelectedPermissions] = useState<Set<UUID7>>(new Set());
+  const [selectedProviderPermissions, setSelectedProviderPermissions] = useState<Set<UUID7>>(new Set());
   const [tagError, setTagError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 

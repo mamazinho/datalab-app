@@ -1,6 +1,6 @@
 import axios from "axios";
 import { axiosCompanyInstance, axiosPrivateInstance } from "./axios";
-import type { UUID } from "../../types/ids";
+import type { UUID7 } from "../../types/ids";
 import type { AssetType, IntegrationKey, Provider } from "../../types/integrations";
 import type { CompanyMembershipRole, CompanyMembershipStatus, IUserCompany } from "./usersResource";
 const AVAILABLE_ASSETS_TIMEOUT_MS = 30_000;
@@ -25,9 +25,9 @@ export interface IProviderAsset {
 
 // Ativo já salvo na allowlist da empresa (tem id, usado no DELETE)
 export interface ICompanyProviderAsset extends IProviderAsset {
-  id: UUID;
+  id: UUID7;
   provider: Provider;
-  company_id: UUID;
+  company_id: UUID7;
   created_at: string;
   updated_at: string;
 }
@@ -49,10 +49,10 @@ export interface IAddProviderAssetRequest {
 // Empresa plain — espelho de RetrieveCompany no backend (sem membership).
 // provider_assets é a allowlist da empresa: onde qualquer membro pode operar.
 export interface ICompany {
-  id: UUID;
+  id: UUID7;
   name: string;
   status: string;
-  created_by_user_id: UUID;
+  created_by_user_id: UUID7;
   created_at: string;
   updated_at: string;
   provider_assets?: ICompanyProviderAsset[];
@@ -60,9 +60,9 @@ export interface ICompany {
 
 // Membership retornado na criação da empresa — espelho de RetrieveCompanyMembership
 export interface ICreateCompanyMembership {
-  id: UUID;
-  user_id: UUID;
-  company_id: UUID;
+  id: UUID7;
+  user_id: UUID7;
+  company_id: UUID7;
   membership_role: CompanyMembershipRole;
   status: CompanyMembershipStatus;
   created_at: string;
@@ -88,12 +88,12 @@ export const CompaniesResource = {
 
   // update/delete usam axiosCompanyInstance: o X-Company-Id do interceptor
   // (empresa ativa) é o alvo da ação e o que o backend usa para autorizar.
-  async updateCompany(companyId: UUID, payload: IUpdateCompanyRequest): Promise<ICompany> {
+  async updateCompany(companyId: UUID7, payload: IUpdateCompanyRequest): Promise<ICompany> {
     const response = await axiosCompanyInstance.patch(`companies/${companyId}/`, payload);
     return response.data as ICompany;
   },
 
-  async deleteCompany(companyId: UUID): Promise<void> {
+  async deleteCompany(companyId: UUID7): Promise<void> {
     await axiosCompanyInstance.delete(`companies/${companyId}/`);
   },
 
@@ -103,7 +103,7 @@ export const CompaniesResource = {
   // remoção são só do owner; a inclusão é gated por route permission.
 
   async listAvailableProviderAssets(
-    companyId: UUID,
+    companyId: UUID7,
     integration: IntegrationKey,
   ): Promise<IAvailableProviderAssets> {
     const response = await axiosCompanyInstance.get(
@@ -114,7 +114,7 @@ export const CompaniesResource = {
   },
 
   async listProviderAssets(
-    companyId: UUID,
+    companyId: UUID7,
     provider?: Provider,
   ): Promise<ICompanyProviderAsset[]> {
     const response = await axiosCompanyInstance.get(`companies/${companyId}/provider-assets/`, {
@@ -125,7 +125,7 @@ export const CompaniesResource = {
 
   // Idempotente: repetir o mesmo external_id atualiza o nome em vez de duplicar.
   async addProviderAsset(
-    companyId: UUID,
+    companyId: UUID7,
     payload: IAddProviderAssetRequest,
   ): Promise<ICompanyProviderAsset> {
     const response = await axiosCompanyInstance.post(
@@ -136,7 +136,7 @@ export const CompaniesResource = {
   },
 
   // 404 = o ativo já não está na allowlist, que é o estado final desejado.
-  async removeProviderAsset(companyId: UUID, assetId: UUID): Promise<void> {
+  async removeProviderAsset(companyId: UUID7, assetId: UUID7): Promise<void> {
     try {
       await axiosCompanyInstance.delete(`companies/${companyId}/provider-assets/${assetId}/`);
     } catch (error: unknown) {

@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 import { DatalabAPI } from './services/datalab-api';
-import type { UUID } from './types/ids';
+import type { UUID7 } from './types/ids';
 import type { IntegrationKey, Provider } from './types/integrations';
 
 /**
@@ -21,7 +21,7 @@ export const chatsQuery = queryOptions({
 
 // Detalhes de um chat, quentes do backend — a página de mensagens não depende
 // da lista ['chats'] (que pode estar velha na outra página).
-export const chatQuery = (chatId: UUID) =>
+export const chatQuery = (chatId: UUID7) =>
   queryOptions({
     queryKey: ['chat', chatId],
     queryFn: () => DatalabAPI.ChatsResource.getChat(chatId),
@@ -29,7 +29,7 @@ export const chatQuery = (chatId: UUID) =>
 
 // Histórico sempre fresco ao montar; nunca refetch em background —
 // um refetch durante o streaming resetaria a timeline local do chat.
-export const chatMessagesQuery = (chatId: UUID) =>
+export const chatMessagesQuery = (chatId: UUID7) =>
   queryOptions({
     queryKey: ['chat-messages', chatId],
     queryFn: () => DatalabAPI.ChatMessagesResource.getChatMessages(chatId),
@@ -46,7 +46,7 @@ export const agentsQuery = queryOptions({
 // Membership ativa (role + company + permissões) da empresa selecionada.
 // companyId entra na key só como identidade de cache (uma entrada por empresa,
 // refetch ao trocar); o X-Company-Id da requisição vem do interceptor.
-export const currentMembershipQuery = (companyId: UUID) =>
+export const currentMembershipQuery = (companyId: UUID7) =>
   queryOptions({
     queryKey: ['current-membership', companyId],
     queryFn: () => DatalabAPI.MembershipsResource.getCurrentMembership(),
@@ -67,7 +67,7 @@ export const routePermissionsQuery = queryOptions({
   queryFn: () => DatalabAPI.MembershipsResource.listRoutePermissions(),
 });
 
-export const memberPermissionsQuery = (memberId: UUID) =>
+export const memberPermissionsQuery = (memberId: UUID7) =>
   queryOptions({
     queryKey: ['member-permissions', memberId],
     queryFn: () => DatalabAPI.MembershipsResource.listMemberPermissions(memberId),
@@ -80,7 +80,7 @@ export const providerPermissionsQuery = queryOptions({
   queryFn: () => DatalabAPI.MembershipsResource.listProviderPermissions(),
 });
 
-export const memberProviderPermissionsQuery = (memberId: UUID) =>
+export const memberProviderPermissionsQuery = (memberId: UUID7) =>
   queryOptions({
     queryKey: ['member-provider-permissions', memberId],
     queryFn: () => DatalabAPI.MembershipsResource.listMemberProviderPermissions(memberId),
@@ -94,7 +94,7 @@ export const integrationsQuery = queryOptions({
 
 // Allowlist de ativos da empresa. companyId entra na key porque trocar de
 // empresa troca a lista inteira — nunca reaproveitar cache entre empresas.
-export const companyProviderAssetsQuery = (companyId: UUID, provider?: Provider) =>
+export const companyProviderAssetsQuery = (companyId: UUID7, provider?: Provider) =>
   queryOptions({
     queryKey: ['company-provider-assets', companyId, provider ?? 'all'],
     queryFn: () => DatalabAPI.CompaniesResource.listProviderAssets(companyId, provider),
@@ -102,7 +102,7 @@ export const companyProviderAssetsQuery = (companyId: UUID, provider?: Provider)
 
 // Ativos que a conta conectada enxerga + os já liberados (marca os checkboxes).
 // Sempre fresco: o que o provider expõe muda fora do app.
-export const availableProviderAssetsQuery = (companyId: UUID, integration: IntegrationKey) =>
+export const availableProviderAssetsQuery = (companyId: UUID7, integration: IntegrationKey) =>
   queryOptions({
     queryKey: ['available-provider-assets', companyId, integration],
     queryFn: () =>

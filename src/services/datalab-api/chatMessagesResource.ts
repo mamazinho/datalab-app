@@ -1,13 +1,13 @@
 import { axiosCompanyInstance } from "./axios";
 import type { IChatFileRef } from "./chatFilesResource";
-import type { UUID } from "../../types/ids";
+import type { UUID7 } from "../../types/ids";
 
 export type ChatChannel = 'main' | 'thread';
 export type ChatAuthor = 'user' | 'supervisor' | 'specialist';
 export type ChatMessageType = 'chat' | 'agent_event' | 'clarification' | 'file';
 
 export interface IChatMessageRead {
-  id: UUID;
+  id: UUID7;
   author: ChatAuthor;
   agent_key: string | null;
   message_type: ChatMessageType;
@@ -31,15 +31,15 @@ export type IChatStreamEvent =
 export interface IUserPrompt {
   prompt: string;
   answer_to_tool_call_id?: string;
-  file_ids?: UUID[];
+  file_ids?: UUID7[];
 }
 
 export const ChatMessagesResource = {
-  async getChatMessages(chatId: UUID): Promise<IChatMessageRead[]> {
+  async getChatMessages(chatId: UUID7): Promise<IChatMessageRead[]> {
     const response = await axiosCompanyInstance.get(`chats/${chatId}/messages/`);
     return response.data as IChatMessageRead[];
   },
-  async sendMessage(chatId: UUID, payload: IUserPrompt): Promise<ReadableStream<Uint8Array>> {
+  async sendMessage(chatId: UUID7, payload: IUserPrompt): Promise<ReadableStream<Uint8Array>> {
     const response = await axiosCompanyInstance.post(
       `chats/${chatId}/messages/`,
       { ...payload, prompt: payload.prompt.trim() },

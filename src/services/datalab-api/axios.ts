@@ -1,5 +1,5 @@
 import axios, { AxiosError, type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
-import type { UUID } from "../../types/ids";
+import type { UUID7 } from "../../types/ids";
 
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_DATALAB_API_URL,
@@ -11,13 +11,13 @@ export const axiosInstance = axios.create({
   },
 });
 
-let _currentCompanyId: UUID | null = null;
+let _currentCompanyId: UUID7 | null = null;
 
-export function setCompanyId(id: UUID | null): void {
+export function setCompanyId(id: UUID7 | null): void {
   _currentCompanyId = id;
 }
 
-export function getCompanyId(): UUID | null {
+export function getCompanyId(): UUID7 | null {
   return _currentCompanyId;
 }
 

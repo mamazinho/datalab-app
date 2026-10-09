@@ -2,7 +2,7 @@ import { useActionState } from 'react';
 import { DatalabAPI } from '../../../../services/datalab-api';
 import type { IChatFileRef } from '../../../../services/datalab-api/chatFilesResource';
 import { formatFileSize, saveBlob } from '../../../../utils/download';
-import type { UUID } from '../../../../types/ids';
+import type { UUID7 } from '../../../../types/ids';
 import {
     FileCardDownload,
     FileCardForm,
@@ -13,7 +13,7 @@ import {
 } from '../messages.style';
 
 interface FileCardProps {
-    chatId: UUID;
+    chatId: UUID7;
     file: IChatFileRef;
 }
 

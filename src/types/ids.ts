@@ -1,7 +1,6 @@
-// IDs do backend são UUIDv4 — mesmo shape do retorno de crypto.randomUUID()
-export type UUID = `${string}-${string}-${string}-${string}-${string}`;
+import { validate, version } from 'uuid';
 
-const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export type UUID7 = `${string}-${string}-${string}-${string}-${string}`;
 
-export const isUuid = (value: string | null | undefined): value is UUID =>
-  !!value && UUID_V4_REGEX.test(value);
+export const isUuid7 = (value: unknown): value is UUID7 =>
+  validate(value) && version(value as string) === 7;

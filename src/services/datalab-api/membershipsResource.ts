@@ -1,5 +1,5 @@
 import { axiosCompanyInstance } from "./axios";
-import type { UUID } from "../../types/ids";
+import type { UUID7 } from "../../types/ids";
 import type { Provider } from "../../types/integrations";
 import type { ICompany } from "./companiesResource";
 import type {
@@ -12,15 +12,15 @@ import type {
 } from "./usersResource";
 
 export interface IMembershipUser {
-  id: UUID;
+  id: UUID7;
   name: string;
   email: string;
 }
 
 // Membership completo — espelho de RetrieveMembership no backend
 export interface ICompanyMembership extends IUserMembership {
-  user_id: UUID;
-  company_id: UUID;
+  user_id: UUID7;
+  company_id: UUID7;
   user?: IMembershipUser | null;
 }
 
@@ -39,8 +39,8 @@ export interface ICurrentMembership extends ICompanyMembership {
 
 export interface ICreateInviteRequest {
   emails: string[];
-  permissions: UUID[];
-  provider_permissions: UUID[];
+  permissions: UUID7[];
+  provider_permissions: UUID7[];
 }
 
 export const MembershipsResource = {
@@ -59,7 +59,7 @@ export const MembershipsResource = {
     return response.data as ICompanyMembership[];
   },
 
-  async removeMember(membershipId: UUID): Promise<void> {
+  async removeMember(membershipId: UUID7): Promise<void> {
     await axiosCompanyInstance.delete(`memberships/members/${membershipId}/`);
   },
 
@@ -70,7 +70,7 @@ export const MembershipsResource = {
     return response.data as IRoutePermission[];
   },
 
-  async listMemberPermissions(membershipId: UUID): Promise<IMembershipPermission[]> {
+  async listMemberPermissions(membershipId: UUID7): Promise<IMembershipPermission[]> {
     const response = await axiosCompanyInstance.get(
       `memberships/members/${membershipId}/permissions/`,
     );
@@ -78,8 +78,8 @@ export const MembershipsResource = {
   },
 
   async grantPermission(
-    membershipId: UUID,
-    routePermissionId: UUID,
+    membershipId: UUID7,
+    routePermissionId: UUID7,
   ): Promise<IMembershipPermission> {
     const response = await axiosCompanyInstance.post(
       `memberships/members/${membershipId}/permissions/${routePermissionId}/`,
@@ -87,7 +87,7 @@ export const MembershipsResource = {
     return response.data as IMembershipPermission;
   },
 
-  async revokePermission(membershipId: UUID, routePermissionId: UUID): Promise<void> {
+  async revokePermission(membershipId: UUID7, routePermissionId: UUID7): Promise<void> {
     await axiosCompanyInstance.delete(
       `memberships/members/${membershipId}/permissions/${routePermissionId}/`,
     );
@@ -103,7 +103,7 @@ export const MembershipsResource = {
   },
 
   async listMemberProviderPermissions(
-    membershipId: UUID,
+    membershipId: UUID7,
   ): Promise<IMembershipProviderPermission[]> {
     const response = await axiosCompanyInstance.get(
       `memberships/members/${membershipId}/provider-permissions/`,
@@ -112,8 +112,8 @@ export const MembershipsResource = {
   },
 
   async grantProviderPermission(
-    membershipId: UUID,
-    providerPermissionId: UUID,
+    membershipId: UUID7,
+    providerPermissionId: UUID7,
   ): Promise<IMembershipProviderPermission> {
     const response = await axiosCompanyInstance.post(
       `memberships/members/${membershipId}/provider-permissions/${providerPermissionId}/`,
@@ -122,8 +122,8 @@ export const MembershipsResource = {
   },
 
   async revokeProviderPermission(
-    membershipId: UUID,
-    providerPermissionId: UUID,
+    membershipId: UUID7,
+    providerPermissionId: UUID7,
   ): Promise<void> {
     await axiosCompanyInstance.delete(
       `memberships/members/${membershipId}/provider-permissions/${providerPermissionId}/`,
@@ -137,7 +137,7 @@ export const MembershipsResource = {
     return response.data as IUserInvite[];
   },
 
-  async getInvite(inviteId: UUID): Promise<IUserInvite> {
+  async getInvite(inviteId: UUID7): Promise<IUserInvite> {
     const response = await axiosCompanyInstance.get(`memberships/invites/${inviteId}/`);
     return response.data as IUserInvite;
   },
@@ -147,7 +147,7 @@ export const MembershipsResource = {
     return response.data as IUserInvite[];
   },
 
-  async deleteInvite(inviteId: UUID): Promise<void> {
+  async deleteInvite(inviteId: UUID7): Promise<void> {
     await axiosCompanyInstance.delete(`memberships/invites/${inviteId}/`);
   },
 };

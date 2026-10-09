@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import type { UUID } from '../../../types/ids';
+import type { UUID7 } from '../../../types/ids';
 import type { IPermissionOption } from './permission-options';
 import {
   PermissionGroup,
@@ -15,15 +15,15 @@ import {
 interface PermissionsSelectorProps {
   /** Grupos já rotulados (tag da rota, provider da permissão de agente...) */
   groups: Record<string, IPermissionOption[]>;
-  selected: Set<UUID>;
-  onChange: (selected: Set<UUID>) => void;
+  selected: Set<UUID7>;
+  onChange: (selected: Set<UUID7>) => void;
 }
 
 interface PermissionGroupItemProps {
   label: string;
   options: IPermissionOption[];
-  selected: Set<UUID>;
-  onToggle: (id: UUID) => void;
+  selected: Set<UUID7>;
+  onToggle: (id: UUID7) => void;
   onToggleGroup: (options: IPermissionOption[]) => void;
 }
 
@@ -79,7 +79,7 @@ const PermissionGroupItem = ({ label, options, selected, onToggle, onToggleGroup
 };
 
 export const PermissionsSelector = ({ groups, selected, onChange }: PermissionsSelectorProps) => {
-  const togglePermission = useCallback((id: UUID) => {
+  const togglePermission = useCallback((id: UUID7) => {
     const next = new Set(selected);
     if (next.has(id)) next.delete(id);
     else next.add(id);

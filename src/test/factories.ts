@@ -1,4 +1,4 @@
-import type { UUID } from '../types/ids';
+import type { UUID7 } from '../types/ids';
 import type { IRetrieveAgentWithState } from '../services/datalab-api/agentsResource';
 import type { IRetrieveChat } from '../services/datalab-api/chatsResource';
 import type {
@@ -20,12 +20,12 @@ import type {
 const TIMESTAMPS = { created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' };
 
 /**
- * UUID v4 válido e determinístico a partir de um número — id legível no output
+ * UUID v7 válido e determinístico a partir de um número — id legível no output
  * do teste. O padStart é o que mantém o primeiro bloco com 8 dígitos: sem ele
  * seeds de dois dígitos produzem um id que o isUuid rejeita.
  */
-export const uuid = (seed: number): UUID =>
-  `${String(seed).padStart(8, '0')}-0000-4000-8000-000000000000` as UUID;
+export const uuid = (seed: number): UUID7 =>
+  `${String(seed).padStart(8, '0')}-0000-7000-8000-000000000000` as UUID7;
 
 export const buildCompany = (overrides: Partial<IUserCompany> = {}): IUserCompany => ({
   id: uuid(1),

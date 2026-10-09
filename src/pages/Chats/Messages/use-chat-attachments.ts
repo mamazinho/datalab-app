@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import axios from 'axios';
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { IChatFileRef } from '../../../services/datalab-api/chatFilesResource';
-import type { UUID } from '../../../types/ids';
+import type { UUID7 } from '../../../types/ids';
 
 export interface IPendingAttachment {
   localId: string;
@@ -25,7 +25,7 @@ const getErrorMessage = (error: unknown): string =>
   (axios.isAxiosError(error) && error.response && REJECTION_BY_STATUS[error.response.status])
   || 'Falha ao enviar o arquivo.';
 
-export const useChatAttachments = (chatId: UUID) => {
+export const useChatAttachments = (chatId: UUID7) => {
   const [attachments, setAttachments] = useState<IPendingAttachment[]>([]);
 
   const update = (localId: string, changes: Partial<IPendingAttachment>) =>

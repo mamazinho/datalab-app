@@ -8,7 +8,7 @@ import { useIntegrations } from '../../hooks/use-integrations';
 import { integrationsQuery } from '../../queries';
 import { DatalabAPI } from '../../services/datalab-api';
 import type { IIntegrationStatus } from '../../services/datalab-api/authResource';
-import type { UUID } from '../../types/ids';
+import type { UUID7 } from '../../types/ids';
 import type { IntegrationKey } from '../../types/integrations';
 import { belongsToIntegration, PROVIDER_LABELS } from '../../utils/integrations';
 import { IntegrationCard } from './components/integration-card';
@@ -27,7 +27,7 @@ import {
 // integração (?ativos=google_analytics).
 const ASSETS_PARAM = 'ativos';
 
-const IntegrationsContent = ({ companyId }: { companyId: UUID }) => {
+const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
   const queryClient = useQueryClient();
   const { data: integrations } = useIntegrations();
   const { companyProviderAssets } = useCompanyContext();

@@ -3,7 +3,7 @@ import { DatalabAPI } from '../../../services/datalab-api';
 import type { IChatFileRef } from '../../../services/datalab-api/chatFilesResource';
 import type { IChatMessageRead, IChatStreamEvent } from '../../../services/datalab-api/chatMessagesResource';
 import { parseChatStream } from '../../../utils/process-stream';
-import type { UUID } from '../../../types/ids';
+import type { UUID7 } from '../../../types/ids';
 import {
   appendUserMessage,
   applyStreamEvent,
@@ -40,7 +40,7 @@ const EMPTY_PROMPT_WITH_ATTACHMENTS = 'Analise o arquivo anexado.';
 const getErrorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error && error.message ? error.message : fallback;
 
-export const useChatStream = (chatId: UUID, initialHistory: IChatMessageRead[]) => {
+export const useChatStream = (chatId: UUID7, initialHistory: IChatMessageRead[]) => {
   const [items, dispatch] = useReducer(timelineReducer, initialHistory, mapHistoryToTimeline);
   const [isStreaming, setIsStreaming] = useState(false);
   // Identifica a "geração" ativa do stream: trocar de chat/desmontar invalida loops em andamento

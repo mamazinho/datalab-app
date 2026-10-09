@@ -2,10 +2,10 @@ import { DatalabAPI } from '../../../services/datalab-api';
 import type { IUpdateSpecialistRequest } from '../../../services/datalab-api/agentsResource';
 import { createFormAction } from '../../../utils/create-form-action';
 import { createAgentSchema, updateAgentSchema } from './schemas';
-import type { UUID } from '../../../types/ids';
+import type { UUID7 } from '../../../types/ids';
 
 // Factory: a action nasce já sabendo se é criação (agentId null) ou edição
-export const createSaveAgentAction = (agentId: UUID | null) =>
+export const createSaveAgentAction = (agentId: UUID7 | null) =>
   createFormAction(
     agentId !== null ? updateAgentSchema : createAgentSchema,
     ({ name, avatar_url, description, instructions, model_name }) => {

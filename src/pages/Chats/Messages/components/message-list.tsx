@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { TimelineItem } from '../../../../utils/chat-timeline';
-import type { UUID } from '../../../../types/ids';
+import type { UUID7 } from '../../../../types/ids';
 import { MessageBubble } from './message-bubble';
 import { ThreadBox } from './thread-box';
 import { ClarificationCard } from './clarification-card';
@@ -19,14 +19,14 @@ import {
 } from '../messages.style';
 
 interface IMessageListProps {
-    chatId: UUID;
+    chatId: UUID7;
     items: TimelineItem[];
     isStreaming: boolean;
     onAnswerClarification: (answer: string) => void;
 }
 
 const renderItem = (
-    chatId: UUID,
+    chatId: UUID7,
     item: TimelineItem,
     isStreaming: boolean,
     onAnswerClarification: (answer: string) => void,

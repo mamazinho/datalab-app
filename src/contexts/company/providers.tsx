@@ -4,7 +4,7 @@ import { CompanyContext } from "./contexts";
 import { setCompanyId } from "../../services/datalab-api/axios";
 import { currentMembershipQuery } from "../../queries";
 import { COMPANY_ROUTE_PERMISSIONS, isAgentsRoutePermission, matchesRoutePermission, toRoutePermission, type IRoutePermissionRef } from "../../utils/route-permissions";
-import { isUuid, type UUID } from "../../types/ids";
+import { isUuid7, type UUID7 } from "../../types/ids";
 import type { ProviderPermissionKey } from "../../types/integrations";
 import type { IProviderPermission, IUserCompany, IUserMembership, IRoutePermission } from "../../services/datalab-api/usersResource";
 import type { ICompanyProviderAsset } from "../../services/datalab-api/companiesResource";
@@ -17,9 +17,9 @@ interface ICompanyProviderProps {
 const SELECTED_COMPANY_KEY = 'selectedCompanyId';
 
 export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) => {
-  const [selectedCompanyId, setSelectedCompanyId] = useState<UUID | null>(() => {
+  const [selectedCompanyId, setSelectedCompanyId] = useState<UUID7 | null>(() => {
     const saved = localStorage.getItem(SELECTED_COMPANY_KEY);
-    return isUuid(saved) ? saved : null;
+    return isUuid7(saved) ? saved : null;
   });
 
   // A lista (de /users/me) decide QUAL empresa está ativa e alimenta o dropdown;
@@ -41,7 +41,7 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
 
   // Fonte única do usuário na empresa ativa: membership + company + permissões (flat).
   const { data: currentMembershipData, isLoading: isMembershipLoading } = useQuery({
-    ...currentMembershipQuery(currentCompany?.id as UUID),
+    ...currentMembershipQuery(currentCompany?.id as UUID7),
     enabled: !!currentCompany,
   });
 
@@ -83,7 +83,7 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
     localStorage.setItem(SELECTED_COMPANY_KEY, company.id);
   }, []);
 
-  const selectCompanyById = useCallback((id: UUID) => {
+  const selectCompanyById = useCallback((id: UUID7) => {
     setSelectedCompanyId(id);
     localStorage.setItem(SELECTED_COMPANY_KEY, id);
   }, []);

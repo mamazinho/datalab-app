@@ -3,14 +3,14 @@ import type {
   ICompanyProviderAsset,
   IProviderAsset,
 } from '../../services/datalab-api/companiesResource';
-import type { UUID } from '../../types/ids';
+import type { UUID7 } from '../../types/ids';
 import type { IntegrationKey, Provider } from '../../types/integrations';
 import { belongsToIntegration } from '../../utils/integrations';
 import { createFormAction } from '../../utils/create-form-action';
 import { saveProviderAssetsSchema } from './schemas';
 
 interface ISaveProviderAssetsParams {
-  companyId: UUID;
+  companyId: UUID7;
   provider: Provider;
   integration: IntegrationKey;
   /** Ativos que a conta conectada enxerga (fonte do POST) */

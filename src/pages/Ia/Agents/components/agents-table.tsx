@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../../components/UI/Tables/ActionTable';
 import { DatalabAPI } from '../../../../services/datalab-api';
 import type { IRetrieveAgentWithState } from '../../../../services/datalab-api/agentsResource';
-import type { UUID } from '../../../../types/ids';
+import type { UUID7 } from '../../../../types/ids';
 import { useCompanyContext } from '../../../../contexts/company';
 import { AGENT_ROUTE_PERMISSIONS } from '../../../../utils/route-permissions';
 import { agentsQuery } from '../../../../queries';
@@ -40,8 +40,8 @@ const renderStatusBadge = (agent: IRetrieveAgentWithState) =>
 export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
   const { currentCompany, hasPermissionByRoute } = useCompanyContext();
   const queryClient = useQueryClient();
-  const [removingId, setRemovingId] = useState<UUID | null>(null);
-  const [togglingId, setTogglingId] = useState<UUID | null>(null);
+  const [removingId, setRemovingId] = useState<UUID7 | null>(null);
+  const [togglingId, setTogglingId] = useState<UUID7 | null>(null);
 
   const invalidateAgents = useCallback(
     () => void queryClient.invalidateQueries({ queryKey: agentsQuery.queryKey }),

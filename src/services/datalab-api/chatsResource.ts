@@ -1,9 +1,9 @@
 import { axiosCompanyInstance } from "./axios";
-import type { UUID } from "../../types/ids";
+import type { UUID7 } from "../../types/ids";
 
 export interface IRetrieveChat {
-  id: UUID;
-  user_id: UUID;
+  id: UUID7;
+  user_id: UUID7;
   title: string;
   input_tokens: number;
   output_tokens: number;
@@ -22,7 +22,7 @@ export const ChatsResource = {
     return response.data as IRetrieveChat[];
   },
 
-  async getChat(chatId: UUID): Promise<IRetrieveChat> {
+  async getChat(chatId: UUID7): Promise<IRetrieveChat> {
     const response = await axiosCompanyInstance.get(`chats/${chatId}/`);
     return response.data as IRetrieveChat;
   },

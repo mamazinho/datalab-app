@@ -5,7 +5,7 @@ import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '
 import { DatalabAPI } from '../../../services/datalab-api';
 import { membersQuery } from '../../../queries';
 import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
-import type { UUID } from '../../../types/ids';
+import type { UUID7 } from '../../../types/ids';
 import { MembersEmpty, MembersTableCellSecondary, RoleBadge } from '../company-members.style';
 import { MemberPermissionsModal } from './member-permissions-modal';
 
@@ -17,7 +17,7 @@ export const MembersList = ({ members }: IMembersListProps) => {
   const queryClient = useQueryClient();
   const [selectedMember, setSelectedMember] = useState<ICompanyMembership | null>(null);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
-  const [removingId, setRemovingId] = useState<UUID | null>(null);
+  const [removingId, setRemovingId] = useState<UUID7 | null>(null);
 
   const handleRemove = useCallback(
     async (membership: ICompanyMembership) => {
