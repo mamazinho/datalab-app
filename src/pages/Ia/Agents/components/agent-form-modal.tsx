@@ -1,6 +1,7 @@
-import { useActionState, useEffect, useMemo, useState } from 'react';
+import { useActionState, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
+import { Collapsible } from '../../../../components/UI/Collapsible';
 import { Modal } from '../../../../components/UI/Modal/modal';
 import { ModelSelect } from '../../../../components/UI/ModelSelect';
 import { INITIAL_ACTION_STATE } from '../../../../types/actions';
@@ -17,7 +18,7 @@ import {
   ModalLabel,
   ModalSubmit,
   ModalTextarea,
-} from '../agents.style';
+} from '../../ia.style';
 
 interface IAgentFormModalProps {
   isOpen: boolean;
@@ -30,13 +31,6 @@ export const AgentFormModal = ({ isOpen, agent, onClose }: IAgentFormModalProps)
   const queryClient = useQueryClient();
   const boundAction = useMemo(() => createSaveAgentAction(agent?.id ?? null), [agent]);
   const [formState, formAction, isPending] = useActionState(boundAction, INITIAL_ACTION_STATE);
-  const [modelName, setModelName] = useState('');
-
-  useEffect(() => {
-    if (isOpen) {
-      setModelName(agent?.model_name ?? '');
-    }
-  }, [isOpen, agent]);
 
   useActionFeedback(formState, {
     onSuccess: () => {
@@ -97,28 +91,32 @@ export const AgentFormModal = ({ isOpen, agent, onClose }: IAgentFormModalProps)
             />
           </ModalField>
 
-          <ModalField>
-            <ModalLabel htmlFor="agent-avatar-url">URL do avatar</ModalLabel>
-            <ModalInput
-              id="agent-avatar-url"
-              name="avatar_url"
-              type="url"
-              autoComplete="off"
-              placeholder="https://..."
-              defaultValue={agent?.avatar_url ?? ''}
-            />
-          </ModalField>
+          <Collapsible
+            label="Configurações avançadas"
+            defaultOpen={Boolean(agent?.avatar_url || agent?.model_name)}
+          >
+            <ModalField>
+              <ModalLabel htmlFor="agent-avatar-url">URL do avatar</ModalLabel>
+              <ModalInput
+                id="agent-avatar-url"
+                name="avatar_url"
+                type="url"
+                autoComplete="off"
+                placeholder="https://..."
+                defaultValue={agent?.avatar_url ?? ''}
+              />
+            </ModalField>
 
-          <ModalField>
-            <ModalLabel>Modelo</ModalLabel>
-            <ModelSelect
-              value={modelName}
-              onChange={setModelName}
-              disabled={isPending}
-              emptyOptionLabel="Padrão do sistema"
-            />
-            <input type="hidden" name="model_name" value={modelName} />
-          </ModalField>
+            <ModalField>
+              <ModalLabel id="agent-model-label">Modelo</ModalLabel>
+              <ModelSelect
+                name="model_name"
+                defaultValue={agent?.model_name ?? ''}
+                emptyOptionLabel="Padrão do sistema"
+                labelId="agent-model-label"
+              />
+            </ModalField>
+          </Collapsible>
 
           {formState.error && !formState.success && (
             <ModalError>{formState.error}</ModalError>

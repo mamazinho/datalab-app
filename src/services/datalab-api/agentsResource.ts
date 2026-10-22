@@ -1,9 +1,15 @@
 import { axiosCompanyInstance } from "./axios";
 import type { UUID7 } from "../../types/ids";
 
+export interface IAvailableModel {
+  name: string;
+  display_name: string;
+}
+
 export interface IListAvailableModelsResponse {
-  models: string[];
   provider: string;
+  display_name: string;
+  models: IAvailableModel[];
 }
 
 export type AgentType = 'supervisor' | 'specialist';

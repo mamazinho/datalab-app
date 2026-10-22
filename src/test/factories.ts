@@ -1,6 +1,10 @@
 import type { UUID7 } from '../types/ids';
-import type { IRetrieveAgentWithState } from '../services/datalab-api/agentsResource';
+import type {
+  IListAvailableModelsResponse,
+  IRetrieveAgentWithState,
+} from '../services/datalab-api/agentsResource';
 import type { IRetrieveChat } from '../services/datalab-api/chatsResource';
+import type { IRetrieveMcpServer, ITestMcpServerResponse } from '../services/datalab-api/mcpServersResource';
 import type {
   ICompanyMembership,
   ICurrentMembership,
@@ -122,6 +126,18 @@ export const buildAgent = (overrides: Partial<IRetrieveAgentWithState> = {}): IR
   ...overrides,
 });
 
+export const buildModelProvider = (
+  overrides: Partial<IListAvailableModelsResponse> = {},
+): IListAvailableModelsResponse => ({
+  provider: 'openai',
+  display_name: 'OpenAI',
+  models: [
+    { name: 'gpt-4o', display_name: 'GPT-4o' },
+    { name: 'gpt-4o-mini', display_name: 'GPT-4o mini' },
+  ],
+  ...overrides,
+});
+
 export const buildInvite = (overrides: Partial<IUserInvite> = {}): IUserInvite => ({
   id: uuid(7),
   email: 'ana@datalab.com',
@@ -134,5 +150,30 @@ export const buildInvite = (overrides: Partial<IUserInvite> = {}): IUserInvite =
   invited_by: { id: uuid(8), name: 'Carla Dias', email: 'carla@acme.com' },
   permissions: [],
   provider_permissions: [],
+  ...overrides,
+});
+
+export const buildMcpServer = (overrides: Partial<IRetrieveMcpServer> = {}): IRetrieveMcpServer => ({
+  id: uuid(30),
+  agent_id: uuid(10),
+  agent_name: 'Especialista GA4',
+  name: 'CRM interno',
+  url: 'https://mcp.acme.com/mcp',
+  transport: 'streamable_http',
+  auth_type: 'none',
+  auth_header_name: null,
+  ...TIMESTAMPS,
+  ...overrides,
+});
+
+export const buildMcpServerTestResult = (
+  overrides: Partial<ITestMcpServerResponse> = {},
+): ITestMcpServerResponse => ({
+  ok: true,
+  tools: [
+    { name: 'search_contacts', description: 'Busca contatos no CRM' },
+    { name: 'create_deal', description: null },
+  ],
+  error: null,
   ...overrides,
 });

@@ -101,9 +101,20 @@ function registerRequestInterceptors(instance: AxiosInstance, interceptors: Requ
 registerRequestInterceptors(axiosPrivateInstance, [authInterceptor]);
 registerRequestInterceptors(axiosCompanyInstance, [authInterceptor, companyInterceptor]);
 
-function extractErrorMessage(data: unknown): string {
-  const detail = (data as Record<string, unknown>)?.detail;
-  return typeof detail === 'string' ? detail : '';
+const STATUS_MESSAGES: Partial<Record<number, string>> = {
+  429: 'Muitas requisições. Tente novamente em instantes.',
+};
+
+// O 422 do FastAPI manda `detail` como lista: [{ loc, msg: "Value error, URL inválida", type }]
+function readDetail(detail: unknown): string {
+  if (typeof detail === 'string') return detail;
+
+  const firstMessage: unknown = Array.isArray(detail) ? detail[0]?.msg : undefined;
+  return typeof firstMessage === 'string' ? firstMessage.replace(/^Value error, /, '') : '';
+}
+
+function extractErrorMessage({ status, data }: AxiosResponse): string {
+  return STATUS_MESSAGES[status] ?? readDetail((data as Record<string, unknown> | undefined)?.detail);
 }
 
 function describeMissingResponse(error: AxiosError): void {
@@ -117,7 +128,7 @@ function describeMissingResponse(error: AxiosError): void {
 const handlePublicAxiosError = (error: Error): Promise<never> => {
   if (axios.isAxiosError(error)) {
     if (error.response) {
-      const msg = extractErrorMessage(error.response.data);
+      const msg = extractErrorMessage(error.response);
       if (msg) error.message = msg;
     } else {
       describeMissingResponse(error);
@@ -137,7 +148,7 @@ function createAuthenticatedErrorHandler(instance: AxiosInstance) {
       return Promise.reject(error);
     }
 
-    const message = extractErrorMessage(error.response.data);
+    const message = extractErrorMessage(error.response);
 
     if (error.response.status === 401) {
       const config = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;

@@ -18,8 +18,8 @@ import {
   AgentModel,
   AgentName,
   AgentOwner,
-  AgentsEmpty,
 } from '../agents.style';
+import { EmptyMessage } from '../../ia.style';
 
 interface IAgentsTableProps {
   agents: IRetrieveAgentWithState[];
@@ -95,7 +95,7 @@ export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
   }, [invalidateAgents]);
 
   if (agents.length === 0) {
-    return <AgentsEmpty>Nenhum agente encontrado.</AgentsEmpty>;
+    return <EmptyMessage>Nenhum agente encontrado.</EmptyMessage>;
   }
 
   return (

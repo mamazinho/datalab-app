@@ -18,6 +18,7 @@ import {
   CompanyManagementRoute,
   IaIndexRedirect,
   IaRoute,
+  McpServersRoute,
   OnboardingRoute,
   PermissionRoute,
   PrivateRoutes,
@@ -228,6 +229,31 @@ describe('permission guards', () => {
   it('guards the agents tab by any agents permission', async () => {
     givenMemberPermissions([buildRoutePermission({ tag: 'chat', path: '/v1/chats/' })]);
     renderRoutes(guardedRoute(<AgentsRoute />), { route: '/protegida', companies: [asMember] });
+
+    expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument();
+  });
+
+  it('opens the IA section for someone who can only list MCP servers', async () => {
+    givenMemberPermissions([
+      buildRoutePermission({ tag: null, method: 'GET', path: '/v1/agents/mcp-servers/' }),
+    ]);
+    renderRoutes(guardedRoute(<IaRoute />), { route: '/protegida', companies: [asMember] });
+
+    expect(await screen.findByRole('heading', { name: 'Protegida' })).toBeInTheDocument();
+  });
+
+  it('lets a member who can list MCP servers into the MCP tab', async () => {
+    givenMemberPermissions([
+      buildRoutePermission({ method: 'GET', path: '/v1/agents/mcp-servers/' }),
+    ]);
+    renderRoutes(guardedRoute(<McpServersRoute />), { route: '/protegida', companies: [asMember] });
+
+    expect(await screen.findByRole('heading', { name: 'Protegida' })).toBeInTheDocument();
+  });
+
+  it('keeps out of the MCP tab a member who only manages agents', async () => {
+    givenMemberPermissions([buildRoutePermission({ method: 'PATCH', path: '/v1/agents/{agent_id}/' })]);
+    renderRoutes(guardedRoute(<McpServersRoute />), { route: '/protegida', companies: [asMember] });
 
     expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument();
   });

@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { buildAgent, buildChat, buildCompany, buildCurrentMembership, buildInvite, buildUser, uuid } from '../factories';
+import { buildAgent, buildChat, buildCompany, buildCurrentMembership, buildInvite, buildMcpServer, buildMcpServerTestResult, buildModelProvider, buildUser, uuid } from '../factories';
 
 const BASE_URL = import.meta.env.VITE_DATALAB_API_URL;
 
@@ -83,7 +83,14 @@ export const handlers = [
   http.get(api('agents/'), () => HttpResponse.json([])),
 
   http.get(api('agents/available-models'), () =>
-    HttpResponse.json([{ provider: 'openai', models: ['gpt-4o', 'gpt-4o-mini'] }]),
+    HttpResponse.json([
+      buildModelProvider(),
+      buildModelProvider({
+        provider: 'google',
+        display_name: 'Google',
+        models: [{ name: 'gemini-2.5-pro', display_name: 'Gemini 2.5 Pro' }],
+      }),
+    ]),
   ),
 
   http.post(api('agents/'), async ({ request }) =>
@@ -99,6 +106,16 @@ export const handlers = [
   http.put(api('agents/:agentId/company-state/'), () => new HttpResponse(null, { status: 204 })),
 
   http.put(api('agents/:agentId/user-state/'), () => new HttpResponse(null, { status: 204 })),
+
+  http.get(api('agents/mcp-servers/'), () => HttpResponse.json([])),
+
+  http.post(api('agents/mcp-servers/'), () => HttpResponse.json(buildMcpServer(), { status: 201 })),
+
+  http.patch(api('agents/mcp-servers/:mcpServerId/'), () => HttpResponse.json(buildMcpServer())),
+
+  http.delete(api('agents/mcp-servers/:mcpServerId/'), () => new HttpResponse(null, { status: 204 })),
+
+  http.post(api('agents/mcp-servers/test/'), () => HttpResponse.json(buildMcpServerTestResult())),
 
   http.get(api('chats/'), () => HttpResponse.json([])),
 

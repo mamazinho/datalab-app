@@ -82,6 +82,14 @@ export const AGENT_ROUTE_PERMISSIONS = {
   companyState: { method: 'PUT', path: 'agents/{agent_id}/company-state/' },
 } as const satisfies Record<string, IRoutePermissionRef>;
 
+export const MCP_SERVER_ROUTE_PERMISSIONS = {
+  list: { method: 'GET', path: 'agents/mcp-servers/' },
+  create: { method: 'POST', path: 'agents/mcp-servers/' },
+  update: { method: 'PATCH', path: 'agents/mcp-servers/{mcp_server_id}/' },
+  remove: { method: 'DELETE', path: 'agents/mcp-servers/{mcp_server_id}/' },
+  test: { method: 'POST', path: 'agents/mcp-servers/test/' },
+} as const satisfies Record<string, IRoutePermissionRef>;
+
 // Gerenciamento de empresa: editar nome e deletar a empresa ativa.
 export const COMPANY_ROUTE_PERMISSIONS = {
   update: { method: 'PATCH', path: 'companies/{id}/' },

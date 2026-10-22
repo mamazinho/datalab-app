@@ -1,135 +1,108 @@
-import { useEffect, useRef, useState } from 'react';
-import { DatalabAPI } from '../../../services/datalab-api';
+import { useId, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useClickOutside } from '../../../hooks/use-click-outside';
-import type { IListAvailableModelsResponse } from '../../../services/datalab-api/agentsResource';
+import { availableModelsQuery } from '../../../queries';
 import {
-    ModelOptionExpand,
     ModelOptionItem,
     ModelProviderGroup,
     ModelProviderLabel,
     ModelSelectButton,
+    ModelSelectHint,
     ModelSelectList,
     ModelSelectWrapper,
 } from './model-select.style';
 
-const VISIBLE_MODELS_PER_PROVIDER = 5;
-
-interface ModelSelectProps {
-    value: string;
-    onChange: (model: string) => void;
-    disabled?: boolean;
-    direction?: 'up' | 'down';
-    emptyOptionLabel?: string;
+interface IModelSelectProps {
+    name: string;
+    defaultValue?: string;
+    emptyOptionLabel: string;
+    labelId?: string;
 }
 
-export const ModelSelect = ({
-    value,
-    onChange,
-    disabled = false,
-    direction = 'down',
-    emptyOptionLabel,
-}: ModelSelectProps) => {
+interface IModelOptionProps {
+    label: string;
+    isSelected: boolean;
+    onSelect: () => void;
+}
+
+const ModelOption = ({ label, isSelected, onSelect }: IModelOptionProps) => (
+    <ModelOptionItem
+        type="button"
+        role="option"
+        aria-selected={isSelected}
+        $isSelected={isSelected}
+        onClick={onSelect}
+    >
+        {label}
+    </ModelOptionItem>
+);
+
+export const ModelSelect = ({ name, defaultValue = '', emptyOptionLabel, labelId }: IModelSelectProps) => {
+    const [value, setValue] = useState(defaultValue);
     const [isOpen, setIsOpen] = useState(false);
-    const [expandedProviders, setExpandedProviders] = useState<Record<string, boolean>>({});
-    const [availableModels, setAvailableModels] = useState<IListAvailableModelsResponse[]>([]);
-    const [isModelsLoading, setIsModelsLoading] = useState(true);
     const wrapperRef = useRef<HTMLDivElement>(null);
+    const buttonId = useId();
+    const { data: providers = [], isLoading, isError } = useQuery(availableModelsQuery);
 
     useClickOutside(wrapperRef, () => setIsOpen(false), isOpen);
 
-    useEffect(() => {
-        let isActive = true;
+    const selectedModel = providers.flatMap((provider) => provider.models).find((model) => model.name === value);
 
-        const loadModels = async () => {
-            try {
-                setIsModelsLoading(true);
-                const modelsList = await DatalabAPI.AgentsResource.listAvailableModels();
-                if (isActive) {
-                    setAvailableModels(modelsList);
-                }
-            } catch (err) {
-                console.error('Erro ao carregar os modelos disponíveis', err);
-            } finally {
-                if (isActive) {
-                    setIsModelsLoading(false);
-                }
-            }
-        };
-
-        loadModels();
-        return () => { isActive = false; };
-    }, []);
-
-    const handleSelectModel = (model: string) => {
-        onChange(model);
+    const select = (model: string) => {
+        setValue(model);
         setIsOpen(false);
     };
 
-    const handleExpandProvider = (provider: string, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setExpandedProviders(prev => ({ ...prev, [provider]: true }));
-    };
-
-    const placeholder = emptyOptionLabel ?? 'Selecione um modelo';
-
     return (
-        <ModelSelectWrapper ref={wrapperRef}>
-            <ModelSelectButton
-                type="button"
-                onClick={() => !isModelsLoading && setIsOpen(!isOpen)}
-                disabled={disabled || isModelsLoading || availableModels.length === 0}
-                aria-expanded={isOpen}
-            >
-                {isModelsLoading ? 'Carregando...' : (value || placeholder)}
-            </ModelSelectButton>
+        <>
+            <ModelSelectWrapper ref={wrapperRef}>
+                <input type="hidden" name={name} value={value} />
 
-            {isOpen && !isModelsLoading && (
-                <ModelSelectList $direction={direction}>
-                    {emptyOptionLabel && (
-                        <ModelOptionItem
-                            onClick={() => handleSelectModel('')}
-                            $isSelected={!value}
-                        >
-                            {emptyOptionLabel}
-                        </ModelOptionItem>
-                    )}
+                <ModelSelectButton
+                    id={buttonId}
+                    type="button"
+                    onClick={() => setIsOpen((prev) => !prev)}
+                    disabled={isLoading}
+                    aria-haspopup="listbox"
+                    aria-expanded={isOpen}
+                    aria-labelledby={labelId ? `${labelId} ${buttonId}` : undefined}
+                >
+                    {isLoading ? 'Carregando modelos...' : (selectedModel?.display_name ?? (value || emptyOptionLabel))}
+                </ModelSelectButton>
 
-                    {availableModels.map((providerGroup) => {
-                        const isExpanded = expandedProviders[providerGroup.provider];
-                        const modelsToShow = isExpanded
-                            ? providerGroup.models
-                            : providerGroup.models.slice(0, VISIBLE_MODELS_PER_PROVIDER);
-                        const hasMore = providerGroup.models.length > VISIBLE_MODELS_PER_PROVIDER && !isExpanded;
+                {isOpen && (
+                    <ModelSelectList role="listbox" aria-labelledby={labelId}>
+                        <ModelOption label={emptyOptionLabel} isSelected={!value} onSelect={() => select('')} />
 
-                        return (
-                            <ModelProviderGroup key={providerGroup.provider}>
-                                <ModelProviderLabel>
-                                    {providerGroup.provider}
+                        {value && !selectedModel && (
+                            <ModelOption label={value} isSelected onSelect={() => select(value)} />
+                        )}
+
+                        {providers.map((provider) => (
+                            <ModelProviderGroup
+                                key={provider.provider}
+                                role="group"
+                                aria-labelledby={`${buttonId}-${provider.provider}`}
+                            >
+                                <ModelProviderLabel id={`${buttonId}-${provider.provider}`}>
+                                    {provider.display_name}
                                 </ModelProviderLabel>
 
-                                {modelsToShow.map((model) => (
-                                    <ModelOptionItem
-                                        key={model}
-                                        onClick={() => handleSelectModel(model)}
-                                        $isSelected={model === value}
-                                    >
-                                        {model}
-                                    </ModelOptionItem>
+                                {provider.models.map((model) => (
+                                    <ModelOption
+                                        key={model.name}
+                                        label={model.display_name}
+                                        isSelected={model.name === value}
+                                        onSelect={() => select(model.name)}
+                                    />
                                 ))}
-
-                                {hasMore && (
-                                    <ModelOptionExpand onClick={(e) => handleExpandProvider(providerGroup.provider, e)}>
-                                        <span>Ver mais...</span>
-                                        <span style={{ opacity: 0.6 }}>
-                                            ({providerGroup.models.length - VISIBLE_MODELS_PER_PROVIDER})
-                                        </span>
-                                    </ModelOptionExpand>
-                                )}
                             </ModelProviderGroup>
-                        );
-                    })}
-                </ModelSelectList>
-            )}
-        </ModelSelectWrapper>
+                        ))}
+                    </ModelSelectList>
+                )}
+            </ModelSelectWrapper>
+
+            {isError && <ModelSelectHint role="status">Não foi possível carregar a lista de modelos.</ModelSelectHint>}
+        </>
     );
 };

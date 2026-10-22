@@ -194,3 +194,44 @@ describe('authenticated instance error handling', () => {
     await expect(axiosPrivateInstance.get('me/')).rejects.toThrow(/Verifique sua internet/);
   });
 });
+
+const failWith = (status: number, data: unknown) =>
+  vi.fn<AxiosAdapter>(async (config) => {
+    throw new AxiosError(`Request failed with status code ${status}`, 'ERR_BAD_REQUEST', config, undefined, {
+      data,
+      status,
+      statusText: '',
+      headers: {},
+      config,
+    });
+  });
+
+describe.each([
+  ['public', axiosInstance],
+  ['authenticated', axiosPrivateInstance],
+])('%s instance error message', (_, instance) => {
+  it('uses the first message of a FastAPI validation error', async () => {
+    instance.defaults.adapter = failWith(422, {
+      detail: [
+        { loc: ['body', 'url'], msg: 'Value error, URL inválida', type: 'value_error' },
+        { loc: ['body', 'name'], msg: 'Field required', type: 'missing' },
+      ],
+    });
+
+    await expect(instance.post('agents/mcp-servers/')).rejects.toThrow(/^URL inválida$/);
+  });
+
+  it('explains a rate limit in plain words', async () => {
+    instance.defaults.adapter = failWith(429, { detail: 'Too Many Requests' });
+
+    await expect(instance.get('agents/')).rejects.toThrow(
+      /^Muitas requisições\. Tente novamente em instantes\.$/,
+    );
+  });
+
+  it('keeps the default message when the body has nothing readable', async () => {
+    instance.defaults.adapter = failWith(502, '<html>Bad Gateway</html>');
+
+    await expect(instance.get('agents/')).rejects.toThrow(/^Request failed with status code 502$/);
+  });
+});

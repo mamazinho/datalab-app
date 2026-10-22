@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { IRoutePermission } from '../services/datalab-api/usersResource';
 import {
   AGENT_ROUTE_PERMISSIONS,
+  MCP_SERVER_ROUTE_PERMISSIONS,
   isAgentsRoutePermission,
   matchesRoutePermission,
   normalizeRoutePath,
@@ -61,6 +62,30 @@ describe('matchesRoutePermission', () => {
 
     expect(matchesRoutePermission(permission, AGENT_ROUTE_PERMISSIONS.create)).toBe(false);
   });
+
+  it('tells the MCP server routes apart from the agent ones', () => {
+    const updateMcpServer = buildPermission({
+      name: 'agent:update-mcp-server',
+      method: 'PATCH',
+      path: '/v1/agents/mcp-servers/{mcp_server_id}/',
+    });
+    const updateAgent = buildPermission({
+      name: 'agent:update',
+      method: 'PATCH',
+      path: '/v1/agents/{agent_id}/',
+    });
+
+    expect(matchesRoutePermission(updateMcpServer, MCP_SERVER_ROUTE_PERMISSIONS.update)).toBe(true);
+    expect(matchesRoutePermission(updateMcpServer, AGENT_ROUTE_PERMISSIONS.update)).toBe(false);
+    expect(matchesRoutePermission(updateAgent, MCP_SERVER_ROUTE_PERMISSIONS.update)).toBe(false);
+  });
+
+  it('separates listing from creating MCP servers on the same path', () => {
+    const listMcpServers = buildPermission({ name: 'agent:list-mcp-servers', method: 'GET', path: '/v1/agents/mcp-servers/' });
+
+    expect(matchesRoutePermission(listMcpServers, MCP_SERVER_ROUTE_PERMISSIONS.list)).toBe(true);
+    expect(matchesRoutePermission(listMcpServers, MCP_SERVER_ROUTE_PERMISSIONS.create)).toBe(false);
+  });
 });
 
 describe('toRoutePermission', () => {
@@ -93,6 +118,10 @@ describe('isAgentsRoutePermission', () => {
 
   it('recognizes it by path when the tag is empty', () => {
     expect(isAgentsRoutePermission(buildPermission({ tag: null, path: '/v1/agents/{agent_id}/' }))).toBe(true);
+  });
+
+  it('counts the MCP server routes as agents routes', () => {
+    expect(isAgentsRoutePermission(buildPermission({ tag: null, path: '/v1/agents/mcp-servers/' }))).toBe(true);
   });
 
   it('rejects a route from another resource', () => {

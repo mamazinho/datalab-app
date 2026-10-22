@@ -33,11 +33,16 @@ const renderLayout = (companies: IUserCompany[] = [company]) =>
   );
 
 describe('<IaLayout />', () => {
-  it('shows both tabs to the owner', async () => {
+  it('shows every tab to the owner, with MCP after agents', async () => {
     renderLayout();
 
     expect(await screen.findByRole('link', { name: 'Conversas' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Agentes' })).toBeInTheDocument();
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual([
+      'Conversas',
+      'Agentes',
+      'MCP',
+    ]);
+    expect(screen.getByRole('link', { name: 'MCP' })).toHaveAttribute('href', '/ia/mcp');
   });
 
   it('marks the tab of the current route as active', async () => {
@@ -74,5 +79,22 @@ describe('<IaLayout />', () => {
     await waitFor(() =>
       expect(screen.queryByRole('link', { name: 'Conversas' })).not.toBeInTheDocument(),
     );
+  });
+
+  it('shows the MCP tab to a member who can list the MCP servers', async () => {
+    givenMemberPermissions([
+      buildRoutePermission({ tag: 'agents', method: 'GET', path: '/v1/agents/mcp-servers/' }),
+    ]);
+    renderLayout([asMember]);
+
+    expect(await screen.findByRole('link', { name: 'MCP' })).toBeInTheDocument();
+  });
+
+  it('hides the MCP tab from a member with other agents permissions only', async () => {
+    givenMemberPermissions([buildRoutePermission({ tag: 'agents', method: 'POST', path: '/v1/agents/' })]);
+    renderLayout([asMember]);
+
+    expect(await screen.findByRole('link', { name: 'Agentes' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'MCP' })).not.toBeInTheDocument();
   });
 });

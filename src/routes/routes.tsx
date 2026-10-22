@@ -16,7 +16,8 @@ import { Integrations } from "../pages/Integrations";
 import { NotFound } from "../pages/NotFound";
 import { IaLayout } from "../pages/Ia";
 import { Agents } from "../pages/Ia/Agents";
-import { PrivateRoutes, PublicRoutes, OnboardingRoute, PermissionRoute, IaRoute, AgentsRoute, CompanyManagementRoute, IaIndexRedirect, RedirectLegacyChatMessages } from "./wrappers";
+import { McpServers } from "../pages/Ia/McpServers";
+import { PrivateRoutes, PublicRoutes, OnboardingRoute, PermissionRoute, IaRoute, AgentsRoute, McpServersRoute, CompanyManagementRoute, IaIndexRedirect, RedirectLegacyChatMessages } from "./wrappers";
 import { COMPANY_PATH, INTEGRATION_CALLBACK_PATH, INTEGRATIONS_PATH, MEMBERS_PATH } from "./paths";
 
 export const routes = createBrowserRouter([
@@ -66,7 +67,7 @@ export const routes = createBrowserRouter([
                 path: "/",
                 element: <Home />,
             },
-            // Seção IA — abas de conversas (tag "chat") e agentes (permissões de agents)
+            // Seção IA — abas de conversas (tag "chat"), agentes e MCP (permissões de agents)
             {
                 element: <IaRoute />,
                 children: [
@@ -97,6 +98,15 @@ export const routes = createBrowserRouter([
                                     {
                                         path: "agentes",
                                         element: <Agents />,
+                                    },
+                                ],
+                            },
+                            {
+                                element: <McpServersRoute />,
+                                children: [
+                                    {
+                                        path: "mcp",
+                                        element: <McpServers />,
                                     },
                                 ],
                             },

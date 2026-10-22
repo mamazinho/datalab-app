@@ -54,6 +54,35 @@ const openRowMenu = async (user: User) => {
   await user.click(await screen.findByRole('button', { name: 'Abrir menu de ações' }));
 };
 
+const openCreateModal = async (user: User) => {
+  await user.click(await screen.findByRole('button', { name: '+ Criar agente' }));
+};
+
+const openEditModal = async (user: User) => {
+  await openRowMenu(user);
+  await user.click(screen.getByRole('menuitem', { name: 'Editar' }));
+};
+
+const fillRequiredFields = async (user: User) => {
+  await user.type(await screen.findByLabelText('Nome *'), 'Especialista Meta');
+  await user.type(screen.getByLabelText('Instruções *'), 'Responda sobre campanhas.');
+};
+
+const toggleAdvancedSettings = async (user: User) => {
+  await user.click(screen.getByRole('button', { name: 'Configurações avançadas' }));
+};
+
+const captureCreatedAgent = () => {
+  const captured: { body?: unknown } = {};
+  server.use(
+    http.post(api('agents/'), async ({ request }) => {
+      captured.body = await request.json();
+      return HttpResponse.json(buildAgent(), { status: 201 });
+    }),
+  );
+  return captured;
+};
+
 describe('<Agents />', () => {
   it('lists the agents with key, model and status', async () => {
     givenAgents([buildAgent({ name: 'Especialista GA4', key: 'ga4', model_name: 'gpt-4o' })]);
@@ -162,29 +191,6 @@ describe('<Agents />', () => {
       });
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     });
-
-    it('does not submit an avatar that is not a valid URL', async () => {
-      const user = userEvent.setup({ delay: null });
-      let called = false;
-      server.use(
-        http.post(api('agents/'), () => {
-          called = true;
-          return HttpResponse.json(buildAgent(), { status: 201 });
-        }),
-      );
-      renderAgents();
-
-      await user.click(await screen.findByRole('button', { name: '+ Criar agente' }));
-      await user.type(await screen.findByLabelText('Nome *'), 'Especialista Meta');
-      await user.type(screen.getByLabelText('Instruções *'), 'Responda sobre campanhas.');
-      const avatar = screen.getByLabelText('URL do avatar');
-      await user.type(avatar, 'nao-e-url');
-      await user.click(screen.getByRole('button', { name: 'Criar agente' }));
-
-      expect(avatar).toBeInvalid();
-      await waitFor(() => expect(called).toBe(false));
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
-    });
   });
 
   describe('editing', () => {
@@ -209,6 +215,49 @@ describe('<Agents />', () => {
 
       expect(await screen.findByText('Agente atualizado.')).toBeInTheDocument();
       expect(body).not.toHaveProperty('instructions');
+    });
+  });
+
+  describe('advanced settings', () => {
+    it('starts collapsed when creating', async () => {
+      const user = userEvent.setup();
+      renderAgents();
+      await openCreateModal(user);
+
+      expect(
+        await screen.findByRole('button', { name: 'Configurações avançadas' }),
+      ).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByRole('textbox', { name: 'URL do avatar' })).not.toBeInTheDocument();
+    });
+
+    it('starts open showing the current avatar and model when editing', async () => {
+      const user = userEvent.setup();
+      givenAgents([buildAgent({ avatar_url: 'https://cdn.datalab.com/ga4.png', model_name: 'gemini-2.5-pro' })]);
+      renderAgents();
+      await openEditModal(user);
+
+      expect(await screen.findByRole('button', { name: 'Modelo Gemini 2.5 Pro' })).toBeVisible();
+      expect(screen.getByRole('textbox', { name: 'URL do avatar' })).toHaveValue('https://cdn.datalab.com/ga4.png');
+    });
+
+    it('sends the chosen avatar and model', async () => {
+      const user = userEvent.setup({ delay: null });
+      const created = captureCreatedAgent();
+      renderAgents();
+      await openCreateModal(user);
+      await fillRequiredFields(user);
+      await toggleAdvancedSettings(user);
+
+      await user.type(screen.getByLabelText('URL do avatar'), 'https://cdn.datalab.com/meta.png');
+      await user.click(await screen.findByRole('button', { name: 'Modelo Padrão do sistema' }));
+      await user.click(screen.getByRole('option', { name: 'Gemini 2.5 Pro' }));
+      await user.click(screen.getByRole('button', { name: 'Criar agente' }));
+
+      expect(await screen.findByText('Agente criado.')).toBeInTheDocument();
+      expect(created.body).toMatchObject({
+        avatar_url: 'https://cdn.datalab.com/meta.png',
+        model_name: 'gemini-2.5-pro',
+      });
     });
   });
 

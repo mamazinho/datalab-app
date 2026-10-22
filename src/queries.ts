@@ -43,6 +43,17 @@ export const agentsQuery = queryOptions({
   queryFn: () => DatalabAPI.AgentsResource.listAgents(),
 });
 
+export const availableModelsQuery = queryOptions({
+  queryKey: ['available-models'],
+  queryFn: () => DatalabAPI.AgentsResource.listAvailableModels(),
+  staleTime: 5 * 60_000,
+});
+
+export const mcpServersQuery = queryOptions({
+  queryKey: ['mcp-servers'],
+  queryFn: () => DatalabAPI.McpServersResource.listMcpServers(),
+});
+
 // Membership ativa (role + company + permissões) da empresa selecionada.
 // companyId entra na key só como identidade de cache (uma entrada por empresa,
 // refetch ao trocar); o X-Company-Id da requisição vem do interceptor.

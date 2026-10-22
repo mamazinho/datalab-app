@@ -20,8 +20,11 @@ export const Backdrop = styled.div`
 
 export const Dialog = styled.div`
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 30rem;
+  max-height: 100%;
   border-radius: 1rem;
   border: 1px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.surface};
@@ -71,4 +74,5 @@ export const CloseIcon = styled.svg`
 
 export const Body = styled.div`
   padding: 1.2rem 1.35rem 1.35rem;
+  overflow-y: auto;
 `;

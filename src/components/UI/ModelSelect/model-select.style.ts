@@ -32,9 +32,9 @@ export const ModelSelectButton = styled.button`
   }
 `;
 
-export const ModelSelectList = styled.div<{ $direction: 'up' | 'down' }>`
+export const ModelSelectList = styled.div`
   position: absolute;
-  ${({ $direction }) => ($direction === 'up' ? 'bottom: calc(100% + 0.5rem);' : 'top: calc(100% + 0.5rem);')}
+  top: calc(100% + 0.5rem);
   left: 0;
   width: 100%;
   min-width: 15rem;
@@ -57,16 +57,20 @@ export const ModelProviderGroup = styled.div`
 `;
 
 export const ModelProviderLabel = styled.div`
-  padding: 0.5rem 0.85rem;
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: ${({ theme }) => theme.colors.text};
-  background: ${({ theme }) => theme.colors.inputBackground};
-  border-bottom: 2px solid ${({ theme }) => theme.colors.primary};
-  margin-bottom: 0.25rem;
+  padding: 0.5rem 0.85rem 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
-export const ModelOptionItem = styled.div<{ $isSelected?: boolean }>`
+export const ModelOptionItem = styled.button<{ $isSelected?: boolean }>`
+  display: block;
+  width: 100%;
+  border: 0;
+  text-align: left;
+  font-family: ${({ theme }) => theme.fonts.main};
   padding: 0.55rem 0.85rem 0.55rem 1.25rem;
   font-size: 0.85rem;
   color: ${({ theme }) => theme.colors.textSecondary};
@@ -75,24 +79,15 @@ export const ModelOptionItem = styled.div<{ $isSelected?: boolean }>`
   background: ${({ $isSelected }) => $isSelected ? 'rgba(255, 190, 0, 0.15)' : 'transparent'};
   font-weight: ${({ $isSelected }) => $isSelected ? '700' : '400'};
 
-  &:hover {
+  &:hover, &:focus-visible {
+    outline: none;
     background: ${({ theme }) => theme.colors.inputBackground};
     color: ${({ theme }) => theme.colors.text};
   }
 `;
 
-export const ModelOptionExpand = styled.div`
-  padding: 0.5rem 0.85rem;
-  font-size: 0.8rem;
-  font-weight: 600;
+export const ModelSelectHint = styled.p`
+  margin: 0;
+  font-size: 0.78rem;
   color: ${({ theme }) => theme.colors.textSecondary};
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.primary};
-    background: ${({ theme }) => theme.colors.inputBackground};
-  }
 `;
