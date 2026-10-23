@@ -3,7 +3,7 @@ import { useAuthContext } from "../contexts/auth";
 import { useCompanyContext } from "../contexts/company";
 import { PrivateLayout } from "../components/UI/Layout/private-layout/layout";
 import { LoadingPiece } from "../components/Feedback/Loadings/loading";
-import { MCP_SERVER_ROUTE_PERMISSIONS } from "../utils/route-permissions";
+import { CHAT_ROUTE_PERMISSIONS, MCP_SERVER_ROUTE_PERMISSIONS } from "../utils/route-permissions";
 import { AuthGate } from "./auth-gate";
 
 /**
@@ -109,6 +109,12 @@ export const McpServersRoute = () => {
     const { hasPermissionByRoute, isMembershipLoading } = useCompanyContext();
 
     return guard(hasPermissionByRoute(MCP_SERVER_ROUTE_PERMISSIONS.list), isMembershipLoading);
+};
+
+export const UsageRoute = () => {
+    const { hasPermissionByRoute, isMembershipLoading } = useCompanyContext();
+
+    return guard(hasPermissionByRoute(CHAT_ROUTE_PERMISSIONS.usageReport), isMembershipLoading);
 };
 
 // Aba de empresa: exige permissão de editar OU deletar company (owners sempre passam)

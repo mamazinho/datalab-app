@@ -105,8 +105,7 @@ export interface IUserInvite {
   id: UUID7;
   email: string;
   company_id: UUID7;
-  invited_by_user_id: UUID7;
-  membership_role: CompanyMembershipRole;
+  invited_by_membership_id: UUID7 | null;
   status: InviteStatus;
   created_at: string;
   updated_at: string;
@@ -186,6 +185,9 @@ export const UsersResource = {
       updateData
     )
     return response.data as IUserResponse;
+  },
+  async deleteMe(): Promise<void> {
+    await axiosPrivateInstance.delete('users/me/');
   },
   async forgotPassword(forgotPasswordData: IForgotPasswordRequest): Promise<void> {
     const response = await axiosInstance.post(

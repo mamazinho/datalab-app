@@ -1,9 +1,9 @@
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
-import { renderWithProviders, screen, userEvent, waitFor } from '../../test/test-utils';
+import { renderWithProviders, screen, userEvent, waitFor, within } from '../../test/test-utils';
 import { ACCESS_TOKEN, api } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
-import { buildUser } from '../../test/factories';
+import { buildCompany, buildUser, uuid } from '../../test/factories';
 import type { IUserResponse } from '../../services/datalab-api/usersResource';
 import { EditProfile } from './edit-profile';
 
@@ -122,5 +122,87 @@ describe('<EditProfile />', () => {
     await save(user);
 
     expect(await screen.findByText(/Telefone já cadastrado\./)).toBeInTheDocument();
+  });
+
+  describe('account deletion', () => {
+    const openDeletion = async (user: User) => {
+      await user.click(await screen.findByRole('button', { name: 'Excluir minha conta' }));
+      return screen.getByRole('dialog');
+    };
+
+    const confirmEmail = (user: User, dialog: HTMLElement) =>
+      user.type(within(dialog).getByLabelText('Para confirmar, digite seu e-mail'), 'ana@datalab.com');
+
+    it('warns that the account leaves every company and points out the ones it owns', async () => {
+      const user = userEvent.setup({ delay: null });
+      const acme = buildCompany({ id: uuid(1), name: 'Acme' });
+      const beta = buildCompany({ id: uuid(9), name: 'Beta', membership: { ...acme.membership, membership_role: 'member' } });
+      givenLoggedUser({ companies: [acme, beta] });
+      renderWithProviders(<EditProfile />);
+
+      const dialog = await openDeletion(user);
+
+      const [owned, joined] = within(dialog).getAllByRole('listitem');
+      expect(owned).toHaveTextContent('Acme');
+      expect(within(owned).getByText('Owner')).toBeInTheDocument();
+      expect(joined).toHaveTextContent('Beta');
+      expect(within(joined).queryByText('Owner')).not.toBeInTheDocument();
+      expect(within(dialog).getByText(/transfira a posse para outro membro antes/)).toBeInTheDocument();
+    });
+
+    it('keeps the deletion locked until the e-mail is typed', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenLoggedUser();
+      renderWithProviders(<EditProfile />);
+
+      const dialog = await openDeletion(user);
+      const submit = within(dialog).getByRole('button', { name: 'Excluir conta' });
+      expect(submit).toBeDisabled();
+
+      await confirmEmail(user, dialog);
+
+      expect(submit).toBeEnabled();
+    });
+
+    it('deletes the account and signs the user out', async () => {
+      const user = userEvent.setup({ delay: null });
+      let deleted = false;
+      givenLoggedUser();
+      server.use(
+        http.delete(api('users/me'), () => {
+          deleted = true;
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+      renderWithProviders(<EditProfile />);
+
+      const dialog = await openDeletion(user);
+      await confirmEmail(user, dialog);
+      await user.click(within(dialog).getByRole('button', { name: 'Excluir conta' }));
+
+      expect(await screen.findByText('Sua conta foi excluída.')).toBeInTheDocument();
+      expect(deleted).toBe(true);
+      expect(localStorage.getItem('accessToken')).toBeNull();
+    });
+
+    it('explains why the backend refused the deletion', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenLoggedUser();
+      server.use(
+        http.delete(api('users/me'), () =>
+          HttpResponse.json({ detail: 'Transfira a posse antes de excluir sua conta: Acme.' }, { status: 409 }),
+        ),
+      );
+      renderWithProviders(<EditProfile />);
+
+      const dialog = await openDeletion(user);
+      await confirmEmail(user, dialog);
+      await user.click(within(dialog).getByRole('button', { name: 'Excluir conta' }));
+
+      expect(await within(dialog).findByRole('alert')).toHaveTextContent(
+        'Transfira a posse antes de excluir sua conta: Acme.',
+      );
+      expect(localStorage.getItem('accessToken')).not.toBeNull();
+    });
   });
 });

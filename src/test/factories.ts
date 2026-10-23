@@ -3,7 +3,13 @@ import type {
   IListAvailableModelsResponse,
   IRetrieveAgentWithState,
 } from '../services/datalab-api/agentsResource';
-import type { IRetrieveChat } from '../services/datalab-api/chatsResource';
+import type {
+  IChatUsage,
+  IChatUsageByChat,
+  IChatUsageReport,
+  IRetrieveChat,
+  IRetrieveChatDetail,
+} from '../services/datalab-api/chatsResource';
 import type { IRetrieveMcpServer, ITestMcpServerResponse } from '../services/datalab-api/mcpServersResource';
 import type {
   ICompanyMembership,
@@ -99,13 +105,48 @@ export const buildCurrentMembership = (
 
 export const buildChat = (overrides: Partial<IRetrieveChat> = {}): IRetrieveChat => ({
   id: uuid(20),
-  user_id: uuid(3),
+  company_id: uuid(1),
   title: 'Análise de vendas',
+  is_private: true,
+  archived: false,
+  created_by_membership_id: uuid(2),
+  created_by: { name: 'Ana Souza', avatar_url: null },
+  ...TIMESTAMPS,
+  ...overrides,
+});
+
+export const buildChatUsage = (overrides: Partial<IChatUsage> = {}): IChatUsage => ({
   input_tokens: 0,
   output_tokens: 0,
-  number_of_requests: 0,
-  created_at: new Date('2026-01-01T00:00:00Z'),
-  updated_at: new Date('2026-01-01T00:00:00Z'),
+  requests: 0,
+  ...overrides,
+});
+
+export const buildChatDetail = (overrides: Partial<IRetrieveChatDetail> = {}): IRetrieveChatDetail => ({
+  ...buildChat(),
+  usage: buildChatUsage(),
+  ...overrides,
+});
+
+export const buildChatUsageByChat = (overrides: Partial<IChatUsageByChat> = {}): IChatUsageByChat => ({
+  ...buildChatUsage(),
+  chat_id: uuid(20),
+  title: 'Análise de vendas',
+  is_private: false,
+  archived: false,
+  deleted: false,
+  created_by: { name: 'Ana Souza', avatar_url: null },
+  ...overrides,
+});
+
+export const buildChatUsageReport = (overrides: Partial<IChatUsageReport> = {}): IChatUsageReport => ({
+  start: '2026-01-01',
+  end: '2026-01-31',
+  totals: buildChatUsage(),
+  by_member: [],
+  by_chat: [],
+  by_origin: [],
+  by_model: [],
   ...overrides,
 });
 
@@ -142,8 +183,7 @@ export const buildInvite = (overrides: Partial<IUserInvite> = {}): IUserInvite =
   id: uuid(7),
   email: 'ana@datalab.com',
   company_id: uuid(1),
-  invited_by_user_id: uuid(8),
-  membership_role: 'member',
+  invited_by_membership_id: uuid(8),
   status: 'pending',
   ...TIMESTAMPS,
   company: buildCompany({ name: 'Acme' }),

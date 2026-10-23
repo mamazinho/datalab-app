@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { createChatAction } from '../actions';
 import { Modal } from '../../../components/UI/Modal/modal';
+import { Toggle } from '../../../components/UI/Inputs/Toggle';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
-import { chatsQuery } from '../../../queries';
+import { chatListsQueryKey } from '../../../queries';
 import {
     CreateChatActions,
     CreateChatButton,
@@ -30,7 +31,7 @@ export const CreateChat = () => {
             // A página de mensagens busca o chat pelo id (GET chats/{id}/), então
             // não precisamos atualizar a lista aqui — só marcá-la stale para
             // recarregar quando /ia/conversas montar de novo.
-            void queryClient.invalidateQueries({ queryKey: chatsQuery.queryKey });
+            void queryClient.invalidateQueries({ queryKey: chatListsQueryKey });
             setIsOpen(false);
             navigate(`/ia/conversas/${chat.id}/mensagens`);
         },
@@ -66,6 +67,8 @@ export const CreateChat = () => {
                                 autoFocus
                             />
                         </CreateChatField>
+
+                        <Toggle name="is_private" label="Conversa privada" defaultChecked />
 
                         <CreateChatActions>
                             <CreateChatSubmit type="submit">

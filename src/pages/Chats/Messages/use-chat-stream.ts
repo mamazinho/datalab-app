@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'r
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { IChatFileRef } from '../../../services/datalab-api/chatFilesResource';
 import type { IChatMessageRead, IChatStreamEvent } from '../../../services/datalab-api/chatMessagesResource';
+import type { IChatMember } from '../../../services/datalab-api/chatsResource';
+import { useMe } from '../../../hooks/use-me';
 import { parseChatStream } from '../../../utils/process-stream';
 import type { UUID7 } from '../../../types/ids';
 import {
@@ -16,7 +18,7 @@ import {
 
 type TimelineAction =
   | { type: 'reset'; history: IChatMessageRead[] }
-  | { type: 'user_prompt'; content: string; attachments: IChatFileRef[] }
+  | { type: 'user_prompt'; content: string; attachments: IChatFileRef[]; sender: IChatMember | null }
   | { type: 'stream_event'; event: IChatStreamEvent }
   | { type: 'clarification_status'; toolCallId: string; status: ClarificationStatus; answer?: string };
 
@@ -25,7 +27,7 @@ const timelineReducer = (items: TimelineItem[], action: TimelineAction): Timelin
     case 'reset':
       return mapHistoryToTimeline(action.history);
     case 'user_prompt':
-      return appendUserMessage(items, action.content, action.attachments);
+      return appendUserMessage(items, action.content, action.attachments, action.sender);
     case 'stream_event':
       return applyStreamEvent(items, action.event);
     case 'clarification_status':
@@ -41,6 +43,7 @@ const getErrorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error && error.message ? error.message : fallback;
 
 export const useChatStream = (chatId: UUID7, initialHistory: IChatMessageRead[]) => {
+  const { data: me } = useMe();
   const [items, dispatch] = useReducer(timelineReducer, initialHistory, mapHistoryToTimeline);
   const [isStreaming, setIsStreaming] = useState(false);
   // Identifica a "geração" ativa do stream: trocar de chat/desmontar invalida loops em andamento
@@ -64,8 +67,9 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatMessageRead[])
     answerToToolCallId?: string,
   ) => {
     const generation = ++generationRef.current;
+    const sender = me ? { name: me.name, avatar_url: me.avatar_url } : null;
 
-    dispatch({ type: 'user_prompt', content: prompt, attachments });
+    dispatch({ type: 'user_prompt', content: prompt, attachments, sender });
     if (answerToToolCallId) {
       dispatch({ type: 'clarification_status', toolCallId: answerToToolCallId, status: 'answered', answer: prompt });
     }
@@ -107,7 +111,7 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatMessageRead[])
         setIsStreaming(false);
       }
     }
-  }, [chatId]);
+  }, [chatId, me]);
 
   const sendPrompt = useCallback(async (prompt: string, attachments: IChatFileRef[] = []) => {
     const trimmedPrompt = prompt.trim();

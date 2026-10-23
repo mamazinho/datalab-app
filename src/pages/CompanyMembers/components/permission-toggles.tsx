@@ -1,4 +1,5 @@
 import type { UUID7 } from '../../../types/ids';
+import { ToggleSwitch } from '../../../components/UI/Inputs/Toggle';
 import type { IPermissionOption } from './permission-options';
 import {
   PermissionGroup,
@@ -8,7 +9,6 @@ import {
   PermissionToggleInfo,
   PermissionToggleName,
   PermissionToggleRow,
-  ToggleSwitch,
 } from '../company-members.style';
 
 interface IPermissionTogglesProps {

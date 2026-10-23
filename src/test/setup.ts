@@ -24,6 +24,13 @@ if (!window.matchMedia) {
     }) as unknown as MediaQueryList;
 }
 
+// jsdom não implementa scrollTo em elementos, usado pela lista de mensagens do chat.
+if (!Element.prototype.scrollTo) {
+  Element.prototype.scrollTo = function (this: Element, options?: ScrollToOptions | number) {
+    if (typeof options === 'object' && options.top !== undefined) this.scrollTop = options.top;
+  };
+}
+
 // onUnhandledRequest: 'error' — requisição sem handler falha o teste em vez de
 // vazar para a rede de verdade ou virar um erro silencioso de query.
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));

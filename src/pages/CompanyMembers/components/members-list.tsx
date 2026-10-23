@@ -1,9 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../components/UI/Tables/ActionTable';
+import { useCompanyContext, useCompanyPermissions } from '../../../contexts/company';
 import { DatalabAPI } from '../../../services/datalab-api';
-import { membersQuery } from '../../../queries';
+import { currentMembershipQuery, meQuery, membersQuery } from '../../../queries';
 import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
 import type { UUID7 } from '../../../types/ids';
 import { MembersEmpty, MembersTableCellSecondary, RoleBadge } from '../company-members.style';
@@ -13,29 +14,55 @@ interface IMembersListProps {
   members: ICompanyMembership[];
 }
 
+const nameOf = (member: ICompanyMembership) => member.user?.name ?? 'este membro';
+
 export const MembersList = ({ members }: IMembersListProps) => {
   const queryClient = useQueryClient();
+  const { currentCompany } = useCompanyContext();
+  const { isOwner } = useCompanyPermissions();
   const [selectedMember, setSelectedMember] = useState<ICompanyMembership | null>(null);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
-  const [removingId, setRemovingId] = useState<UUID7 | null>(null);
+  const [busyId, setBusyId] = useState<UUID7 | null>(null);
 
-  const handleRemove = useCallback(
-    async (membership: ICompanyMembership) => {
-      if (!window.confirm(`Remover ${membership.user?.name ?? 'este membro'} da empresa?`)) return;
-      setRemovingId(membership.id);
-      try {
-        await DatalabAPI.MembershipsResource.removeMember(membership.id);
-        toast.success('Membro removido.');
-        void queryClient.invalidateQueries({ queryKey: membersQuery.queryKey });
-      } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : 'Erro ao remover membro.');
-      } finally {
-        setRemovingId(null);
-      }
-    },
-    [queryClient],
-  );
-  
+  const runMemberAction = async (
+    member: ICompanyMembership,
+    confirmation: string,
+    action: () => Promise<unknown>,
+    successMessage: string,
+  ) => {
+    if (!window.confirm(confirmation)) return;
+    setBusyId(member.id);
+    try {
+      await action();
+      toast.success(successMessage);
+      void queryClient.invalidateQueries({ queryKey: membersQuery.queryKey });
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Erro ao atualizar o membro.');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const removeMember = (member: ICompanyMembership) =>
+    runMemberAction(
+      member,
+      `Remover ${nameOf(member)} da empresa?`,
+      () => DatalabAPI.MembershipsResource.removeMember(member.id),
+      'Membro removido.',
+    );
+
+  const transferOwnership = (member: ICompanyMembership) =>
+    runMemberAction(
+      member,
+      `Transferir a posse da empresa para ${nameOf(member)}? Você continua na empresa como membro, com todas as permissões.`,
+      async () => {
+        await DatalabAPI.MembershipsResource.transferOwnership(member.id);
+        void queryClient.invalidateQueries({ queryKey: meQuery.queryKey });
+        if (currentCompany) void queryClient.invalidateQueries({ queryKey: currentMembershipQuery(currentCompany.id).queryKey });
+      },
+      `${nameOf(member)} agora é o owner da empresa.`,
+    );
+
   if (members.length === 0) {
     return <MembersEmpty>Nenhum membro encontrado.</MembersEmpty>;
   }
@@ -67,11 +94,13 @@ export const MembersList = ({ members }: IMembersListProps) => {
                   <TableAction onClick={() => { setSelectedMember(member); setIsPermissionsOpen(true); }}>
                     Editar permissões
                   </TableAction>
-                  <TableAction
-                    disabled={removingId === member.id}
-                    onClick={() => void handleRemove(member)}
-                  >
-                    {removingId === member.id ? 'Removendo...' : 'Remover membro'}
+                  {isOwner && member.status === 'active' && (
+                    <TableAction disabled={busyId === member.id} onClick={() => void transferOwnership(member)}>
+                      Transferir posse
+                    </TableAction>
+                  )}
+                  <TableAction disabled={busyId === member.id} onClick={() => void removeMember(member)}>
+                    Remover membro
                   </TableAction>
                 </TableActions>
               )}

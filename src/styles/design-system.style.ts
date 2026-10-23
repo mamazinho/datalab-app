@@ -159,6 +159,18 @@ export const SecondaryButton = styled.button`
   }
 `;
 
+export const Badge = styled.span`
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.inputBackground};
+  color: ${({ theme }) => theme.colors.textSecondary};
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+`;
+
 export const FormDivider = styled.div`
   position: relative;
   margin: 0.65rem 0;

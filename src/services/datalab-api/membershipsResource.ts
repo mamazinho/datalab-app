@@ -63,6 +63,13 @@ export const MembershipsResource = {
     await axiosCompanyInstance.delete(`memberships/members/${membershipId}/`);
   },
 
+  async transferOwnership(newOwnerMembershipId: UUID7): Promise<ICompanyMembership> {
+    const response = await axiosCompanyInstance.post('memberships/transfer-ownership/', {
+      new_owner_membership_id: newOwnerMembershipId,
+    });
+    return response.data as ICompanyMembership;
+  },
+
   // ── Permissions ──────────────────────────────────────────────────────────────
 
   async listRoutePermissions(): Promise<IRoutePermission[]> {

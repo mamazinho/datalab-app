@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { buildAgent, buildChat, buildCompany, buildCurrentMembership, buildInvite, buildMcpServer, buildMcpServerTestResult, buildModelProvider, buildUser, uuid } from '../factories';
+import { buildAgent, buildChat, buildChatDetail, buildChatUsageReport, buildCompany, buildCurrentMembership, buildInvite, buildMcpServer, buildMember, buildMcpServerTestResult, buildModelProvider, buildUser, uuid } from '../factories';
 
 const BASE_URL = import.meta.env.VITE_DATALAB_API_URL;
 
@@ -26,6 +26,8 @@ export const handlers = [
   http.post(api('auth/refresh/'), () => HttpResponse.json({ access_token: ACCESS_TOKEN })),
 
   http.get(api('users/me'), () => HttpResponse.json(buildUser())),
+
+  http.delete(api('users/me'), () => new HttpResponse(null, { status: 204 })),
 
   http.patch(api('users/me'), async ({ request }) =>
     HttpResponse.json(buildUser(await request.json() as object)),
@@ -57,7 +59,7 @@ export const handlers = [
     const company = buildCompany({ name });
     return HttpResponse.json(
       {
-        company: { ...company, created_by_user_id: uuid(3) },
+        company: { ...company, created_by_membership_id: uuid(2) },
         membership: { ...company.membership, user_id: uuid(3), company_id: company.id },
       },
       { status: 201 },
@@ -67,6 +69,10 @@ export const handlers = [
   http.get(api('memberships/members/'), () => HttpResponse.json([])),
 
   http.delete(api('memberships/members/:membershipId'), () => new HttpResponse(null, { status: 204 })),
+
+  http.post(api('memberships/transfer-ownership'), () =>
+    HttpResponse.json(buildMember({ membership_role: 'owner' })),
+  ),
 
   http.get(api('memberships/invites/'), () => HttpResponse.json([])),
 
@@ -123,7 +129,16 @@ export const handlers = [
     HttpResponse.json(buildChat(await request.json() as object), { status: 201 }),
   ),
 
-  http.get(api('chats/:chatId/'), () => HttpResponse.json(buildChat())),
+  // Antes de chats/:chatId/, que também casaria com "usage".
+  http.get(api('chats/usage/'), () => HttpResponse.json(buildChatUsageReport())),
+
+  http.get(api('chats/:chatId/'), () => HttpResponse.json(buildChatDetail())),
+
+  http.patch(api('chats/:chatId/'), async ({ request }) =>
+    HttpResponse.json(buildChat(await request.json() as object)),
+  ),
+
+  http.delete(api('chats/:chatId/'), () => new HttpResponse(null, { status: 204 })),
 
   http.get(api('chats/:chatId/messages/'), () => HttpResponse.json([])),
 ];

@@ -1,5 +1,6 @@
 import { axiosCompanyInstance } from "./axios";
 import type { IChatFileRef } from "./chatFilesResource";
+import type { IChatMember } from "./chatsResource";
 import type { UUID7 } from "../../types/ids";
 
 export type ChatChannel = 'main' | 'thread';
@@ -18,6 +19,7 @@ export interface IChatMessageRead {
   tool_call_id?: string | null;
   options?: string[] | null;
   files?: IChatFileRef[] | null;
+  sender: IChatMember | null;
 }
 
 export type IChatStreamEvent =

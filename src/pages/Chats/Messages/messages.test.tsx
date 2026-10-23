@@ -1,11 +1,21 @@
 import { HttpResponse, http } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
-import { renderWithProviders, screen, userEvent, waitFor } from '../../../test/test-utils';
-import { api } from '../../../test/msw/handlers';
+import type { QueryClient } from '@tanstack/react-query';
+import {
+  createTestQueryClient,
+  fireEvent,
+  renderWithProviders,
+  screen,
+  userEvent,
+  waitFor,
+} from '../../../test/test-utils';
+import { ACCESS_TOKEN, api } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
-import { buildChat, buildCompany, uuid } from '../../../test/factories';
+import { buildChatDetail, buildCompany, uuid } from '../../../test/factories';
+import { meQuery } from '../../../queries';
 import type { IChatMessageRead } from '../../../services/datalab-api/chatMessagesResource';
+import type { IRetrieveChatDetail } from '../../../services/datalab-api/chatsResource';
 import { ChatMessages } from './messages';
 
 type User = ReturnType<typeof userEvent.setup>;
@@ -23,6 +33,7 @@ const buildHistoryMessage = (overrides: Partial<IChatMessageRead> = {}): IChatMe
   content: 'Qual foi a receita?',
   created_at: '2026-01-01T00:00:00Z',
   channel: 'main',
+  sender: null,
   ...overrides,
 });
 
@@ -43,20 +54,25 @@ const givenStreamedAnswer = (events: object[]) => {
   );
 };
 
-const givenHistory = (messages: IChatMessageRead[]) => {
+const givenHistory = (messages: IChatMessageRead[], chat: Partial<IRetrieveChatDetail> = {}) => {
   server.use(
     http.get(api(`chats/${CHAT_ID}/messages/`), () => HttpResponse.json(messages)),
-    http.get(api(`chats/${CHAT_ID}/`), () => HttpResponse.json(buildChat({ id: CHAT_ID }))),
+    http.get(api(`chats/${CHAT_ID}/`), () => HttpResponse.json(buildChatDetail({ id: CHAT_ID, ...chat }))),
   );
 };
 
-const renderMessages = (chatId: string = CHAT_ID) =>
+interface IRenderMessagesOptions {
+  chatId?: string;
+  queryClient?: QueryClient;
+}
+
+const renderMessages = ({ chatId = CHAT_ID, queryClient }: IRenderMessagesOptions = {}) =>
   renderWithProviders(
     <Routes>
       <Route path="/ia/conversas/:chatId/mensagens" element={<ChatMessages />} />
       <Route path="/ia/conversas" element={<h1>Conversas</h1>} />
     </Routes>,
-    { route: `/ia/conversas/${chatId}/mensagens`, companies: [company] },
+    { route: `/ia/conversas/${chatId}/mensagens`, companies: [company], queryClient },
   );
 
 const sendPrompt = async (user: User, prompt: string) => {
@@ -64,9 +80,18 @@ const sendPrompt = async (user: User, prompt: string) => {
   await user.click(screen.getByRole('button', { name: /Enviar/ }));
 };
 
+const scrollUp = (conversation: HTMLElement) => {
+  Object.defineProperties(conversation, {
+    scrollHeight: { configurable: true, value: 1200 },
+    clientHeight: { configurable: true, value: 400 },
+  });
+  conversation.scrollTop = 100;
+  fireEvent.scroll(conversation);
+};
+
 describe('<ChatMessages />', () => {
   it('sends a malformed chat id back to the list', () => {
-    renderMessages('nao-e-uuid');
+    renderMessages({ chatId: 'nao-e-uuid' });
 
     expect(screen.getByRole('heading', { name: 'Conversas' })).toBeInTheDocument();
   });
@@ -104,6 +129,83 @@ describe('<ChatMessages />', () => {
 
     expect(await screen.findByText('Qual foi a receita?')).toBeInTheDocument();
     expect(screen.getByText('R$ 10.000 em julho.')).toBeInTheDocument();
+  });
+
+  describe('senders', () => {
+    const messageFromBruno = buildHistoryMessage({
+      content: 'Qual foi a receita?',
+      sender: { name: 'Bruno Lima', avatar_url: null },
+    });
+
+    it('shows who sent each message of a company conversation', async () => {
+      givenHistory([messageFromBruno], { is_private: false });
+      renderMessages();
+
+      expect(await screen.findByText('Bruno Lima')).toBeInTheDocument();
+    });
+
+    it('leaves the senders out of a private conversation', async () => {
+      givenHistory([messageFromBruno], { is_private: true });
+      renderMessages();
+
+      expect(await screen.findByText('Qual foi a receita?')).toBeInTheDocument();
+      expect(screen.queryByText('Bruno Lima')).not.toBeInTheDocument();
+    });
+
+    it('signs the message just sent with the logged-in user', async () => {
+      const user = userEvent.setup({ delay: null });
+      const queryClient = createTestQueryClient();
+      localStorage.setItem('accessToken', ACCESS_TOKEN);
+      await queryClient.prefetchQuery(meQuery);
+      givenHistory([], { is_private: false });
+      givenStreamedAnswer([{ type: 'done' }]);
+      renderMessages({ queryClient });
+
+      await sendPrompt(user, 'Qual foi a receita?');
+
+      expect(await screen.findByText('Ana Souza')).toBeInTheDocument();
+    });
+  });
+
+  describe('scrolling', () => {
+    const shortcut = { name: 'Ir para a última mensagem' };
+
+    it('opens the conversation at the last message', async () => {
+      vi.spyOn(Element.prototype, 'scrollHeight', 'get').mockReturnValue(1200);
+      givenHistory([buildHistoryMessage()]);
+      renderMessages();
+
+      expect((await screen.findByRole('region', { name: 'Mensagens' })).scrollTop).toBe(1200);
+    });
+
+    it('offers a shortcut back to the last message while older ones are being read', async () => {
+      const user = userEvent.setup();
+      givenHistory([buildHistoryMessage()]);
+      renderMessages();
+      const conversation = await screen.findByRole('region', { name: 'Mensagens' });
+      expect(screen.queryByRole('button', shortcut)).not.toBeInTheDocument();
+
+      scrollUp(conversation);
+      await user.click(screen.getByRole('button', shortcut));
+      fireEvent.scroll(conversation);
+
+      expect(conversation.scrollTop).toBe(1200);
+      expect(screen.queryByRole('button', shortcut)).not.toBeInTheDocument();
+    });
+
+    it('goes back to the last message when a new one is sent', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([buildHistoryMessage()]);
+      givenStreamedAnswer([{ type: 'done' }]);
+      renderMessages();
+      const conversation = await screen.findByRole('region', { name: 'Mensagens' });
+      scrollUp(conversation);
+
+      await sendPrompt(user, 'E em agosto?');
+
+      expect(await screen.findByText('E em agosto?')).toBeInTheDocument();
+      expect(conversation.scrollTop).toBe(1200);
+    });
   });
 
   describe('streaming an answer', () => {

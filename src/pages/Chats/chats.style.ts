@@ -48,8 +48,17 @@ export const ChatListCard = styled.section`
   box-shadow: 0 10px 18px ${({ theme }) => theme.colors.shadow};
 `;
 
+export const ChatListHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+`;
+
 export const ChatListTitle = styled.h3`
-  margin: 0 0 1rem;
+  margin: 0;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;

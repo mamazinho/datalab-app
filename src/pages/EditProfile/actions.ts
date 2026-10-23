@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { DatalabAPI } from '../../services/datalab-api';
 import { createFormAction } from '../../utils/create-form-action';
 import { editProfileFormSchema } from './schemas';
@@ -17,3 +18,5 @@ export const updateProfileAction = createFormAction(
     errorPrefix: 'Erro ao atualizar perfil: ',
   },
 );
+
+export const deleteAccountAction = createFormAction(z.object({}), () => DatalabAPI.UsersResource.deleteMe());

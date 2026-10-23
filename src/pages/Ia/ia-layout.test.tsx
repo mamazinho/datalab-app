@@ -33,7 +33,7 @@ const renderLayout = (companies: IUserCompany[] = [company]) =>
   );
 
 describe('<IaLayout />', () => {
-  it('shows every tab to the owner, with MCP after agents', async () => {
+  it('shows every tab to the owner, with MCP after agents and usage last', async () => {
     renderLayout();
 
     expect(await screen.findByRole('link', { name: 'Conversas' })).toBeInTheDocument();
@@ -41,8 +41,10 @@ describe('<IaLayout />', () => {
       'Conversas',
       'Agentes',
       'MCP',
+      'Consumo',
     ]);
     expect(screen.getByRole('link', { name: 'MCP' })).toHaveAttribute('href', '/ia/mcp');
+    expect(screen.getByRole('link', { name: 'Consumo' })).toHaveAttribute('href', '/ia/consumo');
   });
 
   it('marks the tab of the current route as active', async () => {
@@ -96,5 +98,20 @@ describe('<IaLayout />', () => {
 
     expect(await screen.findByRole('link', { name: 'Agentes' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'MCP' })).not.toBeInTheDocument();
+  });
+
+  it('shows the usage tab to a member who can see the usage report', async () => {
+    givenMemberPermissions([buildRoutePermission({ tag: 'chat', method: 'GET', path: '/v1/chats/usage/' })]);
+    renderLayout([asMember]);
+
+    expect(await screen.findByRole('link', { name: 'Consumo' })).toBeInTheDocument();
+  });
+
+  it('hides the usage tab from a member who can only chat', async () => {
+    givenMemberPermissions([buildRoutePermission({ tag: 'chat', method: 'GET', path: '/v1/chats/' })]);
+    renderLayout([asMember]);
+
+    expect(await screen.findByRole('link', { name: 'Conversas' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Consumo' })).not.toBeInTheDocument();
   });
 });

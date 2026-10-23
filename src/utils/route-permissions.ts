@@ -90,6 +90,12 @@ export const MCP_SERVER_ROUTE_PERMISSIONS = {
   test: { method: 'POST', path: 'agents/mcp-servers/test/' },
 } as const satisfies Record<string, IRoutePermissionRef>;
 
+export const CHAT_ROUTE_PERMISSIONS = {
+  usageReport: { method: 'GET', path: 'chats/usage/' },
+  update: { method: 'PATCH', path: 'chats/{chat_id}/' },
+  remove: { method: 'DELETE', path: 'chats/{chat_id}/' },
+} as const satisfies Record<string, IRoutePermissionRef>;
+
 // Gerenciamento de empresa: editar nome e deletar a empresa ativa.
 export const COMPANY_ROUTE_PERMISSIONS = {
   update: { method: 'PATCH', path: 'companies/{id}/' },

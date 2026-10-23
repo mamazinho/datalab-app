@@ -82,7 +82,6 @@ export const Header = () => {
                         <ProfileAvatar
                             src={me?.avatar_url}
                             name={me?.name ?? ''}
-                            size={128}
                             seed="initial"
                             alt={`Foto de perfil de ${me?.name}`}
                         />

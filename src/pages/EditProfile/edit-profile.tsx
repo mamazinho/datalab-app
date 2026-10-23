@@ -5,7 +5,7 @@ import { useMe } from '../../hooks/use-me';
 import { meQuery } from '../../queries';
 import { INITIAL_ACTION_STATE } from '../../types/actions';
 import { useActionFeedback } from '../../hooks/use-action-feedback';
-import { EditProfileForm } from './components';
+import { DeleteAccount, EditProfileForm } from './components';
 import { updateProfileAction } from './actions';
 import { EditProfileContainer, EditProfileShell, EditProfileSubtitle, EditProfileTitle } from './edit-profile.style';
 
@@ -42,6 +42,8 @@ export const EditProfile = () => {
           isPending={isPending}
           error={formState.error}
         />
+
+        <DeleteAccount me={me} />
       </EditProfileContainer>
     </EditProfileShell>
   );

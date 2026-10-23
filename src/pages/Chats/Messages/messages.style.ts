@@ -1,10 +1,12 @@
 import styled, { css, keyframes } from 'styled-components';
 
+const SPACE_ABOVE_CHAT = '10.25rem';
+
 export const MessagesContainer = styled.div`
   display: flex;
   flex-direction: column;
-  width: min(100%, 66rem);
-  margin: 0.5rem auto;
+  height: calc(100dvh - ${SPACE_ABOVE_CHAT} - 1rem);
+  min-height: 26rem;
   border-radius: 1rem;
   border: 1px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.surface};
@@ -60,15 +62,46 @@ export const ErrorLabel = styled.span`
   font-weight: 700;
 `;
 
+export const ConversationViewport = styled.div`
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  margin-bottom: 0.8rem;
+`;
+
 export const Conversation = styled.div`
   flex: 1;
-  margin-bottom: 0.8rem;
   border-radius: 0.85rem;
   border: 1px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.inputBackground};
   box-shadow: inset 0 2px 7px ${({ theme }) => theme.colors.shadow};
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 1rem;
+`;
+
+export const ScrollToBottomButton = styled.button`
+  position: absolute;
+  bottom: 0.9rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  box-shadow: 0 6px 14px ${({ theme }) => theme.colors.shadow};
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.primary};
+  }
 `;
 
 export const EmptyState = styled.div`
@@ -126,6 +159,12 @@ export const Bubble = styled.div<{ $isUser: boolean }>`
           border-bottom-left-radius: 0.35rem;
           border: 1px solid ${theme.colors.primary};
         `}
+`;
+
+export const BubbleSender = styled.div`
+  margin-bottom: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
 `;
 
 const blink = keyframes`

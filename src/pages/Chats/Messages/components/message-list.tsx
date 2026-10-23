@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
+import { ChatMember } from '../../../../components/UI/ChatMember';
 import type { TimelineItem } from '../../../../utils/chat-timeline';
 import type { UUID7 } from '../../../../types/ids';
 import { MessageBubble } from './message-bubble';
@@ -9,11 +10,13 @@ import { AttachmentChip } from './attachment-chip';
 import {
     AttachmentsInBubble,
     Conversation,
+    ConversationViewport,
     EmptyEmoji,
     EmptyState,
     EmptyText,
     EmptyTitle,
     ErrorLabel,
+    ScrollToBottomButton,
     StreamErrorBubble,
     StreamErrorRow,
 } from '../messages.style';
@@ -22,19 +25,34 @@ interface IMessageListProps {
     chatId: UUID7;
     items: TimelineItem[];
     isStreaming: boolean;
+    showSenders: boolean;
     onAnswerClarification: (answer: string) => void;
 }
+
+const NEAR_BOTTOM_PX = 64;
+
+const isNearBottom = ({ scrollHeight, scrollTop, clientHeight }: HTMLElement) =>
+    scrollHeight - scrollTop - clientHeight <= NEAR_BOTTOM_PX;
+
+const scrollToBottom = (element: HTMLElement | null, behavior?: ScrollBehavior) =>
+    element?.scrollTo({ top: element.scrollHeight, behavior });
 
 const renderItem = (
     chatId: UUID7,
     item: TimelineItem,
     isStreaming: boolean,
+    showSenders: boolean,
     onAnswerClarification: (answer: string) => void,
 ) => {
     switch (item.kind) {
         case 'user_message':
             return (
-                <MessageBubble key={item.id} content={item.content} isUser>
+                <MessageBubble
+                    key={item.id}
+                    content={item.content}
+                    isUser
+                    sender={showSenders && item.sender && <ChatMember member={item.sender} />}
+                >
                     {item.attachments.length > 0 && (
                         <AttachmentsInBubble>
                             {item.attachments.map((file) => (
@@ -65,27 +83,59 @@ const renderItem = (
     }
 };
 
-export const MessageList = ({ chatId, items, isStreaming, onAnswerClarification }: IMessageListProps) => {
+export const MessageList = ({ chatId, items, isStreaming, showSenders, onAnswerClarification }: IMessageListProps) => {
     const conversationRef = useRef<HTMLDivElement>(null);
+    const [isScrolledUp, setIsScrolledUp] = useState(false);
+    const lastUserMessageId = items.filter((item) => item.kind === 'user_message').at(-1)?.id;
 
-    // Auto-scroll para o fim quando chegam itens/deltas novos
-    useEffect(() => {
-        if (conversationRef.current) {
-            conversationRef.current.scrollTop = conversationRef.current.scrollHeight;
-        }
-    }, [items]);
+    useLayoutEffect(() => {
+        if (!isScrolledUp) scrollToBottom(conversationRef.current);
+    }, [items, isScrolledUp]);
+
+    useLayoutEffect(() => {
+        scrollToBottom(conversationRef.current);
+    }, [lastUserMessageId]);
 
     return (
-        <Conversation id="conversation" ref={conversationRef}>
-            {items.length === 0 ? (
-                <EmptyState>
-                    <EmptyEmoji>💬</EmptyEmoji>
-                    <EmptyTitle>Nenhuma mensagem ainda</EmptyTitle>
-                    <EmptyText>Comece uma conversa digitando sua pergunta abaixo!</EmptyText>
-                </EmptyState>
-            ) : (
-                items.map((item) => renderItem(chatId, item, isStreaming, onAnswerClarification))
+        <ConversationViewport>
+            <Conversation
+                ref={conversationRef}
+                role="region"
+                aria-label="Mensagens"
+                onScroll={(event) => setIsScrolledUp(!isNearBottom(event.currentTarget))}
+            >
+                {items.length === 0 ? (
+                    <EmptyState>
+                        <EmptyEmoji>💬</EmptyEmoji>
+                        <EmptyTitle>Nenhuma mensagem ainda</EmptyTitle>
+                        <EmptyText>Comece uma conversa digitando sua pergunta abaixo!</EmptyText>
+                    </EmptyState>
+                ) : (
+                    items.map((item) => renderItem(chatId, item, isStreaming, showSenders, onAnswerClarification))
+                )}
+            </Conversation>
+            {isScrolledUp && (
+                <ScrollToBottomButton
+                    type="button"
+                    aria-label="Ir para a última mensagem"
+                    title="Ir para a última mensagem"
+                    onClick={() => scrollToBottom(conversationRef.current, 'smooth')}
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        width="18"
+                        height="18"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M12 5v14M5 12l7 7 7-7" />
+                    </svg>
+                </ScrollToBottomButton>
             )}
-        </Conversation>
+        </ConversationViewport>
     );
 };

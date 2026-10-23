@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import { Input, Label, PrimaryButton } from '../../../styles/design-system.style';
+import { Input, Label, PrimaryButton, SecondaryButton } from '../../../styles/design-system.style';
 
 export const EmptyChatList = styled.div`
   text-align: center;
@@ -12,21 +12,52 @@ export const EmptyChatList = styled.div`
   background: ${({ theme }) => theme.colors.inputBackground};
 `;
 
-export const ChatListWrapper = styled.div`
+export const ChatListWrapper = styled.ul`
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 `;
 
 export const ChatItemLink = styled(Link)`
-  display: block;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.9rem 1rem;
 `;
 
-export const ChatItemCard = styled.div`
+export const ChatItemDetails = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: ${({ theme }) => theme.colors.textSecondary};
+`;
+
+export const ChatItemActions = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  padding-right: 1rem;
+`;
+
+export const ChatItemActionButton = styled(SecondaryButton)`
+  width: auto;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.6rem;
+  font-size: 0.8rem;
+`;
+
+export const ChatItemCard = styled.li`
+  display: flex;
+  align-items: center;
   border-radius: 0.85rem;
   border: 1px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.surface};
-  padding: 0.9rem 1rem;
   box-shadow: 0 6px 12px ${({ theme }) => theme.colors.shadow};
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 

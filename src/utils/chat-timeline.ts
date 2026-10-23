@@ -1,5 +1,6 @@
 import type { IChatFileRef } from '../services/datalab-api/chatFilesResource';
 import type { IChatMessageRead, IChatStreamEvent } from '../services/datalab-api/chatMessagesResource';
+import type { IChatMember } from '../services/datalab-api/chatsResource';
 
 export type ClarificationStatus = 'pending' | 'answered' | 'historic';
 export type ThreadAuthor = 'supervisor' | 'specialist';
@@ -15,6 +16,7 @@ export interface IUserMessageItem {
   id: string;
   content: string;
   attachments: IChatFileRef[];
+  sender: IChatMember | null;
 }
 
 export interface IAssistantBubbleItem {
@@ -158,7 +160,7 @@ export const mapHistoryToTimeline = (messages: IChatMessageRead[]): TimelineItem
     if (!content && attachments.length === 0) continue;
 
     if (message.author === 'user') {
-      items = [...items, { kind: 'user_message', id: `hist-${message.id}`, content, attachments }];
+      items = [...items, { kind: 'user_message', id: `hist-${message.id}`, content, attachments, sender: message.sender }];
       continue;
     }
 
@@ -241,9 +243,10 @@ export const appendUserMessage = (
   items: TimelineItem[],
   content: string,
   attachments: IChatFileRef[] = [],
+  sender: IChatMember | null = null,
 ): TimelineItem[] => [
   ...items,
-  { kind: 'user_message', id: nextItemId('user'), content, attachments },
+  { kind: 'user_message', id: nextItemId('user'), content, attachments, sender },
 ];
 
 export const setClarificationStatus = (

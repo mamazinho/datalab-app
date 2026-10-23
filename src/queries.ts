@@ -14,10 +14,13 @@ export const meQuery = queryOptions({
   queryFn: () => DatalabAPI.UsersResource.me(),
 });
 
-export const chatsQuery = queryOptions({
-  queryKey: ['chats'],
-  queryFn: () => DatalabAPI.ChatsResource.getAllChats(),
-});
+export const chatListsQueryKey = ['chats'] as const;
+
+export const chatsQuery = (includeArchived: boolean) =>
+  queryOptions({
+    queryKey: [...chatListsQueryKey, { includeArchived }],
+    queryFn: () => DatalabAPI.ChatsResource.getAllChats({ archived: includeArchived }),
+  });
 
 // Detalhes de um chat, quentes do backend — a página de mensagens não depende
 // da lista ['chats'] (que pode estar velha na outra página).
@@ -36,6 +39,12 @@ export const chatMessagesQuery = (chatId: UUID7) =>
     staleTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
+  });
+
+export const chatUsageReportQuery = (start: string, end: string) =>
+  queryOptions({
+    queryKey: ['chat-usage-report', start, end],
+    queryFn: () => DatalabAPI.ChatsResource.getUsageReport({ start, end }),
   });
 
 export const agentsQuery = queryOptions({

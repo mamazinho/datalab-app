@@ -9,9 +9,10 @@ import { MessageInput } from './message-input';
 interface ChatConversationProps {
     chatId: UUID7;
     history: IChatMessageRead[];
+    showSenders: boolean;
 }
 
-export const ChatConversation = ({ chatId, history }: ChatConversationProps) => {
+export const ChatConversation = ({ chatId, history, showSenders }: ChatConversationProps) => {
     const { items, isStreaming, pendingClarification, sendPrompt, answerClarification } =
         useChatStream(chatId, history);
     const { attachments, readyFiles, isUploading, addFiles, remove, clear } = useChatAttachments(chatId);
@@ -36,6 +37,7 @@ export const ChatConversation = ({ chatId, history }: ChatConversationProps) => 
                 chatId={chatId}
                 items={items}
                 isStreaming={isStreaming}
+                showSenders={showSenders}
                 onAnswerClarification={(answer) => void answerClarification(answer)}
             />
             <MessageInput

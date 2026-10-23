@@ -17,7 +17,8 @@ import { NotFound } from "../pages/NotFound";
 import { IaLayout } from "../pages/Ia";
 import { Agents } from "../pages/Ia/Agents";
 import { McpServers } from "../pages/Ia/McpServers";
-import { PrivateRoutes, PublicRoutes, OnboardingRoute, PermissionRoute, IaRoute, AgentsRoute, McpServersRoute, CompanyManagementRoute, IaIndexRedirect, RedirectLegacyChatMessages } from "./wrappers";
+import { Usage } from "../pages/Ia/Usage";
+import { PrivateRoutes, PublicRoutes, OnboardingRoute, PermissionRoute, IaRoute, AgentsRoute, McpServersRoute, UsageRoute, CompanyManagementRoute, IaIndexRedirect, RedirectLegacyChatMessages } from "./wrappers";
 import { COMPANY_PATH, INTEGRATION_CALLBACK_PATH, INTEGRATIONS_PATH, MEMBERS_PATH } from "./paths";
 
 export const routes = createBrowserRouter([
@@ -67,7 +68,7 @@ export const routes = createBrowserRouter([
                 path: "/",
                 element: <Home />,
             },
-            // Seção IA — abas de conversas (tag "chat"), agentes e MCP (permissões de agents)
+            // Seção IA — conversas, agentes, MCP e consumo; cada aba tem o seu gate de permissão
             {
                 element: <IaRoute />,
                 children: [
@@ -107,6 +108,15 @@ export const routes = createBrowserRouter([
                                     {
                                         path: "mcp",
                                         element: <McpServers />,
+                                    },
+                                ],
+                            },
+                            {
+                                element: <UsageRoute />,
+                                children: [
+                                    {
+                                        path: "consumo",
+                                        element: <Usage />,
                                     },
                                 ],
                             },

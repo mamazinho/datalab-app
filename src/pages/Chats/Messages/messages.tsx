@@ -27,12 +27,12 @@ const ChatView = ({ chatId }: { chatId: UUID7 }) => {
     return (
         <>
             <MessagesHeader>
-                <MessagesTitle>{chat.title}</MessagesTitle>
+                <MessagesTitle>{chat.title ?? 'Sem título'}</MessagesTitle>
                 <MessagesSubtitle>Converse com nossa IA e tire suas dúvidas</MessagesSubtitle>
             </MessagesHeader>
 
             <MessagesBody>
-                <ChatConversation chatId={chatId} history={history} />
+                <ChatConversation chatId={chatId} history={history} showSenders={!chat.is_private} />
             </MessagesBody>
         </>
     );

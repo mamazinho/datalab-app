@@ -117,7 +117,7 @@ export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
           <TableRow key={agent.id}>
             <td>
               <AgentCell>
-                <AgentAvatar src={agent.avatar_url} name={agent.name} size={64} seed="initial" alt="" />
+                <AgentAvatar src={agent.avatar_url} name={agent.name} seed="initial" alt="" />
                 <AgentIdentity>
                   <AgentName>{agent.name}</AgentName>
                   <AgentKey>{agent.key}</AgentKey>

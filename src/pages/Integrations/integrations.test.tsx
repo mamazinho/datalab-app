@@ -59,7 +59,7 @@ const givenCompanyAssets = (assets: ICompanyProviderAsset[], role: 'owner' | 'me
             id: uuid(1),
             name: 'Acme',
             status: 'active',
-            created_by_user_id: uuid(3),
+            created_by_membership_id: uuid(2),
             created_at: '2026-01-01T00:00:00Z',
             updated_at: '2026-01-01T00:00:00Z',
             provider_assets: assets,

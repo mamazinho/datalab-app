@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, screen, userEvent, waitFor } from '../../test/test-utils';
 import { api } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
-import { buildCompany, buildInvite, buildMember, uuid } from '../../test/factories';
+import { buildCompany, buildCurrentMembership, buildInvite, buildMember, uuid } from '../../test/factories';
 import { CompanyMembers } from './company-members';
 
 const company = buildCompany({ name: 'Acme' });
@@ -115,6 +115,57 @@ describe('<CompanyMembers />', () => {
       await user.click(screen.getByRole('menuitem', { name: 'Remover membro' }));
 
       expect(await screen.findByText('Membro possui pendências.')).toBeInTheDocument();
+    });
+  });
+
+  describe('ownership transfer', () => {
+    it('lets the owner hand the company over to an active member', async () => {
+      const user = userEvent.setup();
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      let body: unknown;
+      server.use(
+        http.get(api('memberships/members/'), () => HttpResponse.json([buildMember({ id: uuid(5) })])),
+        http.post(api('memberships/transfer-ownership'), async ({ request }) => {
+          body = await request.json();
+          return HttpResponse.json(buildMember({ id: uuid(5), membership_role: 'owner' }));
+        }),
+      );
+      renderMembers();
+
+      await openRowMenu(user);
+      await user.click(await screen.findByRole('menuitem', { name: 'Transferir posse' }));
+
+      expect(await screen.findByText('Bruno Lima agora é o owner da empresa.')).toBeInTheDocument();
+      expect(body).toEqual({ new_owner_membership_id: uuid(5) });
+    });
+
+    it('offers the transfer only to the owner', async () => {
+      const user = userEvent.setup();
+      server.use(
+        http.get(api('memberships/current/'), () =>
+          HttpResponse.json(buildCurrentMembership({ membership_role: 'member' })),
+        ),
+        http.get(api('memberships/members/'), () => HttpResponse.json([buildMember()])),
+      );
+      renderMembers();
+
+      await openRowMenu(user);
+
+      expect(await screen.findByRole('menuitem', { name: 'Remover membro' })).toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'Transferir posse' })).not.toBeInTheDocument();
+    });
+
+    it('does not offer the company to a member who was removed', async () => {
+      const user = userEvent.setup();
+      server.use(
+        http.get(api('memberships/members/'), () => HttpResponse.json([buildMember({ status: 'inactive' })])),
+      );
+      renderMembers();
+
+      await openRowMenu(user);
+
+      expect(await screen.findByRole('menuitem', { name: 'Remover membro' })).toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'Transferir posse' })).not.toBeInTheDocument();
     });
   });
 
