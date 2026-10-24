@@ -28,9 +28,6 @@ export const CreateChat = () => {
     useActionFeedback(createChatState, {
         onSuccess: (chat) => {
             if (!chat) return;
-            // A página de mensagens busca o chat pelo id (GET chats/{id}/), então
-            // não precisamos atualizar a lista aqui — só marcá-la stale para
-            // recarregar quando /ia/conversas montar de novo.
             void queryClient.invalidateQueries({ queryKey: chatListsQueryKey });
             setIsOpen(false);
             navigate(`/ia/conversas/${chat.id}/mensagens`);

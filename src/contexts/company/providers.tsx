@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CompanyContext } from "./contexts";
 import { setCompanyId } from "../../services/datalab-api/axios";
-import { currentMembershipQuery } from "../../queries";
+import { currentMembershipQuery, meQuery } from "../../queries";
 import { COMPANY_ROUTE_PERMISSIONS, isAgentsRoutePermission, matchesRoutePermission, toRoutePermission, type IRoutePermissionRef } from "../../utils/route-permissions";
 import { isUuid7, type UUID7 } from "../../types/ids";
 import type { ProviderPermissionKey } from "../../types/integrations";
@@ -17,6 +17,7 @@ interface ICompanyProviderProps {
 const SELECTED_COMPANY_KEY = 'selectedCompanyId';
 
 export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) => {
+  const queryClient = useQueryClient();
   const [selectedCompanyId, setSelectedCompanyId] = useState<UUID7 | null>(() => {
     const saved = localStorage.getItem(SELECTED_COMPANY_KEY);
     return isUuid7(saved) ? saved : null;
@@ -78,15 +79,15 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
     [currentMembershipData],
   );
 
-  const setCurrentCompany = useCallback((company: IUserCompany) => {
-    setSelectedCompanyId(company.id);
-    localStorage.setItem(SELECTED_COMPANY_KEY, company.id);
-  }, []);
-
+  // As queries da empresa não levam o id na chave: trocar de empresa refaz todas, menos o /me.
   const selectCompanyById = useCallback((id: UUID7) => {
+    setCompanyId(id);
     setSelectedCompanyId(id);
     localStorage.setItem(SELECTED_COMPANY_KEY, id);
-  }, []);
+    void queryClient.resetQueries({ predicate: (query) => query.queryKey[0] !== meQuery.queryKey[0] });
+  }, [queryClient]);
+
+  const setCurrentCompany = useCallback((company: IUserCompany) => selectCompanyById(company.id), [selectCompanyById]);
 
   // Limpa a empresa selecionada (ex.: após deletar a ativa) — currentCompany vira
   // null e o PrivateContent redireciona para o onboarding.

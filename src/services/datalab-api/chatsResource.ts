@@ -24,10 +24,6 @@ export interface IRetrieveChat {
   updated_at: string;
 }
 
-export interface IRetrieveChatDetail extends IRetrieveChat {
-  usage: IChatUsage;
-}
-
 export interface ICreateChat {
   title: string;
   is_private: boolean;
@@ -71,13 +67,13 @@ export interface IChatUsageReport {
 
 export const ChatsResource = {
   async getAllChats({ archived }: { archived: boolean }): Promise<IRetrieveChat[]> {
-    const response = await axiosCompanyInstance.get('chats/', { params: archived ? { archived } : {} });
+    const response = await axiosCompanyInstance.get('chats/', { params: { archived } });
     return response.data as IRetrieveChat[];
   },
 
-  async getChat(chatId: UUID7): Promise<IRetrieveChatDetail> {
+  async getChat(chatId: UUID7): Promise<IRetrieveChat> {
     const response = await axiosCompanyInstance.get(`chats/${chatId}/`);
-    return response.data as IRetrieveChatDetail;
+    return response.data as IRetrieveChat;
   },
 
   async createChat(payload: ICreateChat): Promise<IRetrieveChat> {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { IChatMessageRead } from '../../../../services/datalab-api/chatMessagesResource';
+import type { IChatStreamEvent } from '../../../../services/datalab-api/chatMessagesResource';
 import type { UUID7 } from '../../../../types/ids';
 import { useChatAttachments } from '../use-chat-attachments';
 import { useChatStream } from '../use-chat-stream';
@@ -8,11 +8,10 @@ import { MessageInput } from './message-input';
 
 interface ChatConversationProps {
     chatId: UUID7;
-    history: IChatMessageRead[];
-    showSenders: boolean;
+    history: IChatStreamEvent[];
 }
 
-export const ChatConversation = ({ chatId, history, showSenders }: ChatConversationProps) => {
+export const ChatConversation = ({ chatId, history }: ChatConversationProps) => {
     const { items, isStreaming, pendingClarification, sendPrompt, answerClarification } =
         useChatStream(chatId, history);
     const { attachments, readyFiles, isUploading, addFiles, remove, clear } = useChatAttachments(chatId);
@@ -37,7 +36,6 @@ export const ChatConversation = ({ chatId, history, showSenders }: ChatConversat
                 chatId={chatId}
                 items={items}
                 isStreaming={isStreaming}
-                showSenders={showSenders}
                 onAnswerClarification={(answer) => void answerClarification(answer)}
             />
             <MessageInput

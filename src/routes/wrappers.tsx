@@ -3,7 +3,7 @@ import { useAuthContext } from "../contexts/auth";
 import { useCompanyContext } from "../contexts/company";
 import { PrivateLayout } from "../components/UI/Layout/private-layout/layout";
 import { LoadingPiece } from "../components/Feedback/Loadings/loading";
-import { CHAT_ROUTE_PERMISSIONS, MCP_SERVER_ROUTE_PERMISSIONS } from "../utils/route-permissions";
+import type { IRoutePermissionRef } from "../utils/route-permissions";
 import { AuthGate } from "./auth-gate";
 
 /**
@@ -104,17 +104,11 @@ export const AgentsRoute = () => {
     return guard(hasAnyAgentsPermission, isMembershipLoading);
 };
 
-// Aba de MCP: exige a permissão de listar os servidores (owners sempre passam)
-export const McpServersRoute = () => {
+// Guard por permissão de rota específica (ex.: aba de MCP, aba de Consumo). Owners sempre passam.
+export const RoutePermissionRoute = ({ permission }: { permission: IRoutePermissionRef }) => {
     const { hasPermissionByRoute, isMembershipLoading } = useCompanyContext();
 
-    return guard(hasPermissionByRoute(MCP_SERVER_ROUTE_PERMISSIONS.list), isMembershipLoading);
-};
-
-export const UsageRoute = () => {
-    const { hasPermissionByRoute, isMembershipLoading } = useCompanyContext();
-
-    return guard(hasPermissionByRoute(CHAT_ROUTE_PERMISSIONS.usageReport), isMembershipLoading);
+    return guard(hasPermissionByRoute(permission), isMembershipLoading);
 };
 
 // Aba de empresa: exige permissão de editar OU deletar company (owners sempre passam)

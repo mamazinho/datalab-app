@@ -81,7 +81,7 @@ describe('<Chats />', () => {
       http.get(api('chats/'), ({ request }) => {
         const archived = new URL(request.url).searchParams.get('archived');
         archivedParams.push(archived);
-        return HttpResponse.json(archived ? [buildChat({ title: 'Campanha antiga', archived: true })] : []);
+        return HttpResponse.json(archived === 'true' ? [buildChat({ title: 'Campanha antiga', archived: true })] : []);
       }),
     );
     renderChats();
@@ -90,7 +90,7 @@ describe('<Chats />', () => {
     await user.click(screen.getByRole('switch', { name: 'Mostrar arquivadas' }));
 
     expect(await screen.findByRole('link', { name: /Campanha antiga/ })).toBeInTheDocument();
-    expect(archivedParams).toEqual([null, 'true']);
+    expect(archivedParams).toEqual(['false', 'true']);
   });
 
   it('creates a private conversation and opens it', async () => {

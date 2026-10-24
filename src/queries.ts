@@ -47,6 +47,12 @@ export const chatUsageReportQuery = (start: string, end: string) =>
     queryFn: () => DatalabAPI.ChatsResource.getUsageReport({ start, end }),
   });
 
+export const supervisorQuery = queryOptions({
+  queryKey: ['supervisor'],
+  queryFn: () => DatalabAPI.AgentsResource.getSupervisor(),
+  staleTime: Infinity,
+});
+
 export const agentsQuery = queryOptions({
   queryKey: ['agents'],
   queryFn: () => DatalabAPI.AgentsResource.listAgents(),

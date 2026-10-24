@@ -18,8 +18,9 @@ import { IaLayout } from "../pages/Ia";
 import { Agents } from "../pages/Ia/Agents";
 import { McpServers } from "../pages/Ia/McpServers";
 import { Usage } from "../pages/Ia/Usage";
-import { PrivateRoutes, PublicRoutes, OnboardingRoute, PermissionRoute, IaRoute, AgentsRoute, McpServersRoute, UsageRoute, CompanyManagementRoute, IaIndexRedirect, RedirectLegacyChatMessages } from "./wrappers";
+import { PrivateRoutes, PublicRoutes, OnboardingRoute, PermissionRoute, IaRoute, AgentsRoute, RoutePermissionRoute, CompanyManagementRoute, IaIndexRedirect, RedirectLegacyChatMessages } from "./wrappers";
 import { COMPANY_PATH, INTEGRATION_CALLBACK_PATH, INTEGRATIONS_PATH, MEMBERS_PATH } from "./paths";
+import { CHAT_ROUTE_PERMISSIONS, MCP_SERVER_ROUTE_PERMISSIONS } from "../utils/route-permissions";
 
 export const routes = createBrowserRouter([
     // Public routes
@@ -103,7 +104,7 @@ export const routes = createBrowserRouter([
                                 ],
                             },
                             {
-                                element: <McpServersRoute />,
+                                element: <RoutePermissionRoute permission={MCP_SERVER_ROUTE_PERMISSIONS.list} />,
                                 children: [
                                     {
                                         path: "mcp",
@@ -112,7 +113,7 @@ export const routes = createBrowserRouter([
                                 ],
                             },
                             {
-                                element: <UsageRoute />,
+                                element: <RoutePermissionRoute permission={CHAT_ROUTE_PERMISSIONS.usageReport} />,
                                 children: [
                                     {
                                         path: "consumo",

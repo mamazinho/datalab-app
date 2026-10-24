@@ -1,4 +1,5 @@
 import styled, { css, keyframes } from 'styled-components';
+import { Avatar } from '../../../components/UI/Avatar';
 
 const SPACE_ABOVE_CHAT = '10.25rem';
 
@@ -30,10 +31,6 @@ export const MessagesTitle = styled.h2`
   color: ${({ theme }) => theme.colors.text};
 `;
 
-export const MessagesTitleHighlight = styled.span`
-  color: ${({ theme }) => theme.colors.primary};
-`;
-
 export const MessagesSubtitle = styled.p`
   margin: 0;
   color: ${({ theme }) => theme.colors.textSecondary};
@@ -46,16 +43,6 @@ export const MessagesBody = styled.div`
   overflow: hidden;
   display: flex;
   flex-direction: column;
-`;
-
-export const ErrorBanner = styled.div`
-  margin: 0.8rem 0;
-  border-radius: 0.8rem;
-  border: 1px solid ${({ theme }) => theme.colors.error};
-  background: color-mix(in srgb, ${({ theme }) => theme.colors.error} 12%, ${({ theme }) => theme.colors.surface});
-  color: ${({ theme }) => theme.colors.error};
-  padding: 0.8rem;
-  font-size: 0.9rem;
 `;
 
 export const ErrorLabel = styled.span`
@@ -132,15 +119,46 @@ export const EmptyText = styled.p`
   font-size: 0.85rem;
 `;
 
-export const MessageRow = styled.div<{ $isUser: boolean }>`
+export const MessageRow = styled.div<{ $isUser: boolean; $continued: boolean }>`
   display: flex;
+  flex-direction: ${({ $isUser }) => ($isUser ? 'row-reverse' : 'row')};
+  align-items: flex-start;
+  gap: 0.5rem;
   width: 100%;
   margin-bottom: 0.85rem;
-  justify-content: ${({ $isUser }) => ($isUser ? 'flex-end' : 'flex-start')};
+  ${({ $continued }) => $continued && 'margin-top: -0.6rem;'}
+`;
+
+export const MessageColumn = styled.div<{ $isUser: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: ${({ $isUser }) => ($isUser ? 'flex-end' : 'flex-start')};
+  max-width: 85%;
+  min-width: 0;
+`;
+
+export const AuthorAvatar = styled(Avatar)`
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  object-fit: cover;
+`;
+
+export const AuthorSpacer = styled.span`
+  flex-shrink: 0;
+  width: 2rem;
+`;
+
+export const AuthorName = styled.span`
+  margin: 0 0.4rem 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
 export const Bubble = styled.div<{ $isUser: boolean }>`
-  max-width: 85%;
+  max-width: 100%;
   border-radius: 1rem;
   padding: 0.75rem 0.95rem;
   box-shadow: 0 6px 12px ${({ theme }) => theme.colors.shadow};
@@ -161,10 +179,12 @@ export const Bubble = styled.div<{ $isUser: boolean }>`
         `}
 `;
 
-export const BubbleSender = styled.div`
-  margin-bottom: 0.4rem;
-  font-size: 0.75rem;
-  font-weight: 700;
+export const MessageTime = styled.time<{ $isUser: boolean }>`
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.65rem;
+  opacity: 0.65;
+  text-align: ${({ $isUser }) => ($isUser ? 'right' : 'left')};
 `;
 
 const blink = keyframes`
@@ -181,16 +201,30 @@ export const StreamingCursor = styled.span`
 const markdownStyles = css`
   p,
   ul,
-  ol {
-    margin: 0;
+  ol,
+  pre,
+  blockquote {
+    margin: 0 0 0.5em;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+
+  p {
+    white-space: pre-wrap;
   }
 
   ul,
   ol {
-    padding-left: 1rem;
+    padding-left: 1.3rem;
   }
 
-  li {
+  li + li {
+    margin-top: 0.2em;
+  }
+
+  li > p {
     margin: 0;
   }
 `;
@@ -198,7 +232,6 @@ const markdownStyles = css`
 export const MainContent = styled.div`
   font-size: 0.88rem;
   line-height: 1.45;
-  white-space: pre-wrap;
   ${markdownStyles}
 `;
 
@@ -260,21 +293,12 @@ export const ThreadItemMeta = styled.div`
 export const ThreadItemContent = styled.div`
   font-size: 0.78rem;
   line-height: 1.35;
-  white-space: pre-wrap;
   color: ${({ theme }) => theme.colors.text};
   ${markdownStyles}
 `;
 
 /* Card de clarification (HITL) */
-export const ClarificationRow = styled.div`
-  display: flex;
-  width: 100%;
-  margin-bottom: 0.85rem;
-  justify-content: flex-start;
-`;
-
 export const ClarificationBox = styled.div`
-  max-width: 85%;
   border-radius: 1rem;
   border-bottom-left-radius: 0.35rem;
   border: 1px solid ${({ theme }) => theme.colors.primary};
@@ -295,7 +319,6 @@ export const ClarificationLabel = styled.div`
 export const ClarificationQuestion = styled.div`
   font-size: 0.88rem;
   line-height: 1.45;
-  white-space: pre-wrap;
   color: ${({ theme }) => theme.colors.text};
   ${markdownStyles}
 `;

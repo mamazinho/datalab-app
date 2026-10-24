@@ -1,8 +1,7 @@
 import type { IChatFileRef } from '../services/datalab-api/chatFilesResource';
-import type { IChatMessageRead, IChatStreamEvent } from '../services/datalab-api/chatMessagesResource';
+import type { IChatStreamEvent } from '../services/datalab-api/chatMessagesResource';
 import type { IChatMember } from '../services/datalab-api/chatsResource';
 
-export type ClarificationStatus = 'pending' | 'answered' | 'historic';
 export type ThreadAuthor = 'supervisor' | 'specialist';
 
 export interface IThreadEntry {
@@ -17,6 +16,7 @@ export interface IUserMessageItem {
   content: string;
   attachments: IChatFileRef[];
   sender: IChatMember | null;
+  createdAt: string;
 }
 
 export interface IAssistantBubbleItem {
@@ -25,6 +25,7 @@ export interface IAssistantBubbleItem {
   content: string;
   isStreaming: boolean;
   files: IChatFileRef[];
+  createdAt: string;
 }
 
 export interface IThreadBoxItem {
@@ -40,8 +41,8 @@ export interface IClarificationItem {
   id: string;
   question: string;
   options: string[];
-  toolCallId: string | null;
-  status: ClarificationStatus;
+  toolCallId: string;
+  status: 'pending' | 'answered';
   answer?: string;
 }
 
@@ -61,32 +62,17 @@ export type TimelineItem =
 let itemIdCounter = 0;
 const nextItemId = (prefix: string): string => `${prefix}-${++itemIdCounter}`;
 
-const appendThreadEntry = (
-  items: TimelineItem[],
-  threadId: string,
-  entry: IThreadEntry,
-): TimelineItem[] => {
-  const existingBox = items.find(
-    (item): item is IThreadBoxItem => item.kind === 'thread_box' && item.threadId === threadId,
-  );
+const now = () => new Date().toISOString();
 
-  if (!existingBox) {
-    return [
-      ...items,
-      {
-        kind: 'thread_box',
-        id: nextItemId('thread'),
-        threadId,
-        agentKey: entry.agentKey,
-        entries: [entry],
-      },
-    ];
+const appendThreadEntry = (items: TimelineItem[], threadId: string, entry: IThreadEntry): TimelineItem[] => {
+  const box = items.find((item): item is IThreadBoxItem => item.kind === 'thread_box' && item.threadId === threadId);
+
+  if (!box) {
+    return [...items, { kind: 'thread_box', id: nextItemId('thread'), threadId, agentKey: entry.agentKey, entries: [entry] }];
   }
 
   return items.map((item) =>
-    item === existingBox
-      ? { ...existingBox, agentKey: existingBox.agentKey ?? entry.agentKey, entries: [...existingBox.entries, entry] }
-      : item,
+    item === box ? { ...box, agentKey: box.agentKey ?? entry.agentKey, entries: [...box.entries, entry] } : item,
   );
 };
 
@@ -97,110 +83,72 @@ const closeStreamingBubble = (items: TimelineItem[]): TimelineItem[] => {
   return [...items.slice(0, -1), { ...lastItem, isStreaming: false }];
 };
 
-// O backend entrega o arquivo numa mensagem própria, logo depois do texto do supervisor
-const attachFilesToLastBubble = (
-  items: TimelineItem[],
-  files: IChatFileRef[] | null | undefined,
-  newBubble: () => IAssistantBubbleItem,
-): TimelineItem[] => {
-  if (!files?.length) return items;
+const newBubble = (content: string, createdAt = now()): IAssistantBubbleItem => ({
+  kind: 'assistant_bubble',
+  id: nextItemId('bubble'),
+  content,
+  isStreaming: false,
+  files: [],
+  createdAt,
+});
+
+// O backend entrega o arquivo num evento próprio, logo depois do texto do supervisor
+const attachFiles = (items: TimelineItem[], event: Extract<IChatStreamEvent, { type: 'file' }>): TimelineItem[] => {
+  if (!event.files?.length) return items;
 
   const closed = closeStreamingBubble(items);
   const lastItem = closed[closed.length - 1];
   if (lastItem?.kind === 'assistant_bubble') {
-    return [...closed.slice(0, -1), { ...lastItem, files: [...lastItem.files, ...files] }];
+    return [...closed.slice(0, -1), { ...lastItem, files: [...lastItem.files, ...event.files] }];
   }
-  return [...closed, { ...newBubble(), files }];
+  return [...closed, { ...newBubble(event.content ?? '', event.created_at), files: event.files }];
 };
 
-export const mapHistoryToTimeline = (messages: IChatMessageRead[]): TimelineItem[] => {
-  let items: TimelineItem[] = [];
-  let lastClarification: IClarificationItem | null = null;
+const answerPendingClarification = (items: TimelineItem[], answer: string): TimelineItem[] =>
+  items.map((item) =>
+    item.kind === 'clarification' && item.status === 'pending' ? { ...item, status: 'answered', answer } : item,
+  );
 
-  for (const message of messages) {
-    const content = message.content ?? '';
-
-    if (message.channel === 'thread' && message.thread_id) {
-      items = appendThreadEntry(items, message.thread_id, {
-        author: message.author === 'specialist' ? 'specialist' : 'supervisor',
-        agentKey: message.agent_key,
-        content,
-      });
-      continue;
-    }
-
-    if (message.message_type === 'file') {
-      lastClarification = null;
-      items = attachFilesToLastBubble(items, message.files, () => ({
-        kind: 'assistant_bubble',
-        id: `hist-${message.id}`,
-        content,
-        isStreaming: false,
-        files: [],
-      }));
-      continue;
-    }
-
-    if (message.message_type === 'clarification') {
-      const clarification: IClarificationItem = {
-        kind: 'clarification',
-        id: `hist-${message.id}`,
-        question: content,
-        options: message.options ?? [],
-        toolCallId: message.tool_call_id ?? null,
-        status: 'historic',
-      };
-      lastClarification = clarification;
-      items = [...items, clarification];
-      continue;
-    }
-
-    lastClarification = null;
-    const attachments = message.files ?? [];
-    if (!content && attachments.length === 0) continue;
-
-    if (message.author === 'user') {
-      items = [...items, { kind: 'user_message', id: `hist-${message.id}`, content, attachments, sender: message.sender }];
-      continue;
-    }
-
-    items = [...items, { kind: 'assistant_bubble', id: `hist-${message.id}`, content, isStreaming: false, files: [] }];
-  }
-
-  // Clarification no fim do histórico ainda não respondida → reidrata o card interativo
-  if (lastClarification?.toolCallId) {
-    items = items.map((item) =>
-      item === lastClarification ? { ...lastClarification, status: 'pending' as const } : item,
-    );
-  }
-
-  return items;
-};
-
-export const applyStreamEvent = (items: TimelineItem[], event: IChatStreamEvent): TimelineItem[] => {
+export const applyChatEvent = (items: TimelineItem[], event: IChatStreamEvent): TimelineItem[] => {
   switch (event.type) {
+    case 'user_message':
+      return [
+        ...answerPendingClarification(closeStreamingBubble(items), event.content),
+        {
+          kind: 'user_message',
+          id: nextItemId('user'),
+          content: event.content,
+          attachments: event.files ?? [],
+          sender: event.sender ?? null,
+          createdAt: event.created_at ?? now(),
+        },
+      ];
+
+    case 'text':
+      return [...closeStreamingBubble(items), newBubble(event.content, event.created_at)];
+
     case 'text_delta': {
       const lastItem = items[items.length - 1];
-
       if (lastItem?.kind === 'assistant_bubble' && lastItem.isStreaming) {
         return [...items.slice(0, -1), { ...lastItem, content: lastItem.content + event.content }];
       }
-
-      return [
-        ...items,
-        { kind: 'assistant_bubble', id: nextItemId('bubble'), content: event.content, isStreaming: true, files: [] },
-      ];
+      return [...items, { ...newBubble(event.content), isStreaming: true }];
     }
 
-    case 'agent_event': {
+    case 'text_replace': {
+      const lastItem = items[items.length - 1];
+      if (lastItem?.kind !== 'assistant_bubble') return items;
+      return [...items.slice(0, -1), { ...lastItem, content: event.content }];
+    }
+
+    case 'agent_event':
       return appendThreadEntry(closeStreamingBubble(items), event.thread_id, {
         author: event.author,
         agentKey: event.agent_key,
         content: event.content,
       });
-    }
 
-    case 'clarification': {
+    case 'clarification':
       return [
         ...closeStreamingBubble(items),
         {
@@ -212,24 +160,15 @@ export const applyStreamEvent = (items: TimelineItem[], event: IChatStreamEvent)
           status: 'pending',
         },
       ];
-    }
 
-    case 'file': {
-      return attachFilesToLastBubble(items, event.files, () => ({
-        kind: 'assistant_bubble',
-        id: nextItemId('bubble'),
-        content: '',
-        isStreaming: false,
-        files: [],
-      }));
-    }
+    case 'file':
+      return attachFiles(items, event);
 
-    case 'error': {
+    case 'error':
       return [
         ...closeStreamingBubble(items),
         { kind: 'stream_error', id: nextItemId('error'), content: event.content ?? 'Erro desconhecido no processamento.' },
       ];
-    }
 
     case 'done':
       return closeStreamingBubble(items);
@@ -239,29 +178,10 @@ export const applyStreamEvent = (items: TimelineItem[], event: IChatStreamEvent)
   }
 };
 
-export const appendUserMessage = (
-  items: TimelineItem[],
-  content: string,
-  attachments: IChatFileRef[] = [],
-  sender: IChatMember | null = null,
-): TimelineItem[] => [
-  ...items,
-  { kind: 'user_message', id: nextItemId('user'), content, attachments, sender },
-];
-
-export const setClarificationStatus = (
-  items: TimelineItem[],
-  toolCallId: string,
-  status: ClarificationStatus,
-  answer?: string,
-): TimelineItem[] =>
+export const reopenClarification = (items: TimelineItem[], toolCallId: string): TimelineItem[] =>
   items.map((item) =>
-    item.kind === 'clarification' && item.toolCallId === toolCallId
-      ? { ...item, status, answer }
-      : item,
+    item.kind === 'clarification' && item.toolCallId === toolCallId ? { ...item, status: 'pending', answer: undefined } : item,
   );
 
 export const findPendingClarification = (items: TimelineItem[]): IClarificationItem | null =>
-  items.find(
-    (item): item is IClarificationItem => item.kind === 'clarification' && item.status === 'pending',
-  ) ?? null;
+  items.find((item): item is IClarificationItem => item.kind === 'clarification' && item.status === 'pending') ?? null;

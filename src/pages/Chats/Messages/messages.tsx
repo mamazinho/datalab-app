@@ -32,7 +32,7 @@ const ChatView = ({ chatId }: { chatId: UUID7 }) => {
             </MessagesHeader>
 
             <MessagesBody>
-                <ChatConversation chatId={chatId} history={history} showSenders={!chat.is_private} />
+                <ChatConversation chatId={chatId} history={history} />
             </MessagesBody>
         </>
     );

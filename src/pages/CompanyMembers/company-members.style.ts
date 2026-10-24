@@ -57,51 +57,6 @@ export const InviteMemberButton = styled.button`
   &:hover { opacity: 0.88; }
 `;
 
-export const MembersTable = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: 1rem;
-  overflow: hidden;
-`;
-
-export const MembersTableHeader = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr auto auto;
-  gap: 1rem;
-  padding: 0.7rem 1.2rem;
-  background: ${({ theme }) => theme.colors.inputBackground};
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-`;
-
-export const MembersTableHeaderCell = styled.span`
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
-
-export const MembersTableRow = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr auto auto;
-  gap: 1rem;
-  align-items: center;
-  padding: 0.85rem 1.2rem;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-
-  &:last-child { border-bottom: 0; }
-
-  &:hover { background: ${({ theme }) => theme.colors.inputBackground}; }
-`;
-
-export const MembersTableCell = styled.div`
-  font-size: 0.88rem;
-  color: ${({ theme }) => theme.colors.text};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
 export const MembersTableCellSecondary = styled.span`
   font-size: 0.78rem;
   color: ${({ theme }) => theme.colors.textSecondary};
@@ -117,35 +72,6 @@ export const RoleBadge = styled.span<{ $owner: boolean }>`
   background: ${({ theme, $owner }) => $owner ? theme.colors.primary : theme.colors.inputBackground};
   color: ${({ theme, $owner }) => $owner ? theme.colors.primaryText : theme.colors.textSecondary};
   border: 1px solid ${({ theme, $owner }) => $owner ? 'transparent' : theme.colors.border};
-`;
-
-export const MemberActionsCell = styled.div`
-  display: inline-flex;
-  gap: 0.4rem;
-`;
-
-export const MemberActionButton = styled.button`
-  padding: 0.3rem 0.65rem;
-  border-radius: 0.45rem;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  background: transparent;
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 0.78rem;
-  font-weight: 600;
-  font-family: ${({ theme }) => theme.fonts.main};
-  cursor: pointer;
-  transition: background-color 0.18s ease;
-  white-space: nowrap;
-
-  &:hover { background: ${({ theme }) => theme.colors.inputBackground}; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-`;
-
-export const MemberRemoveButton = styled(MemberActionButton)`
-  border-color: ${({ theme }) => theme.colors.error};
-  color: ${({ theme }) => theme.colors.error};
-
-  &:hover { background: ${({ theme }) => theme.colors.error}; color: #fff; }
 `;
 
 export const MembersEmpty = styled.p`
@@ -181,32 +107,6 @@ export const ModalLabel = styled.label`
   font-size: 0.85rem;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
-`;
-
-export const ModalInput = styled.input`
-  padding: 0.65rem 0.85rem;
-  border-radius: 0.6rem;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.inputBackground};
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 0.9rem;
-  font-family: ${({ theme }) => theme.fonts.main};
-  width: 100%;
-  transition: border-color 0.18s ease;
-
-  &:focus { outline: none; border-color: ${({ theme }) => theme.colors.primary}; }
-`;
-
-export const ModalSelect = styled.select`
-  padding: 0.65rem 0.85rem;
-  border-radius: 0.6rem;
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.inputBackground};
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 0.9rem;
-  font-family: ${({ theme }) => theme.fonts.main};
-  width: 100%;
-  cursor: pointer;
 `;
 
 export const ModalError = styled.p`

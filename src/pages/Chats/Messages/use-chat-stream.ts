@@ -1,37 +1,32 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { IChatFileRef } from '../../../services/datalab-api/chatFilesResource';
-import type { IChatMessageRead, IChatStreamEvent } from '../../../services/datalab-api/chatMessagesResource';
-import type { IChatMember } from '../../../services/datalab-api/chatsResource';
+import type { IChatStreamEvent } from '../../../services/datalab-api/chatMessagesResource';
 import { useMe } from '../../../hooks/use-me';
 import { parseChatStream } from '../../../utils/process-stream';
 import type { UUID7 } from '../../../types/ids';
 import {
-  appendUserMessage,
-  applyStreamEvent,
+  applyChatEvent,
   findPendingClarification,
-  mapHistoryToTimeline,
-  setClarificationStatus,
-  type ClarificationStatus,
+  reopenClarification,
   type TimelineItem,
 } from '../../../utils/chat-timeline';
 
 type TimelineAction =
-  | { type: 'reset'; history: IChatMessageRead[] }
-  | { type: 'user_prompt'; content: string; attachments: IChatFileRef[]; sender: IChatMember | null }
-  | { type: 'stream_event'; event: IChatStreamEvent }
-  | { type: 'clarification_status'; toolCallId: string; status: ClarificationStatus; answer?: string };
+  | { type: 'reset'; history: IChatStreamEvent[] }
+  | { type: 'event'; event: IChatStreamEvent }
+  | { type: 'reopen_clarification'; toolCallId: string };
+
+const replay = (history: IChatStreamEvent[]) => history.reduce(applyChatEvent, []);
 
 const timelineReducer = (items: TimelineItem[], action: TimelineAction): TimelineItem[] => {
   switch (action.type) {
     case 'reset':
-      return mapHistoryToTimeline(action.history);
-    case 'user_prompt':
-      return appendUserMessage(items, action.content, action.attachments, action.sender);
-    case 'stream_event':
-      return applyStreamEvent(items, action.event);
-    case 'clarification_status':
-      return setClarificationStatus(items, action.toolCallId, action.status, action.answer);
+      return replay(action.history);
+    case 'event':
+      return applyChatEvent(items, action.event);
+    case 'reopen_clarification':
+      return reopenClarification(items, action.toolCallId);
   }
 };
 
@@ -42,9 +37,9 @@ const EMPTY_PROMPT_WITH_ATTACHMENTS = 'Analise o arquivo anexado.';
 const getErrorMessage = (error: unknown, fallback: string): string =>
   error instanceof Error && error.message ? error.message : fallback;
 
-export const useChatStream = (chatId: UUID7, initialHistory: IChatMessageRead[]) => {
+export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[]) => {
   const { data: me } = useMe();
-  const [items, dispatch] = useReducer(timelineReducer, initialHistory, mapHistoryToTimeline);
+  const [items, dispatch] = useReducer(timelineReducer, initialHistory, replay);
   const [isStreaming, setIsStreaming] = useState(false);
   // Identifica a "geração" ativa do stream: trocar de chat/desmontar invalida loops em andamento
   const generationRef = useRef(0);
@@ -67,12 +62,8 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatMessageRead[])
     answerToToolCallId?: string,
   ) => {
     const generation = ++generationRef.current;
-    const sender = me ? { name: me.name, avatar_url: me.avatar_url } : null;
 
-    dispatch({ type: 'user_prompt', content: prompt, attachments, sender });
-    if (answerToToolCallId) {
-      dispatch({ type: 'clarification_status', toolCallId: answerToToolCallId, status: 'answered', answer: prompt });
-    }
+    dispatch({ type: 'event', event: { type: 'user_message', content: prompt, files: attachments, sender: me ?? null } });
     setIsStreaming(true);
 
     let stream: ReadableStream<Uint8Array>;
@@ -86,12 +77,9 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatMessageRead[])
       if (generationRef.current !== generation) return;
       // POST falhou antes do stream iniciar: reabre a clarification para nova tentativa
       if (answerToToolCallId) {
-        dispatch({ type: 'clarification_status', toolCallId: answerToToolCallId, status: 'pending' });
+        dispatch({ type: 'reopen_clarification', toolCallId: answerToToolCallId });
       }
-      dispatch({
-        type: 'stream_event',
-        event: { type: 'error', content: getErrorMessage(requestError, 'Erro ao enviar a mensagem.') },
-      });
+      dispatch({ type: 'event', event: { type: 'error', content: getErrorMessage(requestError, 'Erro ao enviar a mensagem.') } });
       setIsStreaming(false);
       return;
     }
@@ -99,15 +87,15 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatMessageRead[])
     try {
       for await (const event of parseChatStream(stream)) {
         if (generationRef.current !== generation) return;
-        dispatch({ type: 'stream_event', event });
+        dispatch({ type: 'event', event });
       }
     } catch {
       if (generationRef.current !== generation) return;
-      dispatch({ type: 'stream_event', event: { type: 'error', content: STREAM_INTERRUPTED_MESSAGE } });
+      dispatch({ type: 'event', event: { type: 'error', content: STREAM_INTERRUPTED_MESSAGE } });
     } finally {
       if (generationRef.current === generation) {
         // Fecha a bolha em streaming mesmo se o backend encerrar sem evento "done"
-        dispatch({ type: 'stream_event', event: { type: 'done' } });
+        dispatch({ type: 'event', event: { type: 'done' } });
         setIsStreaming(false);
       }
     }
@@ -121,12 +109,12 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatMessageRead[])
     await submitPrompt(
       trimmedPrompt || EMPTY_PROMPT_WITH_ATTACHMENTS,
       attachments,
-      pendingClarification?.toolCallId ?? undefined,
+      pendingClarification?.toolCallId,
     );
   }, [isStreaming, pendingClarification, submitPrompt]);
 
   const answerClarification = useCallback(async (answer: string) => {
-    if (!pendingClarification?.toolCallId || isStreaming) return;
+    if (!pendingClarification || isStreaming) return;
     await submitPrompt(answer, [], pendingClarification.toolCallId);
   }, [isStreaming, pendingClarification, submitPrompt]);
 

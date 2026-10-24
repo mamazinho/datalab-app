@@ -1,5 +1,7 @@
 import ReactMarkdown from 'react-markdown';
+import type { IChatMember } from '../../../../services/datalab-api/chatsResource';
 import type { IClarificationItem } from '../../../../utils/chat-timeline';
+import { AuthoredRow } from './authored-row';
 import {
     ClarificationAnswered,
     ClarificationBox,
@@ -7,21 +9,22 @@ import {
     ClarificationOption,
     ClarificationOptions,
     ClarificationQuestion,
-    ClarificationRow,
 } from '../messages.style';
 
 interface ClarificationCardProps {
     item: IClarificationItem;
+    author: IChatMember | null;
+    showAuthor: boolean;
     onAnswer: (answer: string) => void;
     disabled: boolean;
 }
 
-export const ClarificationCard = ({ item, onAnswer, disabled }: ClarificationCardProps) => {
+export const ClarificationCard = ({ item, author, showAuthor, onAnswer, disabled }: ClarificationCardProps) => {
     const isPending = item.status === 'pending';
-    const showOptions = item.status !== 'historic' && item.options.length > 0;
+    const showOptions = item.options.length > 0;
 
     return (
-        <ClarificationRow>
+        <AuthoredRow author={author} showAuthor={showAuthor} isUser={false}>
             <ClarificationBox>
                 <ClarificationLabel>Pergunta do agente</ClarificationLabel>
                 <ClarificationQuestion>
@@ -54,6 +57,6 @@ export const ClarificationCard = ({ item, onAnswer, disabled }: ClarificationCar
                     <ClarificationAnswered>Respondido: {item.answer}</ClarificationAnswered>
                 )}
             </ClarificationBox>
-        </ClarificationRow>
+        </AuthoredRow>
     );
 };

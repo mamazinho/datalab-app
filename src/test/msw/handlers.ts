@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { buildAgent, buildChat, buildChatDetail, buildChatUsageReport, buildCompany, buildCurrentMembership, buildInvite, buildMcpServer, buildMember, buildMcpServerTestResult, buildModelProvider, buildUser, uuid } from '../factories';
+import { buildAgent, buildChat, buildChatUsageReport, buildCompany, buildCurrentMembership, buildInvite, buildMcpServer, buildMember, buildMcpServerTestResult, buildModelProvider, buildUser, uuid } from '../factories';
 
 const BASE_URL = import.meta.env.VITE_DATALAB_API_URL;
 
@@ -86,6 +86,10 @@ export const handlers = [
 
   http.get(api('auth/integrations/'), () => HttpResponse.json([])),
 
+  http.get(api('agents/supervisor/'), () =>
+    HttpResponse.json(buildAgent({ type: 'supervisor', key: 'supervisor', name: 'Supervisor' })),
+  ),
+
   http.get(api('agents/'), () => HttpResponse.json([])),
 
   http.get(api('agents/available-models'), () =>
@@ -132,7 +136,7 @@ export const handlers = [
   // Antes de chats/:chatId/, que também casaria com "usage".
   http.get(api('chats/usage/'), () => HttpResponse.json(buildChatUsageReport())),
 
-  http.get(api('chats/:chatId/'), () => HttpResponse.json(buildChatDetail())),
+  http.get(api('chats/:chatId/'), () => HttpResponse.json(buildChat())),
 
   http.patch(api('chats/:chatId/'), async ({ request }) =>
     HttpResponse.json(buildChat(await request.json() as object)),

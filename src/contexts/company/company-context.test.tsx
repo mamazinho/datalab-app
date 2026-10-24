@@ -38,7 +38,7 @@ const renderCompanyContext = (companies: IUserCompany[] = [acme]) => {
     </QueryClientProvider>
   );
 
-  return renderHook(() => ({ ...useCompanyContext(), ...useCompanyPermissions() }), { wrapper });
+  return { queryClient, ...renderHook(() => ({ ...useCompanyContext(), ...useCompanyPermissions() }), { wrapper }) };
 };
 
 describe('CompanyProvider', () => {
@@ -86,6 +86,18 @@ describe('CompanyProvider', () => {
 
       await waitFor(() => expect(result.current.currentCompany?.name).toBe('Globex'));
       expect(localStorage.getItem('selectedCompanyId')).toBe(globex.id);
+    });
+
+    it('drops the data of the previous company when switching, keeping the logged-in user', async () => {
+      const { result, queryClient } = renderCompanyContext([acme, globex]);
+      queryClient.setQueryData(['chats'], [{ title: 'Conversa da Acme' }]);
+      queryClient.setQueryData(['me'], { name: 'Ana' });
+
+      result.current.setCurrentCompany(globex);
+
+      await waitFor(() => expect(result.current.currentCompany?.name).toBe('Globex'));
+      expect(queryClient.getQueryData(['chats'])).toBeUndefined();
+      expect(queryClient.getQueryData(['me'])).toEqual({ name: 'Ana' });
     });
 
     it('clears the selection, which sends the user back to the onboarding', async () => {

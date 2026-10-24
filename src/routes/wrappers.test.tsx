@@ -13,18 +13,18 @@ import {
   uuid,
 } from '../test/factories';
 import type { IRoutePermission, IUserCompany } from '../services/datalab-api/usersResource';
+import { MCP_SERVER_ROUTE_PERMISSIONS } from '../utils/route-permissions';
 import {
   AgentsRoute,
   CompanyManagementRoute,
   IaIndexRedirect,
   IaRoute,
-  McpServersRoute,
+  RoutePermissionRoute,
   OnboardingRoute,
   PermissionRoute,
   PrivateRoutes,
   PublicRoutes,
   RedirectLegacyChatMessages,
-  UsageRoute,
 } from './wrappers';
 
 const company = buildCompany({ id: uuid(1), name: 'Acme' });
@@ -243,32 +243,24 @@ describe('permission guards', () => {
     expect(await screen.findByRole('heading', { name: 'Protegida' })).toBeInTheDocument();
   });
 
-  it('lets a member who can list MCP servers into the MCP tab', async () => {
+  it('lets in a member who has the route permission', async () => {
     givenMemberPermissions([
       buildRoutePermission({ method: 'GET', path: '/v1/agents/mcp-servers/' }),
     ]);
-    renderRoutes(guardedRoute(<McpServersRoute />), { route: '/protegida', companies: [asMember] });
+    renderRoutes(guardedRoute(<RoutePermissionRoute permission={MCP_SERVER_ROUTE_PERMISSIONS.list} />), {
+      route: '/protegida',
+      companies: [asMember],
+    });
 
     expect(await screen.findByRole('heading', { name: 'Protegida' })).toBeInTheDocument();
   });
 
-  it('keeps out of the MCP tab a member who only manages agents', async () => {
+  it('keeps out a member who has other permissions but not that route', async () => {
     givenMemberPermissions([buildRoutePermission({ method: 'PATCH', path: '/v1/agents/{agent_id}/' })]);
-    renderRoutes(guardedRoute(<McpServersRoute />), { route: '/protegida', companies: [asMember] });
-
-    expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument();
-  });
-
-  it('lets a member who can see the usage report into the usage tab', async () => {
-    givenMemberPermissions([buildRoutePermission({ tag: 'chat', method: 'GET', path: '/v1/chats/usage/' })]);
-    renderRoutes(guardedRoute(<UsageRoute />), { route: '/protegida', companies: [asMember] });
-
-    expect(await screen.findByRole('heading', { name: 'Protegida' })).toBeInTheDocument();
-  });
-
-  it('keeps out of the usage tab a member who can only chat', async () => {
-    givenMemberPermissions([buildRoutePermission({ tag: 'chat', method: 'GET', path: '/v1/chats/' })]);
-    renderRoutes(guardedRoute(<UsageRoute />), { route: '/protegida', companies: [asMember] });
+    renderRoutes(guardedRoute(<RoutePermissionRoute permission={MCP_SERVER_ROUTE_PERMISSIONS.list} />), {
+      route: '/protegida',
+      companies: [asMember],
+    });
 
     expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument();
   });

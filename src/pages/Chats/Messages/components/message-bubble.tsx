@@ -1,19 +1,24 @@
 import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Bubble, BubbleSender, MainContent, MessageRow, StreamingCursor } from '../messages.style';
+import type { IChatMember } from '../../../../services/datalab-api/chatsResource';
+import { Bubble, MainContent, MessageTime, StreamingCursor } from '../messages.style';
+import { AuthoredRow } from './authored-row';
 
 interface MessageBubbleProps {
     content: string;
     isUser: boolean;
+    author: IChatMember | null;
+    showAuthor: boolean;
+    createdAt: string;
     isStreaming?: boolean;
-    sender?: ReactNode;
     children?: ReactNode;
 }
 
-export const MessageBubble = ({ content, isUser, isStreaming = false, sender, children }: MessageBubbleProps) => (
-    <MessageRow $isUser={isUser}>
+const timeFormat = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+export const MessageBubble = ({ content, isUser, author, showAuthor, createdAt, isStreaming = false, children }: MessageBubbleProps) => (
+    <AuthoredRow author={author} showAuthor={showAuthor} isUser={isUser}>
         <Bubble $isUser={isUser}>
-            {sender && <BubbleSender>{sender}</BubbleSender>}
             {(content || isStreaming) && (
                 <MainContent>
                     <ReactMarkdown>{content}</ReactMarkdown>
@@ -21,6 +26,9 @@ export const MessageBubble = ({ content, isUser, isStreaming = false, sender, ch
                 </MainContent>
             )}
             {children}
+            <MessageTime $isUser={isUser} dateTime={createdAt}>
+                {timeFormat.format(new Date(createdAt))}
+            </MessageTime>
         </Bubble>
-    </MessageRow>
+    </AuthoredRow>
 );

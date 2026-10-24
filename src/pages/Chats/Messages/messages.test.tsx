@@ -12,10 +12,10 @@ import {
 } from '../../../test/test-utils';
 import { ACCESS_TOKEN, api } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
-import { buildChatDetail, buildCompany, uuid } from '../../../test/factories';
+import { buildChat, buildCompany, uuid } from '../../../test/factories';
 import { meQuery } from '../../../queries';
-import type { IChatMessageRead } from '../../../services/datalab-api/chatMessagesResource';
-import type { IRetrieveChatDetail } from '../../../services/datalab-api/chatsResource';
+import type { IChatStreamEvent } from '../../../services/datalab-api/chatMessagesResource';
+import type { IRetrieveChat } from '../../../services/datalab-api/chatsResource';
 import { ChatMessages } from './messages';
 
 type User = ReturnType<typeof userEvent.setup>;
@@ -24,18 +24,17 @@ const CHAT_ID = uuid(20);
 const company = buildCompany({ id: uuid(1) });
 const encoder = new TextEncoder();
 
-const buildHistoryMessage = (overrides: Partial<IChatMessageRead> = {}): IChatMessageRead => ({
-  id: uuid(30),
-  author: 'user',
-  agent_key: null,
-  message_type: 'chat',
-  thread_id: null,
+type UserMessageEvent = Extract<IChatStreamEvent, { type: 'user_message' }>;
+
+const userMessage = (overrides: Partial<UserMessageEvent> = {}): UserMessageEvent => ({
+  type: 'user_message',
   content: 'Qual foi a receita?',
-  created_at: '2026-01-01T00:00:00Z',
-  channel: 'main',
   sender: null,
+  created_at: '2026-01-01T00:00:00Z',
   ...overrides,
 });
+
+const answer = (content: string): IChatStreamEvent => ({ type: 'text', content, created_at: '2026-01-01T00:00:00Z' });
 
 const givenStreamedAnswer = (events: object[]) => {
   server.use(
@@ -54,10 +53,10 @@ const givenStreamedAnswer = (events: object[]) => {
   );
 };
 
-const givenHistory = (messages: IChatMessageRead[], chat: Partial<IRetrieveChatDetail> = {}) => {
+const givenHistory = (events: IChatStreamEvent[], chat: Partial<IRetrieveChat> = {}) => {
   server.use(
-    http.get(api(`chats/${CHAT_ID}/messages/`), () => HttpResponse.json(messages)),
-    http.get(api(`chats/${CHAT_ID}/`), () => HttpResponse.json(buildChatDetail({ id: CHAT_ID, ...chat }))),
+    http.get(api(`chats/${CHAT_ID}/messages/`), () => HttpResponse.json(events)),
+    http.get(api(`chats/${CHAT_ID}/`), () => HttpResponse.json(buildChat({ id: CHAT_ID, ...chat }))),
   );
 };
 
@@ -122,8 +121,8 @@ describe('<ChatMessages />', () => {
 
   it('renders the previous conversation', async () => {
     givenHistory([
-      buildHistoryMessage({ id: uuid(30), author: 'user', content: 'Qual foi a receita?' }),
-      buildHistoryMessage({ id: uuid(31), author: 'supervisor', content: 'R$ 10.000 em julho.' }),
+      userMessage(),
+      answer('R$ 10.000 em julho.'),
     ]);
     renderMessages();
 
@@ -131,25 +130,44 @@ describe('<ChatMessages />', () => {
     expect(screen.getByText('R$ 10.000 em julho.')).toBeInTheDocument();
   });
 
-  describe('senders', () => {
-    const messageFromBruno = buildHistoryMessage({
+  it('shows the time each message was sent', async () => {
+    const sentAt = '2026-01-01T15:30:00Z';
+    givenHistory([userMessage({ created_at: sentAt })]);
+    renderMessages();
+
+    const time = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(sentAt));
+    expect(await screen.findByText(time)).toHaveAttribute('datetime', sentAt);
+  });
+
+  describe('authors', () => {
+    const messageFromBruno = userMessage({
       content: 'Qual foi a receita?',
       sender: { name: 'Bruno Lima', avatar_url: null },
     });
 
-    it('shows who sent each message of a company conversation', async () => {
-      givenHistory([messageFromBruno], { is_private: false });
+    it('shows who sent each message', async () => {
+      givenHistory([messageFromBruno]);
       renderMessages();
 
       expect(await screen.findByText('Bruno Lima')).toBeInTheDocument();
     });
 
-    it('leaves the senders out of a private conversation', async () => {
-      givenHistory([messageFromBruno], { is_private: true });
+    it('shows the agent that answers', async () => {
+      givenHistory([answer('R$ 10.000 em julho.')]);
       renderMessages();
 
-      expect(await screen.findByText('Qual foi a receita?')).toBeInTheDocument();
-      expect(screen.queryByText('Bruno Lima')).not.toBeInTheDocument();
+      expect(await screen.findByText('Supervisor')).toBeInTheDocument();
+    });
+
+    it('names the author once for consecutive messages', async () => {
+      givenHistory([
+        messageFromBruno,
+        userMessage({ content: 'E em agosto?', sender: { name: 'Bruno Lima', avatar_url: null } }),
+      ]);
+      renderMessages();
+
+      expect(await screen.findByText('E em agosto?')).toBeInTheDocument();
+      expect(screen.getAllByText('Bruno Lima')).toHaveLength(1);
     });
 
     it('signs the message just sent with the logged-in user', async () => {
@@ -157,7 +175,7 @@ describe('<ChatMessages />', () => {
       const queryClient = createTestQueryClient();
       localStorage.setItem('accessToken', ACCESS_TOKEN);
       await queryClient.prefetchQuery(meQuery);
-      givenHistory([], { is_private: false });
+      givenHistory([]);
       givenStreamedAnswer([{ type: 'done' }]);
       renderMessages({ queryClient });
 
@@ -172,7 +190,7 @@ describe('<ChatMessages />', () => {
 
     it('opens the conversation at the last message', async () => {
       vi.spyOn(Element.prototype, 'scrollHeight', 'get').mockReturnValue(1200);
-      givenHistory([buildHistoryMessage()]);
+      givenHistory([userMessage()]);
       renderMessages();
 
       expect((await screen.findByRole('region', { name: 'Mensagens' })).scrollTop).toBe(1200);
@@ -180,7 +198,7 @@ describe('<ChatMessages />', () => {
 
     it('offers a shortcut back to the last message while older ones are being read', async () => {
       const user = userEvent.setup();
-      givenHistory([buildHistoryMessage()]);
+      givenHistory([userMessage()]);
       renderMessages();
       const conversation = await screen.findByRole('region', { name: 'Mensagens' });
       expect(screen.queryByRole('button', shortcut)).not.toBeInTheDocument();
@@ -195,7 +213,7 @@ describe('<ChatMessages />', () => {
 
     it('goes back to the last message when a new one is sent', async () => {
       const user = userEvent.setup({ delay: null });
-      givenHistory([buildHistoryMessage()]);
+      givenHistory([userMessage()]);
       givenStreamedAnswer([{ type: 'done' }]);
       renderMessages();
       const conversation = await screen.findByRole('region', { name: 'Mensagens' });
@@ -404,14 +422,7 @@ describe('<ChatMessages />', () => {
 
     it('reopens a question left unanswered in the history', async () => {
       givenHistory([
-        buildHistoryMessage({
-          id: uuid(32),
-          author: 'supervisor',
-          message_type: 'clarification',
-          content: 'De qual período?',
-          options: ['Últimos 7 dias'],
-          tool_call_id: 'call-1',
-        }),
+        { type: 'clarification', question: 'De qual período?', options: ['Últimos 7 dias'], tool_call_id: 'call-1' },
       ]);
       renderMessages();
 
@@ -591,13 +602,7 @@ describe('<ChatMessages />', () => {
 
     it('rebuilds the download card from the history', async () => {
       givenHistory([
-        buildHistoryMessage({
-          id: uuid(33),
-          author: 'supervisor',
-          message_type: 'file',
-          content: "Arquivo 'relatorio.pdf' disponível para download.",
-          files: [fileRef],
-        }),
+        { type: 'file', content: "Arquivo 'relatorio.pdf' disponível para download.", files: [fileRef] },
       ]);
       renderMessages();
 
@@ -606,7 +611,7 @@ describe('<ChatMessages />', () => {
 
     it('shows the attachments of a past turn on the user bubble', async () => {
       givenHistory([
-        buildHistoryMessage({ id: uuid(34), author: 'user', content: 'Resuma', files: [fileRef] }),
+        userMessage({ content: 'Resuma', files: [fileRef] }),
       ]);
       renderMessages();
 

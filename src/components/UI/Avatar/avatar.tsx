@@ -18,11 +18,7 @@ const buildInitialsUrl = (name: string, seed: AvatarSeed): string => {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 };
 
-/**
- * Imagem de avatar: sem URL, ou se a URL falhar, mostra as iniciais do nome.
- * `no-referrer` porque o Google recusa a foto de perfil quando recebe o referrer.
- * Estilizável via styled(Avatar) — repassa className e demais props de <img>.
- */
+// no-referrer: o Google recusa a foto de perfil quando recebe o referrer.
 export const Avatar = ({ src, name, seed = 'first-name', ...imgProps }: IAvatarProps) => {
   const [brokenSrc, setBrokenSrc] = useState<string | null>(null);
 

@@ -3,30 +3,14 @@ import type { IChatFileRef } from "./chatFilesResource";
 import type { IChatMember } from "./chatsResource";
 import type { UUID7 } from "../../types/ids";
 
-export type ChatChannel = 'main' | 'thread';
-export type ChatAuthor = 'user' | 'supervisor' | 'specialist';
-export type ChatMessageType = 'chat' | 'agent_event' | 'clarification' | 'file';
-
-export interface IChatMessageRead {
-  id: UUID7;
-  author: ChatAuthor;
-  agent_key: string | null;
-  message_type: ChatMessageType;
-  thread_id: string | null;
-  content: string | null;
-  created_at: string;
-  channel: ChatChannel;
-  tool_call_id?: string | null;
-  options?: string[] | null;
-  files?: IChatFileRef[] | null;
-  sender: IChatMember | null;
-}
-
 export type IChatStreamEvent =
-  | { type: 'text_delta'; channel: 'main'; author?: ChatAuthor; content: string }
-  | { type: 'agent_event'; channel: 'thread'; thread_id: string; author: 'supervisor' | 'specialist'; agent_key: string; content: string }
-  | { type: 'clarification'; channel?: ChatChannel; question: string; options?: string[]; tool_call_id: string }
-  | { type: 'file'; channel?: ChatChannel; author?: ChatAuthor; files?: IChatFileRef[] }
+  | { type: 'user_message'; content: string; files?: IChatFileRef[]; sender?: IChatMember | null; created_at?: string }
+  | { type: 'text'; content: string; created_at?: string }
+  | { type: 'text_delta'; content: string }
+  | { type: 'text_replace'; content: string }
+  | { type: 'agent_event'; thread_id: string; author: 'supervisor' | 'specialist'; agent_key: string | null; content: string }
+  | { type: 'clarification'; question: string; options?: string[]; tool_call_id: string }
+  | { type: 'file'; content?: string; files?: IChatFileRef[]; created_at?: string }
   | { type: 'error'; content?: string }
   | { type: 'done' };
 
@@ -37,9 +21,9 @@ export interface IUserPrompt {
 }
 
 export const ChatMessagesResource = {
-  async getChatMessages(chatId: UUID7): Promise<IChatMessageRead[]> {
+  async getChatMessages(chatId: UUID7): Promise<IChatStreamEvent[]> {
     const response = await axiosCompanyInstance.get(`chats/${chatId}/messages/`);
-    return response.data as IChatMessageRead[];
+    return response.data as IChatStreamEvent[];
   },
   async sendMessage(chatId: UUID7, payload: IUserPrompt): Promise<ReadableStream<Uint8Array>> {
     const response = await axiosCompanyInstance.post(

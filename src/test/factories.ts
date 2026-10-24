@@ -8,7 +8,6 @@ import type {
   IChatUsageByChat,
   IChatUsageReport,
   IRetrieveChat,
-  IRetrieveChatDetail,
 } from '../services/datalab-api/chatsResource';
 import type { IRetrieveMcpServer, ITestMcpServerResponse } from '../services/datalab-api/mcpServersResource';
 import type {
@@ -119,12 +118,6 @@ export const buildChatUsage = (overrides: Partial<IChatUsage> = {}): IChatUsage 
   input_tokens: 0,
   output_tokens: 0,
   requests: 0,
-  ...overrides,
-});
-
-export const buildChatDetail = (overrides: Partial<IRetrieveChatDetail> = {}): IRetrieveChatDetail => ({
-  ...buildChat(),
-  usage: buildChatUsage(),
   ...overrides,
 });
 

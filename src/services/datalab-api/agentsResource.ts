@@ -27,7 +27,7 @@ export interface IRetrieveAgent {
   type: AgentType;
   key: string;
   name: string;
-  avatar_url?: string | null;
+  avatar_url: string | null;
   description: string;
   model_name: string;
   is_system: boolean;
@@ -55,6 +55,10 @@ export const AgentsResource = {
   async listAvailableModels(): Promise<IListAvailableModelsResponse[]> {
     const response = await axiosCompanyInstance.get('agents/available-models');
     return response.data as IListAvailableModelsResponse[];
+  },
+  async getSupervisor(): Promise<IRetrieveAgent> {
+    const response = await axiosCompanyInstance.get('agents/supervisor/');
+    return response.data as IRetrieveAgent;
   },
   async listAgents(): Promise<IRetrieveAgentWithState[]> {
     const response = await axiosCompanyInstance.get('agents/');

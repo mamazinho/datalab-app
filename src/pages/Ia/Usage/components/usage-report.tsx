@@ -3,7 +3,6 @@ import { ChatMember } from '../../../../components/UI/ChatMember';
 import { useChatUsageReport } from '../../../../hooks/use-chat-usage-report';
 import type { ChatUsageOrigin, IChatUsage, IChatUsageByChat } from '../../../../services/datalab-api/chatsResource';
 import { Badge } from '../../../../styles/design-system.style';
-import { formatNumber } from '../../../../utils/format';
 import { EmptyMessage } from '../../ia.style';
 import {
   UsageChatLink,
@@ -21,6 +20,8 @@ const ORIGIN_LABELS: Record<ChatUsageOrigin, string> = {
   complexity_classifier: 'Classificador de complexidade',
   answer_rewriter: 'Reescrita da resposta',
 };
+
+const formatNumber = new Intl.NumberFormat('pt-BR').format;
 
 const sumTokens = (usage: IChatUsage) => usage.input_tokens + usage.output_tokens;
 

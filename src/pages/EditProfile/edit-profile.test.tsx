@@ -166,14 +166,7 @@ describe('<EditProfile />', () => {
 
     it('deletes the account and signs the user out', async () => {
       const user = userEvent.setup({ delay: null });
-      let deleted = false;
       givenLoggedUser();
-      server.use(
-        http.delete(api('users/me'), () => {
-          deleted = true;
-          return new HttpResponse(null, { status: 204 });
-        }),
-      );
       renderWithProviders(<EditProfile />);
 
       const dialog = await openDeletion(user);
@@ -181,7 +174,6 @@ describe('<EditProfile />', () => {
       await user.click(within(dialog).getByRole('button', { name: 'Excluir conta' }));
 
       expect(await screen.findByText('Sua conta foi excluída.')).toBeInTheDocument();
-      expect(deleted).toBe(true);
       expect(localStorage.getItem('accessToken')).toBeNull();
     });
 

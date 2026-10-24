@@ -1,5 +1,4 @@
 import { useActionState, useState } from 'react';
-import { toast } from 'react-toastify';
 import { Modal } from '../../../components/UI/Modal/modal';
 import { useAuthContext } from '../../../contexts/auth';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
@@ -25,10 +24,8 @@ export const DeleteAccount = ({ me }: { me: IUserResponse }) => {
   const ownsACompany = me.companies.some((company) => company.membership.membership_role === 'owner');
 
   useActionFeedback(formState, {
-    onSuccess: () => {
-      toast.success('Sua conta foi excluída.');
-      logout();
-    },
+    successMessage: 'Sua conta foi excluída.',
+    onSuccess: logout,
     onError: () => {},
   });
 
@@ -79,9 +76,9 @@ export const DeleteAccount = ({ me }: { me: IUserResponse }) => {
             />
           </Field>
 
-          {formState.error && !formState.success && <ErrorText role="alert">{formState.error}</ErrorText>}
+          {formState.error && <ErrorText role="alert">{formState.error}</ErrorText>}
 
-          <DeleteAccountSubmit type="submit" disabled={confirmation.trim().toLowerCase() !== me.email || isPending}>
+          <DeleteAccountSubmit type="submit" disabled={confirmation.trim().toLowerCase() !== me.email.toLowerCase() || isPending}>
             {isPending ? 'Excluindo...' : 'Excluir conta'}
           </DeleteAccountSubmit>
         </DeleteAccountForm>
