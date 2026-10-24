@@ -1,15 +1,7 @@
+import styles from '../company-members.module.css';
 import type { UUID7 } from '../../../types/ids';
 import { ToggleSwitch } from '../../../components/UI/Inputs/Toggle';
 import type { IPermissionOption } from './permission-options';
-import {
-  PermissionGroup,
-  PermissionGroupLabel,
-  PermissionsList,
-  PermissionToggleDesc,
-  PermissionToggleInfo,
-  PermissionToggleName,
-  PermissionToggleRow,
-} from '../company-members.style';
 
 interface IPermissionTogglesProps {
   groups: Record<string, IPermissionOption[]>;
@@ -21,30 +13,30 @@ interface IPermissionTogglesProps {
 // Lista de switches de concessão — serve tanto às permissões de rota quanto às
 // de provider; quem sabe o que fazer com o toggle é o dono da seção.
 export const PermissionToggles = ({ groups, grantedIds, togglingId, onToggle }: IPermissionTogglesProps) => (
-  <PermissionsList>
+  <div className={styles.permissionsList}>
     {Object.entries(groups).map(([label, options]) => (
-      <PermissionGroup key={label}>
-        <PermissionGroupLabel>{label}</PermissionGroupLabel>
+      <div className={styles.permissionGroup} key={label}>
+        <p className={styles.permissionGroupLabel}>{label}</p>
         {options.map((option) => {
           const isGranted = grantedIds.has(option.id);
 
           return (
-            <PermissionToggleRow key={option.id}>
-              <PermissionToggleInfo>
-                <PermissionToggleName>{option.name}</PermissionToggleName>
+            <label className={styles.permissionToggleRow} key={option.id}>
+              <div className={styles.permissionToggleInfo}>
+                <span className={styles.permissionToggleName}>{option.name}</span>
                 {option.description && (
-                  <PermissionToggleDesc>{option.description}</PermissionToggleDesc>
+                  <span className={styles.permissionToggleDesc}>{option.description}</span>
                 )}
-              </PermissionToggleInfo>
+              </div>
               <ToggleSwitch
                 checked={isGranted}
                 disabled={togglingId === option.id}
                 onChange={() => onToggle(option.id, isGranted)}
               />
-            </PermissionToggleRow>
+            </label>
           );
         })}
-      </PermissionGroup>
+      </div>
     ))}
-  </PermissionsList>
+  </div>
 );

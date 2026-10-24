@@ -1,0 +1,49 @@
+.collapsibleWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.collapsibleTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  align-self: flex-start;
+  padding: 0.2rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: var(--font-main);
+  cursor: pointer;
+  transition: color 0.18s ease;
+
+  &:hover:enabled { color: var(--color-primary); }
+  &:disabled { cursor: not-allowed; }
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 0.3rem;
+  }
+}
+
+.collapsibleContent {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding-left: 0.85rem;
+  border-left: 2px solid var(--color-border);
+
+  &[hidden] { display: none; }
+}
+
+.collapsibleChevron {
+  width: 0.8rem;
+  height: 0.8rem;
+  transition: transform 0.18s ease;
+}
+
+.collapsibleTrigger[aria-expanded='true'] .collapsibleChevron {
+  transform: rotate(180deg);
+}

@@ -1,3 +1,6 @@
+import styles from './layout.module.css';
+import { Avatar } from '../../Avatar';
+import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthContext } from "../../../../contexts/auth";
@@ -8,23 +11,6 @@ import { RouteTabs, type IRouteTabItem } from "../../Tabs";
 import { CompanyDropdown } from "../../CompanyDropdown/company-dropdown";
 import { InvitesMenu } from "../../InvitesMenu/invites-menu";
 import favicon from '../../../../assets/favicon.png';
-import {
-    BrandImage,
-    BrandLink,
-    BrandText,
-    HeaderContent,
-    HeaderNav,
-    ProfileAvatar,
-    ProfileAvatarBadge,
-    ProfileButton,
-    ProfileEmail,
-    ProfileMenu,
-    ProfileMenuHeader,
-    ProfileMenuItem,
-    ProfileMenuLink,
-    ProfileName,
-    RightActions,
-} from "./layout.style";
 
 export const Header = () => {
 
@@ -65,45 +51,45 @@ export const Header = () => {
     }, [location.pathname]);
 
     return (
-        <HeaderNav>
-            <HeaderContent>
-                <BrandLink to="/">
-                    <BrandImage src={favicon} alt="Logo da DataLab" />
-                    <BrandText>DataLab</BrandText>
-                </BrandLink>
+        <nav className={styles.headerNav}>
+            <div className={styles.headerContent}>
+                <Link className={styles.brandLink} to="/">
+                    <img className={styles.brandImage} src={favicon} alt="Logo da DataLab" />
+                    <span className={styles.brandText}>DataLab</span>
+                </Link>
                 <RouteTabs items={menuPages} variant="nav" label="Menu principal" />
-                <RightActions ref={menuRef}>
+                <div className={styles.rightActions} ref={menuRef}>
                     <CompanyDropdown />
-                    <ProfileButton
+                    <button className={styles.profileButton}
                         title="Abrir menu de perfil"
                         onClick={() => setIsMenuOpen((prev) => !prev)}
                         style={{ marginLeft: '0.75rem' }}
                     >
-                        <ProfileAvatar
+                        <Avatar className={styles.profileAvatar}
                             src={me?.avatar_url}
                             name={me?.name ?? ''}
                             seed="initial"
                             alt={`Foto de perfil de ${me?.name}`}
                         />
                         {pendingInviteCount > 0 && (
-                            <ProfileAvatarBadge>{pendingInviteCount > 9 ? '9+' : pendingInviteCount}</ProfileAvatarBadge>
+                            <span className={styles.profileAvatarBadge}>{pendingInviteCount > 9 ? '9+' : pendingInviteCount}</span>
                         )}
-                    </ProfileButton>
+                    </button>
 
                     {isMenuOpen && (
-                        <ProfileMenu>
-                            <ProfileMenuHeader>
-                                <ProfileName>{me?.name || 'Usuário'}</ProfileName>
-                                <ProfileEmail>{me?.email || 'sem-email@datalab.app'}</ProfileEmail>
-                            </ProfileMenuHeader>
+                        <div className={styles.profileMenu}>
+                            <div className={styles.profileMenuHeader}>
+                                <p className={styles.profileName}>{me?.name || 'Usuário'}</p>
+                                <p className={styles.profileEmail}>{me?.email || 'sem-email@datalab.app'}</p>
+                            </div>
 
-                            <ProfileMenuLink to="/perfil/editar">Editar perfil</ProfileMenuLink>
+                            <Link className={styles.profileMenuLink} to="/perfil/editar">Editar perfil</Link>
                             <InvitesMenu />
-                            <ProfileMenuItem onClick={logout}>Sair</ProfileMenuItem>
-                        </ProfileMenu>
+                            <button className={styles.profileMenuItem} onClick={logout}>Sair</button>
+                        </div>
                     )}
-                </RightActions>
-            </HeaderContent>
-        </HeaderNav>
+                </div>
+            </div>
+        </nav>
     );
 }

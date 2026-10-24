@@ -1,0 +1,283 @@
+.membersPageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.membersPageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.membersPageTitle {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.membersPageSubtitle {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.inviteMemberButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 0.65rem;
+  border: 0;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+  cursor: pointer;
+  transition: opacity 0.18s ease;
+
+  &:hover { opacity: 0.88; }
+}
+
+.membersTableCellSecondary {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  display: block;
+}
+
+.membersEmpty {
+  margin: 0;
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.permissionSections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.permissionSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.permissionSectionTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.permissionSectionHint {
+  margin: 0 0 0.3rem;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.ownerNotice {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.85rem;
+  background: var(--color-input-background);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.permissionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.permissionGroup {
+  margin-bottom: 0.5rem;
+}
+
+.permissionGroupLabel {
+  margin: 0 0 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  padding: 0.4rem 0 0.2rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.permissionGroupDetails {
+  &[open] > summary { border-bottom: 1px solid var(--color-border); }
+}
+
+.permissionGroupSummary {
+  display: flex;
+  align-items: center;
+  margin: 0 0 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  padding: 0.4rem 0 0.2rem;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  user-select: none;
+
+  &::-webkit-details-marker { display: none; }
+
+  &::before {
+    content: '▶';
+    font-size: 0.6rem;
+    color: var(--color-primary);
+    margin-right: 0.4rem;
+    transition: transform 0.18s ease;
+    display: inline-block;
+  }
+
+  details[open] > &::before { transform: rotate(90deg); }
+
+  input[type='checkbox'] { margin-left: auto; }
+}
+
+.permissionToggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.2rem;
+  cursor: pointer;
+  border-radius: 0.4rem;
+  transition: background-color 0.15s ease;
+
+  &:hover { background: var(--color-input-background); }
+}
+
+.permissionToggleInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.permissionToggleName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.permissionToggleDesc {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emailTagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-input-background);
+  min-height: 2.8rem;
+  cursor: text;
+}
+
+.emailTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.emailTagRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.75;
+  font-size: 0.95rem;
+
+  &:hover { opacity: 1; }
+}
+
+.emailTagInput {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-family: var(--font-main);
+  min-width: 10rem;
+  flex: 1;
+  padding: 0.1rem 0.2rem;
+}
+
+.permissionToggleMethod {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.3rem;
+  background: var(--color-surface-alt);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+  font-family: monospace;
+}
+
+.inviteStatusBadge {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #888;
+
+  &[data-status='pending'] {
+    color: #f59e0b;
+  }
+
+  &[data-status='accepted'] {
+    color: #10b981;
+  }
+
+  &[data-status='declined'] {
+    color: #ef4444;
+  }
+}
+
+.roleBadge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--color-input-background);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+
+  &[data-owner='true'] {
+    background: var(--color-primary);
+    color: var(--color-primary-text);
+    border-color: transparent;
+  }
+}

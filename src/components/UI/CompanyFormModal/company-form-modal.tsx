@@ -1,3 +1,4 @@
+import modal from '../../../styles/modal-form.module.css';
 import { useActionState, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
@@ -7,15 +8,6 @@ import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { currentMembershipQuery, meQuery } from '../../../queries';
 import type { IUserCompany } from '../../../services/datalab-api/usersResource';
 import { createCompanyAction, createUpdateCompanyAction } from './actions';
-import {
-  ModalError,
-  ModalField,
-  ModalFieldset,
-  ModalForm,
-  ModalInput,
-  ModalLabel,
-  ModalSubmit,
-} from './company-form-modal.style';
 
 interface ICompanyFormModalProps {
   isOpen: boolean;
@@ -51,11 +43,11 @@ export const CompanyFormModal = ({ isOpen, company, onClose }: ICompanyFormModal
       onClose={onClose}
       title={isEditing ? `Editar empresa: ${company.name}` : 'Criar empresa'}
     >
-      <ModalForm key={company?.id ?? 'new'} action={formAction}>
-        <ModalFieldset disabled={isPending}>
-          <ModalField>
-            <ModalLabel htmlFor="company-name">Nome *</ModalLabel>
-            <ModalInput
+      <form className={modal.form} key={company?.id ?? 'new'} action={formAction}>
+        <fieldset className={modal.fieldset} disabled={isPending}>
+          <div className={modal.field}>
+            <label className={modal.label} htmlFor="company-name">Nome *</label>
+            <input className={modal.input}
               id="company-name"
               name="name"
               type="text"
@@ -65,17 +57,17 @@ export const CompanyFormModal = ({ isOpen, company, onClose }: ICompanyFormModal
               required
               autoFocus
             />
-          </ModalField>
+          </div>
 
           {formState.error && !formState.success && (
-            <ModalError>{formState.error}</ModalError>
+            <p className={modal.error}>{formState.error}</p>
           )}
 
-          <ModalSubmit type="submit">
+          <button className={modal.submit} type="submit">
             {isPending ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Criar empresa'}
-          </ModalSubmit>
-        </ModalFieldset>
-      </ModalForm>
+          </button>
+        </fieldset>
+      </form>
     </Modal>
   );
 };

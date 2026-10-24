@@ -1,6 +1,6 @@
+import styles from '../messages.module.css';
 import type { IPendingAttachment } from '../use-chat-attachments';
 import { formatFileSize } from '../../../../utils/download';
-import { AttachmentChipBox, AttachmentMeta, AttachmentName, AttachmentRemove } from '../messages.style';
 
 interface AttachmentChipProps {
     filename: string;
@@ -18,13 +18,13 @@ const STATUS_LABEL: Record<IPendingAttachment['status'], string> = {
 };
 
 export const AttachmentChip = ({ filename, size, status = 'ready', error, onRemove, isDisabled }: AttachmentChipProps) => (
-    <AttachmentChipBox $variant={onRemove ? 'input' : 'bubble'} $failed={status === 'error'} title={error ?? filename}>
-        <AttachmentName>📎 {filename}</AttachmentName>
-        <AttachmentMeta>{STATUS_LABEL[status] || formatFileSize(size)}</AttachmentMeta>
+    <span className={styles.attachmentChipBox} data-variant={onRemove ? 'input' : 'bubble'} data-failed={status === 'error'} title={error ?? filename}>
+        <span className={styles.attachmentName}>📎 {filename}</span>
+        <span className={styles.attachmentMeta}>{STATUS_LABEL[status] || formatFileSize(size)}</span>
         {onRemove && (
-            <AttachmentRemove type="button" aria-label={`Remover ${filename}`} disabled={isDisabled} onClick={onRemove}>
+            <button className={styles.attachmentRemove} type="button" aria-label={`Remover ${filename}`} disabled={isDisabled} onClick={onRemove}>
                 ✕
-            </AttachmentRemove>
+            </button>
         )}
-    </AttachmentChipBox>
+    </span>
 );

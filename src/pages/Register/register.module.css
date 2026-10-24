@@ -1,0 +1,19 @@
+.registerContainer {
+  width: 100%;
+  min-height: 100%;
+}
+
+.registerFooter {
+  composes: footerLinks from '../../styles/design-system.module.css';
+  margin-top: 1.25rem;
+}
+
+.registerFooterLink {
+  color: var(--color-primary);
+  font-weight: 700;
+  transition: color 0.18s ease;
+
+  &:hover {
+    color: var(--color-text);
+  }
+}

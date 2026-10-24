@@ -4,17 +4,17 @@ Uma aplicação de chat React moderna construída com TypeScript, Vite e Axios p
 
 ## Características
 
-- **React 18** com TypeScript para type safety
+- **React 19** com TypeScript para type safety
 - **Vite** para desenvolvimento rápido e build otimizado
 - **Axios** para requisições HTTP com suporte a streaming
-- **Bootstrap 5** para estilização
-- **Marked** para renderização de markdown
+- **CSS Modules** para estilização, com tokens de tema em variáveis CSS
+- **react-markdown** para renderização de markdown
 - **Variáveis de ambiente** para configuração flexível
 
 ## Pré-requisitos
 
 - Node.js (versão 18 ou superior)
-- npm ou yarn
+- yarn 1
 
 ## Instalação
 
@@ -26,7 +26,7 @@ cd datalab-app
 
 2. Instale as dependências:
 ```bash
-npm install
+yarn install
 ```
 
 3. Configure as variáveis de ambiente:
@@ -41,11 +41,14 @@ VITE_DATALAB_API_URL=http://localhost:3000
 
 ## Scripts Disponíveis
 
-- `npm run dev` - Inicia o servidor de desenvolvimento
-- `npm run build` - Gera build de produção
-- `npm run preview` - Visualiza o build de produção
-- `npm run lint` - Executa o linter
-- `npm run type-check` - Verifica tipos TypeScript
+- `yarn dev` - Inicia o servidor de desenvolvimento
+- `yarn build` - Gera build de produção
+- `yarn preview` - Visualiza o build de produção
+- `yarn lint` - Executa o linter
+- `yarn typecheck` - Verifica tipos TypeScript
+- `yarn test` - Roda os testes
+
+No VS Code, selecione a versão do TypeScript do projeto (`TypeScript: Select TypeScript Version` → `Use Workspace Version`): é ela que carrega o plugin de CSS Modules, que leva o Ctrl+click de `styles.classe` para a classe no `.module.css`.
 
 ## Configuração da API
 
@@ -76,7 +79,7 @@ src/
 
 1. Inicie o servidor de desenvolvimento:
 ```bash
-npm run dev
+yarn dev
 ```
 
 2. Abra o navegador em `http://localhost:5173`

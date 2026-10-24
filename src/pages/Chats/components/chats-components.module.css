@@ -1,0 +1,131 @@
+.emptyChatList {
+  text-align: center;
+  padding: 2rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-style: italic;
+  background: var(--color-input-background);
+}
+
+.chatListWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chatItemLink {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.9rem 1rem;
+}
+
+.chatItemDetails {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.chatItemActions {
+  display: flex;
+  gap: 0.5rem;
+  padding-right: 1rem;
+}
+
+.chatItemActionButton {
+  composes: secondaryButton from '../../../styles/design-system.module.css';
+  width: auto;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.6rem;
+  font-size: 0.8rem;
+}
+
+.chatItemCard {
+  display: flex;
+  align-items: center;
+  border-radius: 0.85rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 6px 12px var(--color-shadow);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: var(--color-primary);
+    box-shadow: 0 10px 18px var(--color-shadow);
+  }
+}
+
+.chatTitle {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.createChatButton {
+  border: 0;
+  border-radius: 0.75rem;
+  padding: 0.62rem 0.95rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  color: var(--color-primary-text);
+  background: var(--color-primary);
+  transition: filter 0.18s ease, transform 0.18s ease;
+
+  &:hover {
+    filter: brightness(0.95);
+  }
+
+  &:active {
+    transform: scale(0.985);
+  }
+}
+
+.createChatIcon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.createChatForm {
+
+}
+
+.createChatFieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.createChatField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.createChatActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.2rem;
+}
+
+.createChatSubmit {
+  composes: primaryButton from '../../../styles/design-system.module.css';
+  width: auto;
+  min-width: 7rem;
+  padding-inline: 1.2rem;
+}

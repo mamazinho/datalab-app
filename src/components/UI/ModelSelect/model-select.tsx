@@ -1,16 +1,8 @@
+import styles from './model-select.module.css';
 import { useId, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useClickOutside } from '../../../hooks/use-click-outside';
 import { availableModelsQuery } from '../../../queries';
-import {
-    ModelOptionItem,
-    ModelProviderGroup,
-    ModelProviderLabel,
-    ModelSelectButton,
-    ModelSelectHint,
-    ModelSelectList,
-    ModelSelectWrapper,
-} from './model-select.style';
 
 interface IModelSelectProps {
     name: string;
@@ -26,15 +18,14 @@ interface IModelOptionProps {
 }
 
 const ModelOption = ({ label, isSelected, onSelect }: IModelOptionProps) => (
-    <ModelOptionItem
+    <button className={styles.modelOptionItem}
         type="button"
         role="option"
         aria-selected={isSelected}
-        $isSelected={isSelected}
         onClick={onSelect}
     >
         {label}
-    </ModelOptionItem>
+    </button>
 );
 
 export const ModelSelect = ({ name, defaultValue = '', emptyOptionLabel, labelId }: IModelSelectProps) => {
@@ -55,10 +46,10 @@ export const ModelSelect = ({ name, defaultValue = '', emptyOptionLabel, labelId
 
     return (
         <>
-            <ModelSelectWrapper ref={wrapperRef}>
+            <div className={styles.modelSelectWrapper} ref={wrapperRef}>
                 <input type="hidden" name={name} value={value} />
 
-                <ModelSelectButton
+                <button className={styles.modelSelectButton}
                     id={buttonId}
                     type="button"
                     onClick={() => setIsOpen((prev) => !prev)}
@@ -68,10 +59,10 @@ export const ModelSelect = ({ name, defaultValue = '', emptyOptionLabel, labelId
                     aria-labelledby={labelId ? `${labelId} ${buttonId}` : undefined}
                 >
                     {isLoading ? 'Carregando modelos...' : (selectedModel?.display_name ?? (value || emptyOptionLabel))}
-                </ModelSelectButton>
+                </button>
 
                 {isOpen && (
-                    <ModelSelectList role="listbox" aria-labelledby={labelId}>
+                    <div className={styles.modelSelectList} role="listbox" aria-labelledby={labelId}>
                         <ModelOption label={emptyOptionLabel} isSelected={!value} onSelect={() => select('')} />
 
                         {value && !selectedModel && (
@@ -79,14 +70,14 @@ export const ModelSelect = ({ name, defaultValue = '', emptyOptionLabel, labelId
                         )}
 
                         {providers.map((provider) => (
-                            <ModelProviderGroup
+                            <div className={styles.modelProviderGroup}
                                 key={provider.provider}
                                 role="group"
                                 aria-labelledby={`${buttonId}-${provider.provider}`}
                             >
-                                <ModelProviderLabel id={`${buttonId}-${provider.provider}`}>
+                                <div className={styles.modelProviderLabel} id={`${buttonId}-${provider.provider}`}>
                                     {provider.display_name}
-                                </ModelProviderLabel>
+                                </div>
 
                                 {provider.models.map((model) => (
                                     <ModelOption
@@ -96,13 +87,13 @@ export const ModelSelect = ({ name, defaultValue = '', emptyOptionLabel, labelId
                                         onSelect={() => select(model.name)}
                                     />
                                 ))}
-                            </ModelProviderGroup>
+                            </div>
                         ))}
-                    </ModelSelectList>
+                    </div>
                 )}
-            </ModelSelectWrapper>
+            </div>
 
-            {isError && <ModelSelectHint role="status">Não foi possível carregar a lista de modelos.</ModelSelectHint>}
+            {isError && <p className={styles.modelSelectHint} role="status">Não foi possível carregar a lista de modelos.</p>}
         </>
     );
 };

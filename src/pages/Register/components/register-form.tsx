@@ -1,20 +1,6 @@
+import designSystemStyles from '../../../styles/design-system.module.css';
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import {
-    AuthForm,
-    AuthHeader,
-    BrandHighlight,
-    BrandTitle,
-    Field,
-    FieldsWrapper,
-    FormDivider,
-    DividerLine,
-    DividerText,
-    Input,
-    Label,
-    PrimaryButton,
-    Subtitle,
-} from '../../../styles/design-system.style';
 import { PasswordInput } from '../../../components/UI/Inputs/Password/password-input';
 import { PhoneField } from '../../../components/UI/Inputs/Phone';
 import { SocialLoginButtons } from '../../../components/UI/Buttons/social-login-buttons';
@@ -34,15 +20,15 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onSocial
 
     return (
         <>
-            <AuthHeader>
-                <BrandTitle>DataLab <BrandHighlight>App</BrandHighlight></BrandTitle>
-                <Subtitle>Crie sua conta</Subtitle>
-            </AuthHeader>
-            <AuthForm {...props}>
-                <FieldsWrapper disabled={isPending}>
-                    <Field>
-                        <Label htmlFor="inputName">Nome Completo</Label>
-                        <Input
+            <header className={designSystemStyles.authHeader}>
+                <h1 className={designSystemStyles.brandTitle}>DataLab <span className={designSystemStyles.brandHighlight}>App</span></h1>
+                <h2 className={designSystemStyles.subtitle}>Crie sua conta</h2>
+            </header>
+            <form className={designSystemStyles.authForm} {...props}>
+                <fieldset className={designSystemStyles.fieldsWrapper} disabled={isPending}>
+                    <div className={designSystemStyles.field}>
+                        <label className={designSystemStyles.label} htmlFor="inputName">Nome Completo</label>
+                        <input className={designSystemStyles.input}
                             type="text"
                             id="inputName"
                             name="name"
@@ -51,11 +37,11 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onSocial
                             autoFocus
                             autoComplete="name"
                         />
-                    </Field>
+                    </div>
 
-                    <Field>
-                        <Label htmlFor="inputEmail">Email</Label>
-                        <Input
+                    <div className={designSystemStyles.field}>
+                        <label className={designSystemStyles.label} htmlFor="inputEmail">Email</label>
+                        <input className={designSystemStyles.input}
                             type="email"
                             id="inputEmail"
                             name="email"
@@ -64,10 +50,10 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onSocial
                             required
                             autoComplete="email"
                         />
-                    </Field>
+                    </div>
 
-                    <Field>
-                        <Label htmlFor="inputPhoneNumber">Telefone</Label>
+                    <div className={designSystemStyles.field}>
+                        <label className={designSystemStyles.label} htmlFor="inputPhoneNumber">Telefone</label>
                         <PhoneField
                             id="inputPhoneNumber"
                             name="phone_number"
@@ -77,10 +63,10 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onSocial
                             required
                             disabled={isPending}
                         />
-                    </Field>
+                    </div>
 
-                    <Field>
-                        <Label htmlFor="inputPassword">Senha</Label>
+                    <div className={designSystemStyles.field}>
+                        <label className={designSystemStyles.label} htmlFor="inputPassword">Senha</label>
                         <PasswordInput
                             id="inputPassword"
                             name="password"
@@ -91,10 +77,10 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onSocial
                             autoComplete="new-password"
                             showRequirements
                         />
-                    </Field>
+                    </div>
 
-                    <Field>
-                        <Label htmlFor="inputConfirmPassword">Confirmar Senha</Label>
+                    <div className={designSystemStyles.field}>
+                        <label className={designSystemStyles.label} htmlFor="inputConfirmPassword">Confirmar Senha</label>
                         <PasswordInput
                             id="inputConfirmPassword"
                             name="confirmPassword"
@@ -105,20 +91,20 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onSocial
                             required
                             autoComplete="new-password"
                         />
-                    </Field>
+                    </div>
 
-                    <PrimaryButton type="submit">
+                    <button className={designSystemStyles.primaryButton} type="submit">
                         {isPending ? "Processando..." : "Cadastrar"}
-                    </PrimaryButton>
-                </FieldsWrapper>
+                    </button>
+                </fieldset>
 
-                <FormDivider>
-                    <DividerLine />
-                    <DividerText>Ou continue com</DividerText>
-                </FormDivider>
+                <div className={designSystemStyles.formDivider}>
+                    <div className={designSystemStyles.dividerLine} />
+                    <span className={designSystemStyles.dividerText}>Ou continue com</span>
+                </div>
 
                 <SocialLoginButtons onSelect={onSocialLogin} />
-            </AuthForm>
+            </form>
         </>
     );
 };

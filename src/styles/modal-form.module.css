@@ -1,0 +1,86 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: contents;
+  &:disabled { opacity: 0.6; pointer-events: none; }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.input {
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-input-background);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-family: var(--font-main);
+  width: 100%;
+  transition: border-color 0.18s ease;
+
+  &:focus { outline: none; border-color: var(--color-primary); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.textarea {
+  composes: input;
+  resize: vertical;
+  min-height: 5.5rem;
+}
+
+.select {
+  composes: input;
+  cursor: pointer;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.error {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-error);
+}
+
+.submit {
+  padding: 0.7rem 1.4rem;
+  border-radius: 0.65rem;
+  border: 0;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+  cursor: pointer;
+  align-self: flex-end;
+  transition: opacity 0.18s ease;
+
+  &:hover:enabled { opacity: 0.88; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.deleteSubmit {
+  composes: submit;
+  background: var(--color-error);
+  color: #fff;
+}

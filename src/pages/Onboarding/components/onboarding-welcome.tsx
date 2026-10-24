@@ -1,3 +1,4 @@
+import styles from '../onboarding.module.css';
 import { useActionState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -5,28 +6,6 @@ import { useMe } from '../../../hooks/use-me';
 import { meQuery } from '../../../queries';
 import { useCompanyContext } from '../../../contexts/company';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
-import {
-  InviteAcceptButton,
-  InviteActions,
-  InviteBy,
-  InviteCompanyName,
-  InviteDeclineButton,
-  InviteInfo,
-  InviteItem,
-  InviteList,
-  OnboardingCard,
-  OnboardingDivider,
-  OnboardingError,
-  OnboardingField,
-  OnboardingFieldset,
-  OnboardingForm,
-  OnboardingInput,
-  OnboardingLabel,
-  OnboardingSubmit,
-  OnboardingSubtitle,
-  OnboardingTitle,
-  OnboardingWrapper,
-} from '../onboarding.style';
 import { createCompanyAction } from '../actions';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { useInviteActions } from '../../../hooks/use-invite-actions';
@@ -36,26 +15,26 @@ const InviteRow = ({ invite }: { invite: IUserInvite }) => {
   const { acceptFormAction, declineFormAction, isAccepting, isDeclining } = useInviteActions();
 
   return (
-    <InviteItem>
-      <InviteInfo>
-        <InviteCompanyName>{invite.company?.name ?? `Empresa #${invite.company_id}`}</InviteCompanyName>
-        <InviteBy>Convidado por {invite.invited_by?.name ?? 'alguém'}</InviteBy>
-      </InviteInfo>
-      <InviteActions>
+    <li className={styles.inviteItem}>
+      <div className={styles.inviteInfo}>
+        <span className={styles.inviteCompanyName}>{invite.company?.name ?? `Empresa #${invite.company_id}`}</span>
+        <span className={styles.inviteBy}>Convidado por {invite.invited_by?.name ?? 'alguém'}</span>
+      </div>
+      <div className={styles.inviteActions}>
         <form action={acceptFormAction}>
           <input type="hidden" name="inviteId" value={invite.id} />
-          <InviteAcceptButton type="submit" disabled={isAccepting || isDeclining}>
+          <button className={styles.inviteAcceptButton} type="submit" disabled={isAccepting || isDeclining}>
             {isAccepting ? '...' : 'Aceitar'}
-          </InviteAcceptButton>
+          </button>
         </form>
         <form action={declineFormAction}>
           <input type="hidden" name="inviteId" value={invite.id} />
-          <InviteDeclineButton type="submit" disabled={isAccepting || isDeclining}>
+          <button className={styles.inviteDeclineButton} type="submit" disabled={isAccepting || isDeclining}>
             {isDeclining ? '...' : 'Recusar'}
-          </InviteDeclineButton>
+          </button>
         </form>
-      </InviteActions>
-    </InviteItem>
+      </div>
+    </li>
   );
 };
 
@@ -85,32 +64,32 @@ export const OnboardingWelcome = () => {
   });
 
   return (
-    <OnboardingWrapper>
-      <OnboardingCard>
-        <OnboardingTitle>Bem-vindo ao DataLab</OnboardingTitle>
-        <OnboardingSubtitle>
+    <div className={styles.onboardingWrapper}>
+      <div className={styles.onboardingCard}>
+        <h1 className={styles.onboardingTitle}>Bem-vindo ao DataLab</h1>
+        <p className={styles.onboardingSubtitle}>
           Para começar, você precisa pertencer a uma empresa.
           Aceite um convite ou crie uma nova empresa abaixo.
-        </OnboardingSubtitle>
+        </p>
 
         <p>Você tem {pendingInvites.length} convite(s) pendente(s).</p>
         {pendingInvites.length > 0 && (
           <div>
-            <InviteList>
+            <ul className={styles.inviteList}>
               {pendingInvites.map((invite) => (
                 <InviteRow key={invite.id} invite={invite} />
               ))}
-            </InviteList>
+            </ul>
           </div>
         )}
-        <OnboardingDivider />
-        <OnboardingSubtitle>Crie sua própria empresa para começar.</OnboardingSubtitle>
+        <div className={styles.onboardingDivider} />
+        <p className={styles.onboardingSubtitle}>Crie sua própria empresa para começar.</p>
 
-        <OnboardingForm action={createFormAction}>
-          <OnboardingFieldset disabled={isCreating}>
-            <OnboardingField>
-              <OnboardingLabel htmlFor="companyName">Nome da empresa</OnboardingLabel>
-              <OnboardingInput
+        <form className={styles.onboardingForm} action={createFormAction}>
+          <fieldset className={styles.onboardingFieldset} disabled={isCreating}>
+            <div className={styles.onboardingField}>
+              <label className={styles.onboardingLabel} htmlFor="companyName">Nome da empresa</label>
+              <input className={styles.onboardingInput}
                 id="companyName"
                 type="text"
                 name="name"
@@ -120,16 +99,16 @@ export const OnboardingWelcome = () => {
                 minLength={2}
                 autoFocus={pendingInvites.length === 0}
               />
-            </OnboardingField>
+            </div>
             {createState.error && createState.timestamp > 0 && (
-              <OnboardingError>{createState.error}</OnboardingError>
+              <p className={styles.onboardingError}>{createState.error}</p>
             )}
-            <OnboardingSubmit type="submit">
+            <button className={styles.onboardingSubmit} type="submit">
               {isCreating ? 'Criando...' : 'Criar empresa'}
-            </OnboardingSubmit>
-          </OnboardingFieldset>
-        </OnboardingForm>
-      </OnboardingCard>
-    </OnboardingWrapper>
+            </button>
+          </fieldset>
+        </form>
+      </div>
+    </div>
   );
 };

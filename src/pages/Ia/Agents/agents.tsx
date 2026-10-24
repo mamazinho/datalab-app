@@ -1,3 +1,4 @@
+import styles from '../ia.module.css';
 import { useState } from 'react';
 import { QueryBoundary } from '../../../components/Tools/query-boundary';
 import { useCompanyContext } from '../../../contexts/company';
@@ -6,7 +7,6 @@ import type { IRetrieveAgentWithState } from '../../../services/datalab-api/agen
 import { AGENT_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
 import { AgentsTable } from './components/agents-table';
 import { AgentFormModal } from './components/agent-form-modal';
-import { CreateButton, PageContainer, PageHeader, PageSubtitle, PageTitle } from '../ia.style';
 
 interface IAgentsListSectionProps {
   onEdit: (agent: IRetrieveAgentWithState) => void;
@@ -36,22 +36,22 @@ export const Agents = () => {
   };
 
   return (
-    <PageContainer>
-      <PageHeader>
+    <div className={styles.pageContainer}>
+      <div className={styles.pageHeader}>
         <div>
-          <PageTitle>Agentes</PageTitle>
-          <PageSubtitle>
+          <h1 className={styles.pageTitle}>Agentes</h1>
+          <p className={styles.pageSubtitle}>
             {currentCompany?.name} · Gerencie os agentes especialistas disponíveis no chat.
-          </PageSubtitle>
+          </p>
         </div>
-        <CreateButton
+        <button className={styles.createButton}
           onClick={openCreateModal}
           disabled={!canCreate}
           title={canCreate ? undefined : 'Você não tem permissão para criar agentes'}
         >
           + Criar agente
-        </CreateButton>
-      </PageHeader>
+        </button>
+      </div>
 
       <QueryBoundary>
         <AgentsListSection onEdit={openEditModal} />
@@ -62,6 +62,6 @@ export const Agents = () => {
         agent={editingAgent}
         onClose={() => setIsFormOpen(false)}
       />
-    </PageContainer>
+    </div>
   );
 };

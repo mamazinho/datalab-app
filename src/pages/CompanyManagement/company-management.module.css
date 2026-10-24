@@ -1,0 +1,92 @@
+.companyPageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.companyPageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.companyPageTitle {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.companyPageSubtitle {
+  margin: 0.3rem 0 0;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.companyInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.companyName {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.activeBadge {
+  align-self: flex-start;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.companyActions {
+  display: inline-flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.companyActionButton {
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: var(--font-main);
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+  white-space: nowrap;
+
+  &:hover { background: var(--color-input-background); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.companyDeleteButton {
+  composes: companyActionButton;
+  border-color: var(--color-error);
+  color: var(--color-error);
+
+  &:hover { background: var(--color-error); color: #fff; }
+}
+
+.companyRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.2rem;
+  border-radius: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-primary);
+}

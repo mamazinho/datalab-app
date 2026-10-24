@@ -1,3 +1,7 @@
+import iaStyles from '../../ia.module.css';
+import styles from '../agents.module.css';
+import { TruncatedText } from '../../../../components/UI/TruncatedText';
+import { Avatar } from '../../../../components/UI/Avatar';
 import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
@@ -8,18 +12,6 @@ import type { UUID7 } from '../../../../types/ids';
 import { useCompanyContext } from '../../../../contexts/company';
 import { AGENT_ROUTE_PERMISSIONS } from '../../../../utils/route-permissions';
 import { agentsQuery } from '../../../../queries';
-import {
-  AgentAvatar,
-  AgentBadge,
-  AgentCell,
-  AgentDescription,
-  AgentIdentity,
-  AgentKey,
-  AgentModel,
-  AgentName,
-  AgentOwner,
-} from '../agents.style';
-import { EmptyMessage } from '../../ia.style';
 
 interface IAgentsTableProps {
   agents: IRetrieveAgentWithState[];
@@ -28,13 +20,13 @@ interface IAgentsTableProps {
 
 const renderStatusBadge = (agent: IRetrieveAgentWithState) =>
   agent.disabled_by_company ? (
-    <AgentBadge $variant="company-disabled">Desativado pela empresa</AgentBadge>
+    <span className={styles.agentBadge} data-variant="company-disabled">Desativado pela empresa</span>
   ) : agent.disabled_by_user ? (
-    <AgentBadge $variant="user-disabled">Desativado por você</AgentBadge>
+    <span className={styles.agentBadge} data-variant="user-disabled">Desativado por você</span>
   ) : agent.is_enabled ? (
-    <AgentBadge $variant="active">Ativo</AgentBadge>
+    <span className={styles.agentBadge} data-variant="active">Ativo</span>
   ) : (
-    <AgentBadge $variant="user-disabled">Inativo</AgentBadge>
+    <span className={styles.agentBadge} data-variant="user-disabled">Inativo</span>
   );
 
 export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
@@ -95,7 +87,7 @@ export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
   }, [invalidateAgents]);
 
   if (agents.length === 0) {
-    return <EmptyMessage>Nenhum agente encontrado.</EmptyMessage>;
+    return <p className={iaStyles.emptyMessage}>Nenhum agente encontrado.</p>;
   }
 
   return (
@@ -116,26 +108,26 @@ export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
         return (
           <TableRow key={agent.id}>
             <td>
-              <AgentCell>
-                <AgentAvatar src={agent.avatar_url} name={agent.name} seed="initial" alt="" />
-                <AgentIdentity>
-                  <AgentName>{agent.name}</AgentName>
-                  <AgentKey>{agent.key}</AgentKey>
-                </AgentIdentity>
-              </AgentCell>
+              <div className={styles.agentCell}>
+                <Avatar className={styles.agentAvatar} src={agent.avatar_url} name={agent.name} seed="initial" alt="" />
+                <div className={styles.agentIdentity}>
+                  <span className={styles.agentName}>{agent.name}</span>
+                  <span className={styles.agentKey}>{agent.key}</span>
+                </div>
+              </div>
             </td>
             <td>
-              <AgentDescription text={agent.description} lines={3} />
+              <TruncatedText className={styles.agentDescription} text={agent.description} lines={3} />
             </td>
             <td>
-              <AgentModel>{agent.model_name || '—'}</AgentModel>
+              <span className={styles.agentModel}>{agent.model_name || '—'}</span>
             </td>
             <td>{renderStatusBadge(agent)}</td>
             <td>
               {agent.is_system ? (
-                <AgentBadge $variant="system">Sistema</AgentBadge>
+                <span className={styles.agentBadge} data-variant="system">Sistema</span>
               ) : (
-                <AgentOwner>{currentCompany?.name ?? '—'}</AgentOwner>
+                <span className={styles.agentOwner}>{currentCompany?.name ?? '—'}</span>
               )}
             </td>
             <td>

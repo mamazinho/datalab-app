@@ -1,3 +1,6 @@
+import styles from './chats-components.module.css';
+import designSystemStyles from '../../../styles/design-system.module.css';
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
@@ -6,19 +9,8 @@ import { useCompanyContext, useCompanyPermissions } from '../../../contexts/comp
 import { chatListsQueryKey } from '../../../queries';
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { IRetrieveChat } from '../../../services/datalab-api/chatsResource';
-import { Badge } from '../../../styles/design-system.style';
 import type { UUID7 } from '../../../types/ids';
 import { CHAT_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
-import {
-    ChatItemActionButton,
-    ChatItemActions,
-    ChatItemCard,
-    ChatItemDetails,
-    ChatItemLink,
-    ChatListWrapper,
-    ChatTitle,
-    EmptyChatList,
-} from './chats-components.style';
 
 export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
     const { currentMembership, hasPermissionByRoute } = useCompanyContext();
@@ -54,10 +46,10 @@ export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
         void runChatAction(chat, () => DatalabAPI.ChatsResource.deleteChat(chat.id), 'Conversa excluída.');
     };
 
-    if (!chats.length) return <EmptyChatList>Nenhum chat encontrado.</EmptyChatList>;
+    if (!chats.length) return <div className={styles.emptyChatList}>Nenhum chat encontrado.</div>;
 
     return (
-        <ChatListWrapper>
+        <ul className={styles.chatListWrapper}>
             {chats.map(chat => {
                 const isCreatorOrOwner = isOwner || chat.created_by_membership_id === currentMembership?.id;
                 const canArchiveChat = canArchive && isCreatorOrOwner;
@@ -65,33 +57,33 @@ export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
                 const isBusy = busyChatId === chat.id;
 
                 return (
-                    <ChatItemCard key={chat.id}>
-                        <ChatItemLink to={`/ia/conversas/${chat.id}/mensagens`}>
-                            <ChatTitle>{chat.title ?? 'Sem título'}</ChatTitle>
-                            <ChatItemDetails>
+                    <li className={styles.chatItemCard} key={chat.id}>
+                        <Link className={styles.chatItemLink} to={`/ia/conversas/${chat.id}/mensagens`}>
+                            <h5 className={styles.chatTitle}>{chat.title ?? 'Sem título'}</h5>
+                            <div className={styles.chatItemDetails}>
                                 {chat.created_by && <ChatMember member={chat.created_by} />}
-                                {chat.is_private && <Badge>Privada</Badge>}
-                                {chat.archived && <Badge>Arquivada</Badge>}
-                            </ChatItemDetails>
-                        </ChatItemLink>
+                                {chat.is_private && <span className={designSystemStyles.badge}>Privada</span>}
+                                {chat.archived && <span className={designSystemStyles.badge}>Arquivada</span>}
+                            </div>
+                        </Link>
 
                         {(canArchiveChat || canDeleteChat) && (
-                            <ChatItemActions>
+                            <div className={styles.chatItemActions}>
                                 {canArchiveChat && (
-                                    <ChatItemActionButton disabled={isBusy} onClick={() => void toggleArchived(chat)}>
+                                    <button className={styles.chatItemActionButton} disabled={isBusy} onClick={() => void toggleArchived(chat)}>
                                         {chat.archived ? 'Desarquivar' : 'Arquivar'}
-                                    </ChatItemActionButton>
+                                    </button>
                                 )}
                                 {canDeleteChat && (
-                                    <ChatItemActionButton disabled={isBusy} onClick={() => deleteChat(chat)}>
+                                    <button className={styles.chatItemActionButton} disabled={isBusy} onClick={() => deleteChat(chat)}>
                                         Excluir
-                                    </ChatItemActionButton>
+                                    </button>
                                 )}
-                            </ChatItemActions>
+                            </div>
                         )}
-                    </ChatItemCard>
+                    </li>
                 );
             })}
-        </ChatListWrapper>
+        </ul>
     );
 };

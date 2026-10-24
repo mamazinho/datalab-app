@@ -1,20 +1,10 @@
+import styles from './company-dropdown.module.css';
 import { useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useMe, useIsAuthLoading } from '../../../hooks/use-me';
 import { useCompanyContext } from '../../../contexts/company';
 import { useClickOutside } from '../../../hooks/use-click-outside';
 import { CompanyFormModal } from '../CompanyFormModal';
-import {
-  ActiveDot,
-  CreateCompanyItem,
-  DropdownChevron,
-  DropdownItem,
-  DropdownMenu,
-  DropdownMenuLabel,
-  DropdownTrigger,
-  DropdownTriggerName,
-  DropdownWrapper,
-} from './company-dropdown.style';
 import type { IUserCompany } from '../../../services/datalab-api/usersResource';
 
 export const CompanyDropdown = () => {
@@ -38,39 +28,38 @@ export const CompanyDropdown = () => {
   };
 
   return (
-    <DropdownWrapper ref={wrapperRef}>
-      <DropdownTrigger
+    <div className={styles.dropdownWrapper} ref={wrapperRef}>
+      <button className={styles.dropdownTrigger}
         onClick={() => setIsOpen((prev) => !prev)}
         title="Trocar empresa"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
-        <DropdownTriggerName>{currentCompany.name}</DropdownTriggerName>
-        <DropdownChevron
+        <span className={styles.dropdownTriggerName}>{currentCompany.name}</span>
+        <svg className={styles.dropdownChevron}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
           style={{ transform: isOpen ? 'rotate(180deg)' : undefined }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
-        </DropdownChevron>
-      </DropdownTrigger>
+        </svg>
+      </button>
 
       {isOpen && (
-        <DropdownMenu role="listbox">
-          <DropdownMenuLabel>Empresa ativa</DropdownMenuLabel>
+        <div className={styles.dropdownMenu} role="listbox">
+          <p className={styles.dropdownMenuLabel}>Empresa ativa</p>
           {userCompanies.map((userCompany) => {
             const isActive = userCompany.id === currentCompany.id;
             const isOwner = userCompany.membership.membership_role === 'owner';
             return (
-              <DropdownItem
+              <button className={styles.dropdownItem}
                 key={userCompany.id}
                 role="option"
                 aria-selected={isActive}
-                $active={isActive}
                 onClick={() => handleSelect(userCompany)}
               >
-                {isActive && <ActiveDot />}
+                {isActive && <span className={styles.activeDot} />}
                 {userCompany.name}
                 {isOwner && (
                   <svg
@@ -82,19 +71,19 @@ export const CompanyDropdown = () => {
                     <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm0 2h14v2H5v-2z" />
                   </svg>
                 )}
-              </DropdownItem>
+              </button>
             );
           })}
 
-          <CreateCompanyItem
+          <button className={styles.createCompanyItem}
             onClick={() => {
               setIsOpen(false);
               setIsCreateOpen(true);
             }}
           >
             + Criar empresa
-          </CreateCompanyItem>
-        </DropdownMenu>
+          </button>
+        </div>
       )}
 
       <CompanyFormModal
@@ -102,6 +91,6 @@ export const CompanyDropdown = () => {
         company={null}
         onClose={() => setIsCreateOpen(false)}
       />
-    </DropdownWrapper>
+    </div>
   );
 };

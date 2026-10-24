@@ -1,6 +1,7 @@
-import type { ComponentPropsWithoutRef } from 'react';
+import type { ComponentPropsWithoutRef, CSSProperties } from 'react';
+import { cx } from '../../../utils/class-names';
 import { truncateText } from '../../../utils/text';
-import { StyledTruncatedText } from './truncated-text.style';
+import styles from './truncated-text.module.css';
 
 interface ITruncatedTextProps extends Omit<ComponentPropsWithoutRef<'span'>, 'children'> {
   text?: string | null;
@@ -9,14 +10,19 @@ interface ITruncatedTextProps extends Omit<ComponentPropsWithoutRef<'span'>, 'ch
   fallback?: string;
 }
 
-export const TruncatedText = ({ text, lines, maxChars, fallback = '—', ...props }: ITruncatedTextProps) => {
+export const TruncatedText = ({ text, lines, maxChars, fallback = '—', className, style, ...props }: ITruncatedTextProps) => {
   if (!text) {
-    return <StyledTruncatedText {...props}>{fallback}</StyledTruncatedText>;
+    return <span className={cx(styles.truncatedText, className)} style={style} {...props}>{fallback}</span>;
   }
 
   return (
-    <StyledTruncatedText $lines={lines} title={text} {...props}>
+    <span
+      className={cx(styles.truncatedText, !!lines && styles.clamped, className)}
+      style={lines ? ({ ...style, '--lines': lines } as CSSProperties) : style}
+      title={text}
+      {...props}
+    >
       {maxChars ? truncateText(text, maxChars) : text}
-    </StyledTruncatedText>
+    </span>
   );
 };

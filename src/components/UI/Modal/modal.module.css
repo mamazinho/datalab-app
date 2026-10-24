@@ -1,0 +1,76 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: var(--color-overlay);
+  backdrop-filter: blur(4px);
+  animation: global(floatIn) 0.2s ease;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+.dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 30rem;
+  max-height: 100%;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 18px 32px var(--color-shadow);
+  overflow: hidden;
+  animation: global(floatIn) 0.2s ease;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.35rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-input-background);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--color-text);
+}
+
+.closeButton {
+  border: 0;
+  border-radius: 0.65rem;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: transparent;
+  color: var(--color-text-secondary);
+  transition: color 0.16s ease, background-color 0.16s ease;
+
+  &:hover {
+    color: var(--color-text);
+    background: var(--color-surface);
+  }
+}
+
+.closeIcon {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.body {
+  padding: 1.2rem 1.35rem 1.35rem;
+  overflow-y: auto;
+}

@@ -1,14 +1,6 @@
+import styles from '../messages.module.css';
 import ReactMarkdown from 'react-markdown';
 import type { IThreadBoxItem } from '../../../../utils/chat-timeline';
-import {
-    ThreadDetails,
-    ThreadItem,
-    ThreadItemContent,
-    ThreadItemMeta,
-    ThreadList,
-    ThreadRow,
-    ThreadSummary,
-} from '../messages.style';
 
 interface ThreadBoxProps {
     item: IThreadBoxItem;
@@ -19,25 +11,25 @@ const formatAgentKey = (agentKey: string | null): string =>
     agentKey ? agentKey.replace(/_/g, ' ') : 'Especialista';
 
 export const ThreadBox = ({ item }: ThreadBoxProps) => (
-    <ThreadRow>
-        <ThreadDetails>
-            <ThreadSummary>
+    <div className={styles.threadRow}>
+        <details className={styles.threadDetails}>
+            <summary className={styles.threadSummary}>
                 Agentes conversando — {formatAgentKey(item.agentKey)} ({item.entries.length})
-            </ThreadSummary>
-            <ThreadList>
+            </summary>
+            <div className={styles.threadList}>
                 {item.entries.map((entry, index) => (
-                    <ThreadItem key={`${item.threadId}-${index}`}>
-                        <ThreadItemMeta>
+                    <div className={styles.threadItem} key={`${item.threadId}-${index}`}>
+                        <div className={styles.threadItemMeta}>
                             {entry.author === 'supervisor'
                                 ? `Supervisor → ${formatAgentKey(entry.agentKey)}`
                                 : formatAgentKey(entry.agentKey)}
-                        </ThreadItemMeta>
-                        <ThreadItemContent>
+                        </div>
+                        <div className={styles.threadItemContent}>
                             <ReactMarkdown>{entry.content}</ReactMarkdown>
-                        </ThreadItemContent>
-                    </ThreadItem>
+                        </div>
+                    </div>
                 ))}
-            </ThreadList>
-        </ThreadDetails>
-    </ThreadRow>
+            </div>
+        </details>
+    </div>
 );

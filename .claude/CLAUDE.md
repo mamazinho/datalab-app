@@ -7,7 +7,7 @@
 ## 📋 Informações do Projeto
 
 **Nome do Projeto:** Datalab APP  
-**Descrição:** Esse projeto é um APP em monolito escrito com React 19, axios e styled-components que gerencia todos os recursos de uma empresa de marketing com AI no centro da empresa. Essa SPA tem código em typescript e se comunica com um backend em python. Ela deve ser o mais componentizada possível para fazer uma ótima reutilização de código. A SPA possui envvars.
+**Descrição:** Esse projeto é um APP em monolito escrito com React 19, axios e CSS Modules que gerencia todos os recursos de uma empresa de marketing com AI no centro da empresa. Essa SPA tem código em typescript e se comunica com um backend em python. Ela deve ser o mais componentizada possível para fazer uma ótima reutilização de código. A SPA possui envvars.
 **Objetivo Principal:** Melhorias, manutenção e criação de código para a SPA em react 19 
 
 ---
@@ -137,7 +137,12 @@ Essa pasta deve guardar schemas globais e reutilizáveis do zod. Atualmente temo
 Nessa pasta fica a conexão do axios com a API Backend, separada por recursos que o backend possui
 
 ### `/styles`
-Pasta que possui os arquivos de estilos globais do app, controle de tema e etc
+Estilos que não pertencem a um componente só:
+- `tokens.css`: cores e fonte como variáveis CSS (`var(--color-primary)`); o tema escuro sobrescreve em `[data-theme='dark']`, que o provider de tema grava no `<html>`
+- `global.css`: reset, elementos base, scrollbar e keyframes usados em várias telas. Num `.module.css`, o nome da animação é renomeado como as classes, então keyframe global se usa com `global()`: `animation: global(spin) 0.8s linear infinite`
+- `*.module.css` compartilhados (`design-system`, `modal-form`): classes reaproveitadas por várias telas
+
+Cada componente tem o seu `componente.module.css` ao lado, com classes em camelCase (`styles.messageRow`). Variação de estado vai em atributo `data-*` ou ARIA (`data-active`, `aria-selected`) e é estilizada no CSS, nunca calculada em JS; para juntar classes use `cx` de `utils/class-names`
 
 ### `/types`
 Pasta com os tipos globais que são usados em mais de um lugar

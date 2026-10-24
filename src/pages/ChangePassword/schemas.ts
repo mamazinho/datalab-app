@@ -20,7 +20,6 @@ export const changePasswordSchema = z.object({
     .min(1, 'A confirmação de senha é obrigatória.'),
 }).superRefine(({ password, confirmPassword }, context) => {
   const passwordValidation = passwordSchema.safeParse(password);
-  
   if (!passwordValidation.success) {
     for (const issue of passwordValidation.error.issues) {
       context.addIssue({

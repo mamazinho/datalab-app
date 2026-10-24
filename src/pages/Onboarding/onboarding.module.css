@@ -1,0 +1,258 @@
+.onboardingWrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.onboardingCard {
+  width: min(100%, 32rem);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1.2rem;
+  padding: 2.5rem 2rem;
+  box-shadow: 0 14px 32px var(--color-shadow);
+}
+
+.onboardingTitle {
+  margin: 0 0 0.4rem;
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.onboardingSubtitle {
+  margin: 0 0 2rem;
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.onboardingForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.onboardingFieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: contents;
+
+  &:disabled {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}
+
+.onboardingField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.onboardingLabel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.onboardingInput {
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-input-background);
+  color: var(--color-text);
+  font-size: 0.95rem;
+  font-family: var(--font-main);
+  transition: border-color 0.18s ease;
+  width: 100%;
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+}
+
+.onboardingSubmit {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.7rem;
+  border: 0;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+  cursor: pointer;
+  transition: opacity 0.18s ease;
+
+  &:hover {
+    opacity: 0.88;
+  }
+}
+
+.onboardingError {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-error);
+}
+
+.inviteList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.inviteItem {
+  padding: 1rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-input-background);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.inviteInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.inviteCompanyName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.inviteBy {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.inviteActions {
+  display: inline-flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.inviteAcceptButton {
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 0;
+  background: var(--color-success);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+  cursor: pointer;
+  transition: opacity 0.18s ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.inviteDeclineButton {
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+  cursor: pointer;
+  transition: background-color 0.18s ease, color 0.18s ease;
+
+  &:hover {
+    background: var(--color-input-background);
+    color: var(--color-text);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.onboardingDivider {
+  margin: 1.5rem 0;
+  border-top: 1px solid var(--color-border);
+  position: relative;
+  text-align: center;
+
+  &::after {
+    content: 'ou';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--color-surface);
+    padding: 0 0.75rem;
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+  }
+}
+
+.companyPickerList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.companyPickerItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-input-background);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+    background: var(--color-surface-alt);
+  }
+}
+
+.companyPickerName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.companyPickerRole {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  text-transform: capitalize;
+}

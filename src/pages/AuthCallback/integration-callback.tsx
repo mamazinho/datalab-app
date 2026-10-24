@@ -1,10 +1,10 @@
+import styles from './social-callback.module.css';
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { INTEGRATION_CALLBACK, type IIntegrationCallbackEvent } from '../../types/auth';
 import { isProvider, type IntegrationKey, type Provider } from '../../types/integrations';
 import { INTEGRATIONS_PATH } from '../../routes/paths';
 import { closeCallbackWindow, postAuthChannelMessage } from '../../utils/auth-channel';
-import { CallbackCard, CallbackContainer, CallbackSpinner, CallbackText, CallbackTitle } from './social-callback.style';
 
 /**
  * Retorno do consentimento de uma integração. Mesma mecânica do login social:
@@ -43,12 +43,12 @@ export const IntegrationCallback = () => {
   }, [searchParams]);
 
   return (
-    <CallbackContainer>
-      <CallbackCard>
-        <CallbackSpinner />
-        <CallbackTitle>Finalizando integração...</CallbackTitle>
-        <CallbackText>Só um instante.</CallbackText>
-      </CallbackCard>
-    </CallbackContainer>
+    <div className={styles.callbackContainer}>
+      <div className={styles.callbackCard}>
+        <div className={styles.callbackSpinner} />
+        <h2 className={styles.callbackTitle}>Finalizando integração...</h2>
+        <p className={styles.callbackText}>Só um instante.</p>
+      </div>
+    </div>
   );
 };

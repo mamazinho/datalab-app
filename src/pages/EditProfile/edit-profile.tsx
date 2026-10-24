@@ -1,3 +1,4 @@
+import styles from './edit-profile.module.css';
 import { useActionState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
@@ -7,7 +8,6 @@ import { INITIAL_ACTION_STATE } from '../../types/actions';
 import { useActionFeedback } from '../../hooks/use-action-feedback';
 import { DeleteAccount, EditProfileForm } from './components';
 import { updateProfileAction } from './actions';
-import { EditProfileContainer, EditProfileShell, EditProfileSubtitle, EditProfileTitle } from './edit-profile.style';
 
 export const EditProfile = () => {
   const { data: me } = useMe();
@@ -29,12 +29,12 @@ export const EditProfile = () => {
   }
 
   return (
-    <EditProfileShell>
-      <EditProfileContainer>
-        <EditProfileTitle>Editar perfil</EditProfileTitle>
-        <EditProfileSubtitle>
+    <div className={styles.editProfileShell}>
+      <section className={styles.editProfileContainer}>
+        <h1 className={styles.editProfileTitle}>Editar perfil</h1>
+        <p className={styles.editProfileSubtitle}>
           Atualize suas informações pessoais, foto e preferências de tema.
-        </EditProfileSubtitle>
+        </p>
 
         <EditProfileForm
           user={me}
@@ -44,7 +44,7 @@ export const EditProfile = () => {
         />
 
         <DeleteAccount me={me} />
-      </EditProfileContainer>
-    </EditProfileShell>
+      </section>
+    </div>
   );
 };

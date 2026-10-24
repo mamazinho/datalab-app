@@ -1,0 +1,32 @@
+:root {
+  --color-background: #FFFFF7;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #FFF8DE;
+  --color-text: #00001F;
+  --color-text-secondary: #505261;
+  --color-primary: #FFBE00;
+  --color-primary-text: #00001F;
+  --color-border: #E6DFAF;
+  --color-error: #EF4444;
+  --color-success: #10B981;
+  --color-input-background: #FFFDF3;
+  --color-overlay: rgba(0, 0, 31, 0.45);
+  --color-shadow: rgba(0, 0, 31, 0.14);
+  --font-main: 'Fira Sans', sans-serif;
+}
+
+[data-theme='dark'] {
+  --color-background: #00001F;
+  --color-surface: #060629;
+  --color-surface-alt: #0E0E38;
+  --color-text: #FFFFF7;
+  --color-text-secondary: #BFC2D3;
+  --color-primary: #FFBE00;
+  --color-primary-text: #00001F;
+  --color-border: #2A2D5B;
+  --color-error: #F87171;
+  --color-success: #34D399;
+  --color-input-background: #0D1038;
+  --color-overlay: rgba(0, 0, 31, 0.75);
+  --color-shadow: rgba(0, 0, 0, 0.45);
+}

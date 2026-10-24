@@ -1,9 +1,9 @@
+import iaStyles from '../ia.module.css';
+import styles from './usage.module.css';
 import { useState } from 'react';
 import { QueryBoundary } from '../../../components/Tools/query-boundary';
 import { useCompanyContext } from '../../../contexts/company';
 import { UsageReport } from './components/usage-report';
-import { UsageMonthField, UsageMonthInput } from './usage.style';
-import { PageContainer, PageHeader, PageSubtitle, PageTitle } from '../ia.style';
 
 const getCurrentMonth = () => {
   const today = new Date();
@@ -22,29 +22,29 @@ export const Usage = () => {
   const { start, end } = getMonthPeriod(month);
 
   return (
-    <PageContainer>
-      <PageHeader>
+    <div className={iaStyles.pageContainer}>
+      <div className={iaStyles.pageHeader}>
         <div>
-          <PageTitle>Consumo</PageTitle>
-          <PageSubtitle>
+          <h1 className={iaStyles.pageTitle}>Consumo</h1>
+          <p className={iaStyles.pageSubtitle}>
             {currentCompany?.name} · Tokens e chamadas de modelo das conversas com a IA.
-          </PageSubtitle>
+          </p>
         </div>
-        <UsageMonthField>
+        <label className={styles.usageMonthField}>
           Mês
-          <UsageMonthInput
+          <input className={styles.usageMonthInput}
             type="month"
             defaultValue={month}
             onChange={(event) => {
               if (event.target.value) setMonth(event.target.value);
             }}
           />
-        </UsageMonthField>
-      </PageHeader>
+        </label>
+      </div>
 
       <QueryBoundary>
         <UsageReport start={start} end={end} />
       </QueryBoundary>
-    </PageContainer>
+    </div>
   );
 };

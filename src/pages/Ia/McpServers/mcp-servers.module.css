@@ -1,0 +1,38 @@
+.mcpName {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.mcpUrl {
+  display: block;
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.8rem;
+  font-family: monospace;
+  color: var(--color-text);
+}
+
+.mcpTestButton {
+  align-self: flex-start;
+  padding: 0.5rem 1rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-main);
+  cursor: pointer;
+  transition: background-color 0.18s ease;
+
+  &:hover:enabled { background: var(--color-input-background); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.mcpTestSuccess {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-success);
+}

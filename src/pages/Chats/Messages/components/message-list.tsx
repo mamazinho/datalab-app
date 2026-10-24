@@ -1,3 +1,4 @@
+import styles from '../messages.module.css';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supervisorQuery } from '../../../../queries';
@@ -8,19 +9,6 @@ import { ThreadBox } from './thread-box';
 import { ClarificationCard } from './clarification-card';
 import { FileCard } from './file-card';
 import { AttachmentChip } from './attachment-chip';
-import {
-    AttachmentsInBubble,
-    Conversation,
-    ConversationViewport,
-    EmptyEmoji,
-    EmptyState,
-    EmptyText,
-    EmptyTitle,
-    ErrorLabel,
-    ScrollToBottomButton,
-    StreamErrorBubble,
-    StreamErrorRow,
-} from '../messages.style';
 
 interface IMessageListProps {
     chatId: UUID7;
@@ -73,11 +61,11 @@ export const MessageList = ({ chatId, items, isStreaming, onAnswerClarification 
                         createdAt={item.createdAt}
                     >
                         {item.attachments.length > 0 && (
-                            <AttachmentsInBubble>
+                            <div className={styles.attachmentsInBubble}>
                                 {item.attachments.map((file) => (
                                     <AttachmentChip key={file.id} filename={file.filename} size={file.size} />
                                 ))}
-                            </AttachmentsInBubble>
+                            </div>
                         )}
                     </MessageBubble>
                 );
@@ -108,35 +96,35 @@ export const MessageList = ({ chatId, items, isStreaming, onAnswerClarification 
                     />;
             case 'stream_error':
                 return (
-                    <StreamErrorRow key={item.id}>
-                        <StreamErrorBubble>
-                            <ErrorLabel>Erro: </ErrorLabel>{item.content}
-                        </StreamErrorBubble>
-                    </StreamErrorRow>
+                    <div className={styles.streamErrorRow} key={item.id}>
+                        <div className={styles.streamErrorBubble}>
+                            <span className={styles.errorLabel}>Erro: </span>{item.content}
+                        </div>
+                    </div>
                 );
         }
     };
 
     return (
-        <ConversationViewport>
-            <Conversation
+        <div className={styles.conversationViewport}>
+            <div className={styles.conversation}
                 ref={conversationRef}
                 role="region"
                 aria-label="Mensagens"
                 onScroll={(event) => setIsScrolledUp(!isNearBottom(event.currentTarget))}
             >
                 {items.length === 0 ? (
-                    <EmptyState>
-                        <EmptyEmoji>💬</EmptyEmoji>
-                        <EmptyTitle>Nenhuma mensagem ainda</EmptyTitle>
-                        <EmptyText>Comece uma conversa digitando sua pergunta abaixo!</EmptyText>
-                    </EmptyState>
+                    <div className={styles.emptyState}>
+                        <p className={styles.emptyEmoji}>💬</p>
+                        <p className={styles.emptyTitle}>Nenhuma mensagem ainda</p>
+                        <p className={styles.emptyText}>Comece uma conversa digitando sua pergunta abaixo!</p>
+                    </div>
                 ) : (
                     items.map(renderItem)
                 )}
-            </Conversation>
+            </div>
             {isScrolledUp && (
-                <ScrollToBottomButton
+                <button className={styles.scrollToBottomButton}
                     type="button"
                     aria-label="Ir para a última mensagem"
                     title="Ir para a última mensagem"
@@ -155,8 +143,8 @@ export const MessageList = ({ chatId, items, isStreaming, onAnswerClarification 
                     >
                         <path d="M12 5v14M5 12l7 7 7-7" />
                     </svg>
-                </ScrollToBottomButton>
+                </button>
             )}
-        </ConversationViewport>
+        </div>
     );
 };

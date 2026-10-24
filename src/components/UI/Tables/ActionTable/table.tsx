@@ -1,7 +1,7 @@
+import styles from './table.module.css';
 import React, { useRef, useState } from 'react';
 import type { ComponentPropsWithoutRef } from 'react';
 import { useClickOutside } from '../../../../hooks/use-click-outside';
-import { ActionItem, ActionsMenu, ActionsTrigger, StyledTable } from './table.style';
 
 export const TableHeaders = ({ children, ...props }: ComponentPropsWithoutRef<'tr'>) => (
   <thead>
@@ -15,7 +15,7 @@ export const TableHeaders = ({ children, ...props }: ComponentPropsWithoutRef<'t
 export const TableRow = (props: ComponentPropsWithoutRef<'tr'>) => <tr {...props} />;
 
 export const TableAction = ({ children, ...props }: ComponentPropsWithoutRef<'button'>) => (
-  <ActionItem role="menuitem" {...props}>{children}</ActionItem>
+  <button className={styles.actionItem} role="menuitem" {...props}>{children}</button>
 );
 
 export const TableActions = ({ children }: { children: React.ReactNode }) => {
@@ -36,13 +36,13 @@ export const TableActions = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
-      <ActionsTrigger ref={triggerRef} onClick={toggle} aria-label="Abrir menu de ações" aria-expanded={open} aria-haspopup="menu">
+      <button className={styles.actionsTrigger} ref={triggerRef} onClick={toggle} aria-label="Abrir menu de ações" aria-expanded={open} aria-haspopup="menu">
         &#8942;
-      </ActionsTrigger>
+      </button>
       {open && pos && (
-        <ActionsMenu ref={menuRef} role="menu" style={{ top: pos.top, right: pos.right }}>
+        <div className={styles.actionsMenu} ref={menuRef} role="menu" style={{ top: pos.top, right: pos.right }}>
           {children}
-        </ActionsMenu>
+        </div>
       )}
     </>
   );
@@ -54,9 +54,9 @@ export const ActionTable = ({ children, ...props }: ComponentPropsWithoutRef<'ta
   const tbody = all.filter(c => !React.isValidElement(c) || c.type !== TableHeaders);
 
   return (
-    <StyledTable {...props}>
+    <table className={styles.styledTable} {...props}>
       {thead}
       {tbody.length > 0 && <tbody>{tbody}</tbody>}
-    </StyledTable>
+    </table>
   );
 };

@@ -1,9 +1,9 @@
+import styles from './management.module.css';
 import { useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useCompanyContext } from '../../contexts/company';
 import { RouteTabs, type IRouteTabItem } from '../../components/UI/Tabs';
 import { COMPANY_PATH, INTEGRATIONS_PATH, MEMBERS_PATH } from '../../routes/paths';
-import { ManagementContainer } from './management.style';
 
 // Sub-navegação do gerenciamento: cada aba só aparece se o usuário tiver acesso.
 // Integrações é a exceção — a conexão OAuth é da conta de cada membro.
@@ -20,9 +20,9 @@ export const ManagementLayout = () => {
   );
 
   return (
-    <ManagementContainer>
+    <div className={styles.managementContainer}>
       <RouteTabs items={tabs} label="Seções de gerenciamento" />
       <Outlet />
-    </ManagementContainer>
+    </div>
   );
 };

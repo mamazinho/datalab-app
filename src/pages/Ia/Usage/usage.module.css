@@ -1,0 +1,59 @@
+.usageMonthField {
+  composes: label from '../../../styles/design-system.module.css';
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.usageMonthInput {
+  composes: input from '../../../styles/design-system.module.css';
+  width: auto;
+}
+
+.usageTotals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.usageTotal {
+  padding: 1rem 1.2rem;
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.usageTotalLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+}
+
+.usageTotalValue {
+  margin: 0.3rem 0 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.usageSectionTitle {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.usageChatTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.usageChatLink {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}

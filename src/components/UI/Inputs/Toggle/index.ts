@@ -1,2 +1,1 @@
-export { Toggle } from './toggle';
-export { ToggleSwitch } from './toggle.style';
+export { Toggle, ToggleSwitch } from './toggle';

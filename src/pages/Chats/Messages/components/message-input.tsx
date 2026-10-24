@@ -1,19 +1,8 @@
+import styles from '../messages.module.css';
 import { useRef } from 'react';
 import type { IPendingAttachment } from '../use-chat-attachments';
 import { ACCEPTED_FILE_TYPES } from '../../../../services/datalab-api/chatFilesResource';
 import { AttachmentChip } from './attachment-chip';
-import {
-    AttachButton,
-    AttachmentError,
-    AttachmentTray,
-    HiddenFileInput,
-    MessageInputField,
-    MessageInputForm,
-    MessageInputRow,
-    MessageSubmit,
-    SubmitArrow,
-    SubmitSpinner,
-} from '../messages.style';
 
 interface MessageInputProps {
     value: string;
@@ -46,14 +35,14 @@ export const MessageInput = ({
     const rejections = attachments.filter((attachment) => attachment.status === 'error');
 
     return (
-        <MessageInputForm
+        <form className={styles.messageInputForm}
             onSubmit={(e) => {
                 e.preventDefault();
                 onSubmit();
             }}
         >
             {attachments.length > 0 && (
-                <AttachmentTray>
+                <div className={styles.attachmentTray}>
                     {attachments.map((attachment) => (
                         <AttachmentChip
                             key={attachment.localId}
@@ -65,17 +54,17 @@ export const MessageInput = ({
                             isDisabled={isDisabled}
                         />
                     ))}
-                </AttachmentTray>
+                </div>
             )}
 
             {rejections.map((rejection) => (
-                <AttachmentError key={rejection.localId}>
+                <p className={styles.attachmentError} key={rejection.localId}>
                     {rejection.filename}: {rejection.error}
-                </AttachmentError>
+                </p>
             ))}
 
-            <MessageInputRow>
-                <AttachButton
+            <div className={styles.messageInputRow}>
+                <button className={styles.attachButton}
                     type="button"
                     aria-label="Anexar arquivo"
                     title={canAttach ? 'Anexar arquivo' : 'Responda à pergunta acima antes de anexar'}
@@ -83,8 +72,8 @@ export const MessageInput = ({
                     onClick={() => fileInputRef.current?.click()}
                 >
                     📎
-                </AttachButton>
-                <HiddenFileInput
+                </button>
+                <input className={styles.hiddenFileInput}
                     ref={fileInputRef}
                     type="file"
                     multiple
@@ -95,7 +84,7 @@ export const MessageInput = ({
                         e.target.value = '';
                     }}
                 />
-                <MessageInputField
+                <input className={styles.messageInputField}
                     id="prompt-input"
                     name="prompt"
                     value={value}
@@ -104,23 +93,23 @@ export const MessageInput = ({
                     autoComplete="off"
                     placeholder={placeholder}
                 />
-                <MessageSubmit
+                <button className={styles.messageSubmit}
                     type="submit"
                     disabled={isDisabled || !canSubmit}
                 >
                     {isLoading ? (
                         <>
-                            <SubmitSpinner role="status" aria-hidden="true" />
+                            <span className={styles.submitSpinner} role="status" aria-hidden="true" />
                             Enviando...
                         </>
                     ) : (
                         <>
-                            <SubmitArrow>➤</SubmitArrow>
+                            <span className={styles.submitArrow}>➤</span>
                             Enviar
                         </>
                     )}
-                </MessageSubmit>
-            </MessageInputRow>
-        </MessageInputForm>
+                </button>
+            </div>
+        </form>
     );
 };

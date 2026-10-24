@@ -21,7 +21,9 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    "plugins": [{ "name": "typescript-plugin-css-modules", "options": { "customTemplate": "./css-modules-dts.cjs" } }]
   },
   "include": ["src"]
 }

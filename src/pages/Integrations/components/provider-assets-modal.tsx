@@ -1,3 +1,4 @@
+import styles from '../integrations.module.css';
 import { Suspense, useActionState, useCallback, useMemo, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -21,18 +22,6 @@ import {
   type ISaveProviderAssetsResult,
 } from '../actions';
 import { AssetsSelector } from './assets-selector';
-import {
-  AssetsError,
-  AssetsFallback,
-  AssetsFieldset,
-  AssetsFooter,
-  AssetsForm,
-  AssetsIntro,
-  AssetsSubmit,
-  AssetsSummary,
-  IntegrationButton,
-  IntegrationsEmpty,
-} from '../integrations.style';
 
 interface IProviderAssetsModalProps {
   isOpen: boolean;
@@ -59,12 +48,12 @@ const assetsErrorMessage = (error: unknown): string => {
 };
 
 const AssetsErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => (
-  <AssetsFallback>
+  <div className={styles.assetsFallback}>
     <span>{assetsErrorMessage(error)}</span>
-    <IntegrationButton type="button" onClick={resetErrorBoundary}>
+    <button className={styles.integrationButton} type="button" onClick={resetErrorBoundary}>
       Tentar novamente
-    </IntegrationButton>
-  </AssetsFallback>
+    </button>
+  </div>
 );
 
 interface IProviderAssetsContentProps {
@@ -158,24 +147,24 @@ const ProviderAssetsContent = ({ companyId, integration, onClose }: IProviderAss
 
   if (available.assets.length === 0) {
     return (
-      <IntegrationsEmpty>
+      <p className={styles.integrationsEmpty}>
         A conta {PROVIDER_LABELS[available.provider]} conectada não enxerga nenhum ativo de{' '}
         {integration.label}. Verifique se ela tem acesso na plataforma do provedor e tente de novo.
-      </IntegrationsEmpty>
+      </p>
     );
   }
 
   return (
-    <AssetsForm action={saveFormAction}>
+    <form className={styles.assetsForm} action={saveFormAction}>
       {Array.from(selected).map((externalId) => (
         <input key={externalId} type="hidden" name="assets" value={externalId} />
       ))}
 
-      <AssetsFieldset disabled={isPending}>
-        <AssetsIntro>
+      <fieldset className={styles.assetsFieldset} disabled={isPending}>
+        <p className={styles.assetsIntro}>
           Marque o que pertence a esta empresa. O agente só enxerga e só opera o que estiver
           nesta lista — deixar tudo desmarcado significa acesso zero, não acesso total.
-        </AssetsIntro>
+        </p>
 
         <AssetsSelector
           assets={available.assets}
@@ -184,20 +173,20 @@ const ProviderAssetsContent = ({ companyId, integration, onClose }: IProviderAss
           onChange={setSelected}
         />
 
-        {!saveState.success && saveState.error && <AssetsError>{saveState.error}</AssetsError>}
+        {!saveState.success && saveState.error && <p className={styles.assetsError}>{saveState.error}</p>}
 
-        <AssetsFooter>
-          <AssetsSummary>
+        <footer className={styles.assetsFooter}>
+          <span className={styles.assetsSummary}>
             {selected.size === 0
               ? `Esta empresa ainda não pode operar o ${integration.label}`
               : `${selected.size} ativo(s) selecionado(s)`}
-          </AssetsSummary>
-          <AssetsSubmit type="submit" disabled={isPending} onClick={handleSubmitClick}>
+          </span>
+          <button className={styles.assetsSubmit} type="submit" disabled={isPending} onClick={handleSubmitClick}>
             {isPending ? 'Salvando...' : 'Salvar seleção'}
-          </AssetsSubmit>
-        </AssetsFooter>
-      </AssetsFieldset>
-    </AssetsForm>
+          </button>
+        </footer>
+      </fieldset>
+    </form>
   );
 };
 

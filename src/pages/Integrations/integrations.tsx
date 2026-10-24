@@ -1,3 +1,4 @@
+import styles from './integrations.module.css';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -14,14 +15,6 @@ import { belongsToIntegration, PROVIDER_LABELS } from '../../utils/integrations'
 import { IntegrationCard } from './components/integration-card';
 import { ProviderAssetsModal } from './components/provider-assets-modal';
 import { useConnectIntegration } from './use-connect-integration';
-import {
-  IntegrationsEmpty,
-  IntegrationsGrid,
-  IntegrationsPageContainer,
-  IntegrationsPageHeader,
-  IntegrationsPageSubtitle,
-  IntegrationsPageTitle,
-} from './integrations.style';
 
 // O callback da integração volta para cá pedindo a seleção de ativos daquela
 // integração (?ativos=google_analytics).
@@ -111,12 +104,12 @@ const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
   );
 
   if (connectable.length === 0) {
-    return <IntegrationsEmpty>Nenhuma integração disponível no momento.</IntegrationsEmpty>;
+    return <p className={styles.integrationsEmpty}>Nenhuma integração disponível no momento.</p>;
   }
 
   return (
     <>
-      <IntegrationsGrid>
+      <div className={styles.integrationsGrid}>
         {connectable.map((integration) => (
           <IntegrationCard
             key={integration.key}
@@ -129,7 +122,7 @@ const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
             onManageAssets={setAssetsIntegration}
           />
         ))}
-      </IntegrationsGrid>
+      </div>
 
       <ProviderAssetsModal
         isOpen={assetsIntegration !== null}
@@ -147,21 +140,21 @@ export const Integrations = () => {
   if (!currentCompany) return null;
 
   return (
-    <IntegrationsPageContainer>
-      <IntegrationsPageHeader>
+    <div className={styles.integrationsPageContainer}>
+      <div className={styles.integrationsPageHeader}>
         <div>
-          <IntegrationsPageTitle>Integrações</IntegrationsPageTitle>
-          <IntegrationsPageSubtitle>
+          <h1 className={styles.integrationsPageTitle}>Integrações</h1>
+          <p className={styles.integrationsPageSubtitle}>
             Conecte suas contas Google e Meta e defina quais ativos de cada uma pertencem a{' '}
             {currentCompany.name}. A conexão é da sua conta; os ativos liberados valem para
             toda a empresa.
-          </IntegrationsPageSubtitle>
+          </p>
         </div>
-      </IntegrationsPageHeader>
+      </div>
 
       <QueryBoundary>
         <IntegrationsContent companyId={currentCompany.id} />
       </QueryBoundary>
-    </IntegrationsPageContainer>
+    </div>
   );
 };

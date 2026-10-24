@@ -1,3 +1,4 @@
+import styles from '../company-members.module.css';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
@@ -18,13 +19,6 @@ import type {
 import type { UUID7 } from '../../../types/ids';
 import { providerPermissionGroups, routePermissionGroups } from './permission-options';
 import { PermissionToggles } from './permission-toggles';
-import {
-  OwnerNotice,
-  PermissionSection,
-  PermissionSectionHint,
-  PermissionSections,
-  PermissionSectionTitle,
-} from '../company-members.style';
 
 interface IMemberPermissionsModalProps {
   isOpen: boolean;
@@ -127,37 +121,37 @@ const MemberPermissionsContent = ({ memberId }: { memberId: UUID7 }) => {
   );
 
   return (
-    <PermissionSections>
-      <PermissionSection>
-        <PermissionSectionTitle>Permissões do app</PermissionSectionTitle>
-        <PermissionSectionHint>
+    <div className={styles.permissionSections}>
+      <section className={styles.permissionSection}>
+        <h3 className={styles.permissionSectionTitle}>Permissões do app</h3>
+        <p className={styles.permissionSectionHint}>
           Rotas da Datalab que este membro pode chamar.
-        </PermissionSectionHint>
+        </p>
         <PermissionToggles
           groups={routeGroups}
           grantedIds={grantedRouteIds}
           togglingId={togglingId}
           onToggle={handleToggleRoute}
         />
-      </PermissionSection>
+      </section>
 
       {providerPermissions.length > 0 && (
-        <PermissionSection>
-          <PermissionSectionTitle>Permissões nos agentes</PermissionSectionTitle>
-          <PermissionSectionHint>
+        <section className={styles.permissionSection}>
+          <h3 className={styles.permissionSectionTitle}>Permissões nos agentes</h3>
+          <p className={styles.permissionSectionHint}>
             O que o agente pode executar por este membro dentro do Google/Meta. É independente
             das permissões do app: quem pode criar uma property pelo agente não necessariamente
             pode adicioná-la à empresa.
-          </PermissionSectionHint>
+          </p>
           <PermissionToggles
             groups={providerGroups}
             grantedIds={grantedProviderIds}
             togglingId={togglingId}
             onToggle={handleToggleProvider}
           />
-        </PermissionSection>
+        </section>
       )}
-    </PermissionSections>
+    </div>
   );
 };
 
@@ -170,10 +164,10 @@ export const MemberPermissionsModal = ({ isOpen, onClose, member }: IMemberPermi
     {member && (
       // Owner tem tudo implicitamente — a API recusa conceder e revogar para ele.
       member.membership_role === 'owner' ? (
-        <OwnerNotice>
+        <p className={styles.ownerNotice}>
           Este membro é owner da empresa e tem todas as permissões implicitamente — não há o
           que conceder ou revogar.
-        </OwnerNotice>
+        </p>
       ) : (
         <QueryBoundary>
           <MemberPermissionsContent memberId={member.id} />

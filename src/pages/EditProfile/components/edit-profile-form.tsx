@@ -1,18 +1,6 @@
+import designSystemStyles from '../../../styles/design-system.module.css';
+import styles from './edit-profile-form.module.css';
 import { useState } from 'react';
-import {
-  AvatarRow,
-  Footer,
-  Form,
-  FormError,
-  SaveButton,
-  SectionTitle,
-  StyledField,
-  StyledFieldset,
-  StyledInput,
-  StyledLabel,
-  StyledSelect,
-  StyledOption,
-} from './edit-profile-form.style';
 import { ProfileAvatarUploader } from './profile-avatar-uploader';
 import { useAvatarUpload } from './use-avatar-upload';
 import type { IUserConfig, IUserResponse } from '../../../services/datalab-api/usersResource';
@@ -48,8 +36,8 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
   };
 
   return (
-    <Form action={action} onSubmit={handleSubmit}>
-      <AvatarRow>
+    <form className={styles.form} action={action} onSubmit={handleSubmit}>
+      <div className={styles.avatarRow}>
         <ProfileAvatarUploader
           avatarUrl={avatarUrl}
           firstName={firstName}
@@ -57,26 +45,26 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
           isDisabled={isPending}
           onFileSelected={handleFileSelected}
         />
-      </AvatarRow>
+      </div>
 
       <input type="hidden" name="avatar_url" value={avatarUrl} readOnly />
 
-      <StyledFieldset disabled={isPending || isUploadingAvatar}>
+      <fieldset className={styles.styledFieldset} disabled={isPending || isUploadingAvatar}>
 
-        <SectionTitle>Perfil</SectionTitle>
+        <h3 className={styles.sectionTitle}>Perfil</h3>
 
-        <StyledField>
-          <StyledLabel htmlFor="inputName">Nome</StyledLabel>
-          <StyledInput
+        <div className={designSystemStyles.field}>
+          <label className={designSystemStyles.label} htmlFor="inputName">Nome</label>
+          <input className={designSystemStyles.input}
             id="inputName"
             name="name"
             defaultValue={user.name}
             autoComplete="name"
           />
-        </StyledField>
+        </div>
 
-        <StyledField>
-          <StyledLabel htmlFor="inputPhoneNumber">Telefone</StyledLabel>
+        <div className={designSystemStyles.field}>
+          <label className={designSystemStyles.label} htmlFor="inputPhoneNumber">Telefone</label>
           <PhoneField
             id="inputPhoneNumber"
             name="phone_number"
@@ -85,30 +73,30 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
             autoComplete="tel"
             disabled={isPending || isUploadingAvatar}
           />
-        </StyledField>
+        </div>
 
-        <SectionTitle>Configurações</SectionTitle>
+        <h3 className={styles.sectionTitle}>Configurações</h3>
 
-        <StyledField>
-          <StyledLabel htmlFor="inputTheme">Tema</StyledLabel>
-          <StyledSelect
+        <div className={designSystemStyles.field}>
+          <label className={designSystemStyles.label} htmlFor="inputTheme">Tema</label>
+          <select className={styles.styledSelect}
             id="inputTheme"
             name="theme"
             value={theme}
             onChange={(event) => setTheme(event.target.value as IUserConfig['theme'])}
           >
             {THEME_OPTIONS.map((option) => (
-              <StyledOption key={option.value} value={option.value}>
+              <option className={styles.styledOption} key={option.value} value={option.value}>
                 {option.label}
-              </StyledOption>
+              </option>
             ))}
-          </StyledSelect>
-        </StyledField>
+          </select>
+        </div>
 
-        <SectionTitle>Senhas</SectionTitle>
+        <h3 className={styles.sectionTitle}>Senhas</h3>
 
-        <StyledField>
-          <StyledLabel htmlFor="inputPassword">Nova senha</StyledLabel>
+        <div className={designSystemStyles.field}>
+          <label className={designSystemStyles.label} htmlFor="inputPassword">Nova senha</label>
           <PasswordInput
             id="inputPassword"
             name="password"
@@ -118,10 +106,10 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
             autoComplete="new-password"
             showRequirements
           />
-        </StyledField>
+        </div>
 
-        <StyledField>
-          <StyledLabel htmlFor="inputConfirmPassword">Confirmar nova senha</StyledLabel>
+        <div className={designSystemStyles.field}>
+          <label className={designSystemStyles.label} htmlFor="inputConfirmPassword">Confirmar nova senha</label>
           <PasswordInput
             id="inputConfirmPassword"
             name="confirmPassword"
@@ -131,16 +119,16 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
             placeholder="Confirme a nova senha"
             autoComplete="new-password"
           />
-        </StyledField>
+        </div>
 
-        {(error || uploadError) && <FormError>{error || uploadError}</FormError>}
+        {(error || uploadError) && <p className={styles.formError}>{error || uploadError}</p>}
 
-        <Footer>
-          <SaveButton type="submit" disabled={isPending || isUploadingAvatar}>
+        <div className={styles.footer}>
+          <button className={styles.saveButton} type="submit" disabled={isPending || isUploadingAvatar}>
             {isPending ? 'Salvando...' : 'Salvar alterações'}
-          </SaveButton>
-        </Footer>
-      </StyledFieldset>
-    </Form>
+          </button>
+        </div>
+      </fieldset>
+    </form>
   );
 };

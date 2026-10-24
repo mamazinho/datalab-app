@@ -1,8 +1,5 @@
 import type { ReactNode } from 'react';
-import { useCallback, useMemo, useState } from 'react';
-import { ThemeProvider as StyledThemeProvider, type DefaultTheme } from 'styled-components';
-import { GlobalStyle } from '../../styles/global-style';
-import { darkTheme, lightTheme } from '../../styles/themes';
+import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { ThemeContext, type ThemeMode } from './contexts';
 
 const STORAGE_KEY = 'theme';
@@ -20,23 +17,11 @@ export const CustomThemeProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(STORAGE_KEY, newMode);
   }, []);
 
-  const theme = useMemo<DefaultTheme>(() => {
-    const baseTheme = mode === 'dark' ? darkTheme : lightTheme;
-
-    return {
-      ...baseTheme,
-      mode,
-    };
+  useLayoutEffect(() => {
+    document.documentElement.dataset.theme = mode;
   }, [mode]);
 
   const contextValue = useMemo(() => ({ mode, setThemeMode }), [mode, setThemeMode]);
 
-  return (
-    <ThemeContext.Provider value={contextValue}>
-      <StyledThemeProvider theme={theme}>
-        <GlobalStyle />
-        {children}
-      </StyledThemeProvider>
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
 };

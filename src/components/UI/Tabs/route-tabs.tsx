@@ -1,5 +1,7 @@
-import { useLocation } from 'react-router-dom';
-import { TabLink, TabsList, type TabsVariant } from './tabs.style';
+import { Link, useLocation } from 'react-router-dom';
+import styles from './tabs.module.css';
+
+export type TabsVariant = 'tabs' | 'nav';
 
 export interface IRouteTabItem {
   label: string;
@@ -37,22 +39,16 @@ export const RouteTabs = ({ items, variant = 'tabs', label }: IRouteTabsProps) =
   const { pathname } = useLocation();
 
   return (
-    <TabsList $variant={variant} aria-label={label}>
+    <nav className={styles.list} data-variant={variant} aria-label={label}>
       {items.map((item) => {
         const active = isItemActive(item, pathname);
 
         return (
-          <TabLink
-            key={item.to}
-            to={item.to}
-            $variant={variant}
-            $active={active}
-            aria-current={active ? 'page' : undefined}
-          >
+          <Link key={item.to} to={item.to} className={styles.item} aria-current={active ? 'page' : undefined}>
             {item.label}
-          </TabLink>
+          </Link>
         );
       })}
-    </TabsList>
+    </nav>
   );
 };

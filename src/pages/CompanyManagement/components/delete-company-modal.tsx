@@ -1,3 +1,4 @@
+import modal from '../../../styles/modal-form.module.css';
 import { useActionState, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
@@ -7,16 +8,6 @@ import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { currentMembershipQuery, meQuery } from '../../../queries';
 import type { IUserCompany } from '../../../services/datalab-api/usersResource';
 import { createDeleteCompanyAction } from '../actions';
-import {
-  ModalDeleteSubmit,
-  ModalError,
-  ModalField,
-  ModalFieldset,
-  ModalForm,
-  ModalHint,
-  ModalInput,
-  ModalLabel,
-} from '../company-management.style';
 
 interface IDeleteCompanyModalProps {
   isOpen: boolean;
@@ -51,15 +42,15 @@ export const DeleteCompanyModal = ({ isOpen, company, onClose, onDeleted }: IDel
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Deletar empresa: ${company.name}`}>
-      <ModalForm key={company.id} action={formAction}>
-        <ModalFieldset disabled={isPending}>
-          <ModalHint>
+      <form className={modal.form} key={company.id} action={formAction}>
+        <fieldset className={modal.fieldset} disabled={isPending}>
+          <p className={modal.hint}>
             Esta ação é irreversível. Para confirmar, digite <strong>{company.name}</strong> abaixo.
-          </ModalHint>
+          </p>
 
-          <ModalField>
-            <ModalLabel htmlFor="confirm-company-name">Nome da empresa</ModalLabel>
-            <ModalInput
+          <div className={modal.field}>
+            <label className={modal.label} htmlFor="confirm-company-name">Nome da empresa</label>
+            <input className={modal.input}
               id="confirm-company-name"
               type="text"
               autoComplete="off"
@@ -68,17 +59,17 @@ export const DeleteCompanyModal = ({ isOpen, company, onClose, onDeleted }: IDel
               placeholder={company.name}
               autoFocus
             />
-          </ModalField>
+          </div>
 
           {formState.error && !formState.success && (
-            <ModalError>{formState.error}</ModalError>
+            <p className={modal.error}>{formState.error}</p>
           )}
 
-          <ModalDeleteSubmit type="submit" disabled={!canDelete || isPending}>
+          <button className={modal.deleteSubmit} type="submit" disabled={!canDelete || isPending}>
             {isPending ? 'Deletando...' : 'Deletar empresa'}
-          </ModalDeleteSubmit>
-        </ModalFieldset>
-      </ModalForm>
+          </button>
+        </fieldset>
+      </form>
     </Modal>
   );
 };

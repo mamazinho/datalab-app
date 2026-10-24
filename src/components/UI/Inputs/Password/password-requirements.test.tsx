@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders, screen } from '../../../../test/test-utils';
-import { lightTheme } from '../../../../styles/themes';
 import { PasswordRequirements } from './password-requirements';
 
 describe('<PasswordRequirements />', () => {
@@ -19,17 +18,15 @@ describe('<PasswordRequirements />', () => {
   it('highlights only the rules already satisfied', () => {
     renderWithProviders(<PasswordRequirements password="senha@123" />);
 
-    expect(screen.getByText(/no minimo 8 caracteres/i)).toHaveStyle({ color: lightTheme.colors.success });
-    expect(screen.getByText(/letra maiuscula/i)).toHaveStyle({
-      color: lightTheme.colors.textSecondary,
-    });
+    expect(screen.getByText(/no minimo 8 caracteres/i)).toHaveAttribute('data-valid', 'true');
+    expect(screen.getByText(/letra maiuscula/i)).toHaveAttribute('data-valid', 'false');
   });
 
   it('highlights every rule once the password is valid', () => {
     renderWithProviders(<PasswordRequirements password="Senha@123" />);
 
     screen.getAllByRole('listitem').forEach((item) => {
-      expect(item).toHaveStyle({ color: lightTheme.colors.success });
+      expect(item).toHaveAttribute('data-valid', 'true');
     });
   });
 });

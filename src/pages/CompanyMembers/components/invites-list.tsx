@@ -1,3 +1,4 @@
+import styles from '../company-members.module.css';
 import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
@@ -6,7 +7,6 @@ import { DatalabAPI } from '../../../services/datalab-api';
 import { invitesQuery } from '../../../queries';
 import type { IUserInvite } from '../../../services/datalab-api/usersResource';
 import type { UUID7 } from '../../../types/ids';
-import { InviteStatusBadge, MembersEmpty, MembersTableCellSecondary } from '../company-members.style';
 
 const statusLabel: Record<string, string> = {
   pending: 'Pendente',
@@ -40,7 +40,7 @@ export const InvitesList = ({ invites }: IInvitesListProps) => {
   );
 
   if (invites.length === 0) {
-    return <MembersEmpty>Nenhum convite enviado ainda.</MembersEmpty>;
+    return <p className={styles.membersEmpty}>Nenhum convite enviado ainda.</p>;
   }
 
   return (
@@ -56,13 +56,13 @@ export const InvitesList = ({ invites }: IInvitesListProps) => {
         <TableRow key={invite.id}>
           <td>{invite.email}</td>
           <td>
-            <InviteStatusBadge $status={invite.status as 'pending' | 'accepted' | 'rejected'}>
+            <span className={styles.inviteStatusBadge} data-status={invite.status}>
               {statusLabel[invite.status] ?? invite.status}
-            </InviteStatusBadge>
+            </span>
           </td>
           <td>
             {invite.invited_by?.name ?? 'Desconhecido'}
-            <MembersTableCellSecondary>{invite.invited_by?.email}</MembersTableCellSecondary>
+            <span className={styles.membersTableCellSecondary}>{invite.invited_by?.email}</span>
           </td>
           <td>{new Date(invite.created_at).toLocaleDateString('pt-BR')}</td>
           <td>

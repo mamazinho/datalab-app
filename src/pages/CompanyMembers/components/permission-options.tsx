@@ -1,8 +1,8 @@
+import styles from '../company-members.module.css';
 import type { ReactNode } from 'react';
 import type { IProviderPermission, IRoutePermission } from '../../../services/datalab-api/usersResource';
 import type { UUID7 } from '../../../types/ids';
 import { groupPermissionsByTag, groupProviderPermissionsByProvider } from '../permissions-helpers';
-import { PermissionToggleMethod } from '../company-members.style';
 
 /**
  * Forma neutra que as listas de permissão consomem — é o que permite os mesmos
@@ -32,7 +32,7 @@ export const routePermissionGroups = (
     name: permission.description || permission.name,
     description: (
       <>
-        <PermissionToggleMethod>{permission.method}</PermissionToggleMethod> {permission.path}
+        <span className={styles.permissionToggleMethod}>{permission.method}</span> {permission.path}
       </>
     ),
   }));

@@ -1,16 +1,7 @@
+import styles from '../company-members.module.css';
 import { useCallback, useRef } from 'react';
 import type { UUID7 } from '../../../types/ids';
 import type { IPermissionOption } from './permission-options';
-import {
-  PermissionGroup,
-  PermissionGroupDetails,
-  PermissionGroupSummary,
-  PermissionsList,
-  PermissionToggleDesc,
-  PermissionToggleInfo,
-  PermissionToggleName,
-  PermissionToggleRow,
-} from '../company-members.style';
 
 interface PermissionsSelectorProps {
   /** Grupos já rotulados (tag da rota, provider da permissão de agente...) */
@@ -45,9 +36,9 @@ const PermissionGroupItem = ({ label, options, selected, onToggle, onToggleGroup
   }
 
   return (
-    <PermissionGroup>
-      <PermissionGroupDetails ref={detailsRef}>
-        <PermissionGroupSummary>
+    <div className={styles.permissionGroup}>
+      <details className={styles.permissionGroupDetails} ref={detailsRef}>
+        <summary className={styles.permissionGroupSummary}>
           {label}
           <input
             ref={checkboxRef}
@@ -56,25 +47,25 @@ const PermissionGroupItem = ({ label, options, selected, onToggle, onToggleGroup
             onClick={handleGroupCheckbox}
             onChange={() => {}}
           />
-        </PermissionGroupSummary>
+        </summary>
         {options.map((option) => (
-          <PermissionToggleRow key={option.id} htmlFor={`perm-${option.id}`}>
-            <PermissionToggleInfo>
-              <PermissionToggleName>{option.name}</PermissionToggleName>
+          <label className={styles.permissionToggleRow} key={option.id} htmlFor={`perm-${option.id}`}>
+            <div className={styles.permissionToggleInfo}>
+              <span className={styles.permissionToggleName}>{option.name}</span>
               {option.description && (
-                <PermissionToggleDesc>{option.description}</PermissionToggleDesc>
+                <span className={styles.permissionToggleDesc}>{option.description}</span>
               )}
-            </PermissionToggleInfo>
+            </div>
             <input
               id={`perm-${option.id}`}
               type="checkbox"
               checked={selected.has(option.id)}
               onChange={() => onToggle(option.id)}
             />
-          </PermissionToggleRow>
+          </label>
         ))}
-      </PermissionGroupDetails>
-    </PermissionGroup>
+      </details>
+    </div>
   );
 };
 
@@ -94,7 +85,7 @@ export const PermissionsSelector = ({ groups, selected, onChange }: PermissionsS
   }, [selected, onChange]);
 
   return (
-    <PermissionsList>
+    <div className={styles.permissionsList}>
       {Object.entries(groups).map(([label, options]) => (
         <PermissionGroupItem
           key={label}
@@ -105,6 +96,6 @@ export const PermissionsSelector = ({ groups, selected, onChange }: PermissionsS
           onToggleGroup={toggleGroup}
         />
       ))}
-    </PermissionsList>
+    </div>
   );
 };

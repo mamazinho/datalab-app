@@ -1,3 +1,5 @@
+import modal from '../../../styles/modal-form.module.css';
+import styles from '../company-members.module.css';
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
@@ -9,18 +11,6 @@ import { QueryBoundary } from '../../../components/Tools/query-boundary';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { inviteMembersAction } from '../actions';
-import {
-  EmailTag,
-  EmailTagInput,
-  EmailTagList,
-  EmailTagRemove,
-  ModalError,
-  ModalField,
-  ModalFieldset,
-  ModalForm,
-  ModalLabel,
-  ModalSubmit,
-} from '../company-members.style';
 import { PermissionsSelector } from './permissions-list';
 import { providerPermissionGroups, routePermissionGroups } from './permission-options';
 import type { UUID7 } from '../../../types/ids';
@@ -41,14 +31,14 @@ const InvitePermissionsField = ({ selected, onChange }: IPermissionsFieldProps) 
   if (routePermissions.length === 0) return null;
 
   return (
-    <ModalField>
-      <ModalLabel>Permissões do app</ModalLabel>
+    <div className={modal.field}>
+      <label className={modal.label}>Permissões do app</label>
       <PermissionsSelector
         groups={routePermissionGroups(routePermissions)}
         selected={selected}
         onChange={onChange}
       />
-    </ModalField>
+    </div>
   );
 };
 
@@ -60,14 +50,14 @@ const InviteProviderPermissionsField = ({ selected, onChange }: IPermissionsFiel
   if (providerPermissions.length === 0) return null;
 
   return (
-    <ModalField>
-      <ModalLabel>Permissões nos agentes</ModalLabel>
+    <div className={modal.field}>
+      <label className={modal.label}>Permissões nos agentes</label>
       <PermissionsSelector
         groups={providerPermissionGroups(providerPermissions)}
         selected={selected}
         onChange={onChange}
       />
-    </ModalField>
+    </div>
   );
 };
 
@@ -143,7 +133,7 @@ export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) 
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Convidar membros">
-      <ModalForm action={inviteFormAction}>
+      <form className={modal.form} action={inviteFormAction}>
         <input type="hidden" name="emails" value={emails.join(',')} />
         {Array.from(selectedPermissions).map((permissionId) => (
           <input key={permissionId} type="hidden" name="permissions" value={permissionId} />
@@ -152,23 +142,23 @@ export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) 
           <input key={permissionId} type="hidden" name="provider_permissions" value={permissionId} />
         ))}
 
-        <ModalFieldset disabled={isPending}>
-          <ModalField>
-            <ModalLabel>E-mails</ModalLabel>
-            <EmailTagList onClick={() => inputRef.current?.focus()}>
+        <fieldset className={modal.fieldset} disabled={isPending}>
+          <div className={modal.field}>
+            <label className={modal.label}>E-mails</label>
+            <div className={styles.emailTagList} onClick={() => inputRef.current?.focus()}>
               {emails.map((email) => (
-                <EmailTag key={email}>
+                <span className={styles.emailTag} key={email}>
                   {email}
-                  <EmailTagRemove
+                  <button className={styles.emailTagRemove}
                     type="button"
                     onClick={(e) => { e.stopPropagation(); removeEmail(email); }}
                     aria-label={`Remover ${email}`}
                   >
                     ×
-                  </EmailTagRemove>
-                </EmailTag>
+                  </button>
+                </span>
               ))}
-              <EmailTagInput
+              <input className={styles.emailTagInput}
                 ref={inputRef}
                 name="emailDraft"
                 value={inputValue}
@@ -178,8 +168,8 @@ export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) 
                 placeholder={emails.length === 0 ? 'membro@empresa.com (espaço para adicionar)' : ''}
                 autoFocus
               />
-            </EmailTagList>
-          </ModalField>
+            </div>
+          </div>
 
           <QueryBoundary>
             <InvitePermissionsField
@@ -195,13 +185,13 @@ export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) 
             />
           </QueryBoundary>
 
-          {formError && <ModalError>{formError}</ModalError>}
+          {formError && <p className={modal.error}>{formError}</p>}
 
-          <ModalSubmit type="submit" disabled={isPending}>
+          <button className={modal.submit} type="submit" disabled={isPending}>
             {isPending ? 'Enviando...' : 'Enviar convites'}
-          </ModalSubmit>
-        </ModalFieldset>
-      </ModalForm>
+          </button>
+        </fieldset>
+      </form>
     </Modal>
   );
 };

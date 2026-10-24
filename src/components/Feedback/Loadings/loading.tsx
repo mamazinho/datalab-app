@@ -1,10 +1,10 @@
-import { LoadingContainer, LoadingText, Spinner } from './loading.style';
+import styles from './loading.module.css';
 
 export const LoadingPiece = () => {
     return (
-        <LoadingContainer>
-            <Spinner />
-            <LoadingText>Loading...</LoadingText>
-        </LoadingContainer>
+        <div className={styles.loadingContainer}>
+            <div className={styles.spinner} />
+            <h2 className={styles.loadingText}>Loading...</h2>
+        </div>
     );
 }

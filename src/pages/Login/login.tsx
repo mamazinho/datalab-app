@@ -1,25 +1,8 @@
+import designSystemStyles from '../../styles/design-system.module.css';
+import styles from './login.module.css';
+import { Link } from 'react-router-dom';
 import React, { useActionState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  LoginButton,
-  LoginCard,
-  LoginContainer,
-  LoginDivider,
-  LoginDividerLine,
-  LoginDividerText,
-  LoginField,
-  LoginFieldset,
-  LoginFooterLinks,
-  LoginForgotLink,
-  LoginForm,
-  LoginHeader,
-  LoginInput,
-  LoginLabel,
-  LoginRegisterLink,
-  LoginShell,
-  LoginSubtitle,
-  LoginTitle,
-} from './login.style';
 import { useAuthContext } from '../../contexts/auth';
 import { SocialLoginButtons } from '../../components/UI/Buttons/social-login-buttons';
 import { loginAction } from './actions';
@@ -43,19 +26,19 @@ export const Login: React.FC = () => {
   });
 
   return (
-    <LoginContainer>
-      <LoginShell>
-        <LoginCard>
-          <LoginHeader>
-            <LoginTitle>DataLab <span>App</span></LoginTitle>
-            <LoginSubtitle>Bem vindo de volta!</LoginSubtitle>
-          </LoginHeader>
+    <div className={styles.loginContainer}>
+      <div className={designSystemStyles.authShell}>
+        <section className={designSystemStyles.authCard}>
+          <header className={designSystemStyles.authHeader}>
+            <h1 className={designSystemStyles.brandTitle}>DataLab <span>App</span></h1>
+            <h2 className={designSystemStyles.subtitle}>Bem vindo de volta!</h2>
+          </header>
 
-          <LoginForm action={loginFormAction}>
-            <LoginFieldset disabled={isLoginPending}>
-              <LoginField>
-                <LoginLabel htmlFor="inputEmail">Email</LoginLabel>
-                <LoginInput
+          <form className={designSystemStyles.authForm} action={loginFormAction}>
+            <fieldset className={designSystemStyles.fieldsWrapper} disabled={isLoginPending}>
+              <div className={designSystemStyles.field}>
+                <label className={designSystemStyles.label} htmlFor="inputEmail">Email</label>
+                <input className={designSystemStyles.input}
                   type="email"
                   id="inputEmail"
                   name="email"
@@ -64,10 +47,10 @@ export const Login: React.FC = () => {
                   autoFocus
                   autoComplete="email"
                 />
-              </LoginField>
+              </div>
 
-              <LoginField>
-                <LoginLabel htmlFor="inputPassword">Senha</LoginLabel>
+              <div className={designSystemStyles.field}>
+                <label className={designSystemStyles.label} htmlFor="inputPassword">Senha</label>
                 <PasswordInput
                   id="inputPassword"
                   name="password"
@@ -75,27 +58,27 @@ export const Login: React.FC = () => {
                   required
                   autoComplete="current-password"
                 />
-              </LoginField>
+              </div>
 
-              <LoginButton type="submit">
+              <button className={styles.loginButton} type="submit">
                 {isLoginPending ? 'Entrando...' : 'Entrar'}
-              </LoginButton>
-            </LoginFieldset>
+              </button>
+            </fieldset>
 
-            <LoginDivider>
-              <LoginDividerLine />
-              <LoginDividerText>Ou continue com</LoginDividerText>
-            </LoginDivider>
+            <div className={designSystemStyles.formDivider}>
+              <div className={designSystemStyles.dividerLine} />
+              <span className={designSystemStyles.dividerText}>Ou continue com</span>
+            </div>
 
             <SocialLoginButtons onSelect={handleSocialLogin} />
 
-            <LoginFooterLinks>
-              <LoginRegisterLink to="/cadastro">Não possui conta? Cadastre-se</LoginRegisterLink>
-              <LoginForgotLink to="/esqueci-senha">Esqueci minha senha</LoginForgotLink>
-            </LoginFooterLinks>
-          </LoginForm>
-        </LoginCard>
-      </LoginShell>
-    </LoginContainer>
+            <div className={styles.loginFooterLinks}>
+              <Link className={styles.loginRegisterLink} to="/cadastro">Não possui conta? Cadastre-se</Link>
+              <Link className={styles.loginForgotLink} to="/esqueci-senha">Esqueci minha senha</Link>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
   );
 };

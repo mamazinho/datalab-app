@@ -1,3 +1,5 @@
+import modal from '../../../../styles/modal-form.module.css';
+import mcpServersStyles from '../mcp-servers.module.css';
 import { useActionState, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -13,18 +15,6 @@ import { INITIAL_ACTION_STATE } from '../../../../types/actions';
 import { MCP_SERVER_ROUTE_PERMISSIONS } from '../../../../utils/route-permissions';
 import { createSaveMcpServerAction, testMcpServerConnection } from '../actions';
 import { AUTH_TYPE_LABELS, TRANSPORT_LABELS } from '../schemas';
-import {
-  ModalError,
-  ModalField,
-  ModalFieldset,
-  ModalForm,
-  ModalHint,
-  ModalInput,
-  ModalLabel,
-  ModalSelect,
-  ModalSubmit,
-} from '../../ia.style';
-import { McpTestButton, McpTestSuccess } from '../mcp-servers.style';
 
 const SAVED_SECRET_PLACEHOLDER = '•••• configurado — deixe em branco para manter';
 
@@ -61,11 +51,11 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
   const toolNames = connectionTest.data?.tools.map((tool) => tool.name).join(', ');
 
   return (
-    <ModalForm action={formAction} onChange={() => connectionTest.reset()}>
-      <ModalFieldset disabled={isPending}>
-        <ModalField>
-          <ModalLabel htmlFor="mcp-agent">Agente *</ModalLabel>
-          <ModalSelect
+    <form className={modal.form} action={formAction} onChange={() => connectionTest.reset()}>
+      <fieldset className={modal.fieldset} disabled={isPending}>
+        <div className={modal.field}>
+          <label className={modal.label} htmlFor="mcp-agent">Agente *</label>
+          <select className={modal.select}
             id="mcp-agent"
             name="agent_id"
             value={agentId}
@@ -77,16 +67,16 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
             {customAgents.map((agent) => (
               <option key={agent.id} value={agent.id}>{agent.name}</option>
             ))}
-          </ModalSelect>
+          </select>
           {customAgents.length === 0 && (
-            <ModalHint>Crie um agente na aba Agentes para vincular um servidor MCP.</ModalHint>
+            <p className={modal.hint}>Crie um agente na aba Agentes para vincular um servidor MCP.</p>
           )}
-        </ModalField>
+        </div>
 
-        <ModalFieldset disabled={!agentId}>
-          <ModalField>
-            <ModalLabel htmlFor="mcp-name">Nome *</ModalLabel>
-            <ModalInput
+        <fieldset className={modal.fieldset} disabled={!agentId}>
+          <div className={modal.field}>
+            <label className={modal.label} htmlFor="mcp-name">Nome *</label>
+            <input className={modal.input}
               id="mcp-name"
               name="name"
               type="text"
@@ -95,11 +85,11 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
               defaultValue={mcpServer?.name ?? ''}
               required
             />
-          </ModalField>
+          </div>
 
-          <ModalField>
-            <ModalLabel htmlFor="mcp-url">URL *</ModalLabel>
-            <ModalInput
+          <div className={modal.field}>
+            <label className={modal.label} htmlFor="mcp-url">URL *</label>
+            <input className={modal.input}
               id="mcp-url"
               name="url"
               type="url"
@@ -109,14 +99,14 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
               aria-describedby="mcp-url-hint"
               required
             />
-            <ModalHint id="mcp-url-hint">
+            <p className={modal.hint} id="mcp-url-hint">
               Precisa ser acessível pela internet. Para usar um MCP da sua máquina, exponha-o com um túnel (ex.: ngrok).
-            </ModalHint>
-          </ModalField>
+            </p>
+          </div>
 
-          <ModalField>
-            <ModalLabel htmlFor="mcp-auth-type">Autenticação</ModalLabel>
-            <ModalSelect
+          <div className={modal.field}>
+            <label className={modal.label} htmlFor="mcp-auth-type">Autenticação</label>
+            <select className={modal.select}
               id="mcp-auth-type"
               name="auth_type"
               value={authType}
@@ -125,13 +115,13 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
               {Object.entries(AUTH_TYPE_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
-            </ModalSelect>
-          </ModalField>
+            </select>
+          </div>
 
           {authType === 'bearer' && (
-            <ModalField>
-              <ModalLabel htmlFor="mcp-token">Token</ModalLabel>
-              <ModalInput
+            <div className={modal.field}>
+              <label className={modal.label} htmlFor="mcp-token">Token</label>
+              <input className={modal.input}
                 id="mcp-token"
                 name="token"
                 type="password"
@@ -139,14 +129,14 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
                 placeholder={secretPlaceholder}
                 required={!keepsSavedSecret}
               />
-            </ModalField>
+            </div>
           )}
 
           {authType === 'static_header' && (
             <>
-              <ModalField>
-                <ModalLabel htmlFor="mcp-header-name">Nome do header</ModalLabel>
-                <ModalInput
+              <div className={modal.field}>
+                <label className={modal.label} htmlFor="mcp-header-name">Nome do header</label>
+                <input className={modal.input}
                   id="mcp-header-name"
                   name="header_name"
                   type="text"
@@ -156,11 +146,11 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
                   onChange={(e) => setHeaderName(e.target.value)}
                   required
                 />
-              </ModalField>
+              </div>
 
-              <ModalField>
-                <ModalLabel htmlFor="mcp-header-value">Valor do header</ModalLabel>
-                <ModalInput
+              <div className={modal.field}>
+                <label className={modal.label} htmlFor="mcp-header-value">Valor do header</label>
+                <input className={modal.input}
                   id="mcp-header-value"
                   name="header_value"
                   type="password"
@@ -168,43 +158,43 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
                   placeholder={secretPlaceholder}
                   required={!keepsSavedSecret}
                 />
-              </ModalField>
+              </div>
             </>
           )}
 
           <Collapsible label="Opções avançadas" defaultOpen={mcpServer?.transport === 'sse'}>
-            <ModalField>
-              <ModalLabel htmlFor="mcp-transport">Transporte</ModalLabel>
-              <ModalSelect id="mcp-transport" name="transport" defaultValue={mcpServer?.transport ?? 'streamable_http'}>
+            <div className={modal.field}>
+              <label className={modal.label} htmlFor="mcp-transport">Transporte</label>
+              <select className={modal.select} id="mcp-transport" name="transport" defaultValue={mcpServer?.transport ?? 'streamable_http'}>
                 {Object.entries(TRANSPORT_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
-              </ModalSelect>
-            </ModalField>
+              </select>
+            </div>
           </Collapsible>
 
           {hasPermissionByRoute(MCP_SERVER_ROUTE_PERMISSIONS.test) && (
-            <McpTestButton
+            <button className={mcpServersStyles.mcpTestButton}
               type="button"
               disabled={connectionTest.isPending}
               onClick={(event) => connectionTest.mutate(new FormData(event.currentTarget.form!))}
             >
               {connectionTest.isPending ? 'Testando...' : 'Testar conexão'}
-            </McpTestButton>
+            </button>
           )}
-          {connectionTest.error && <ModalError role="alert">{connectionTest.error.message}</ModalError>}
+          {connectionTest.error && <p className={modal.error} role="alert">{connectionTest.error.message}</p>}
           {connectionTest.data && (
-            <McpTestSuccess role="status">Conexão OK — tools: {toolNames || 'nenhuma'}</McpTestSuccess>
+            <p className={mcpServersStyles.mcpTestSuccess} role="status">Conexão OK — tools: {toolNames || 'nenhuma'}</p>
           )}
-        </ModalFieldset>
+        </fieldset>
 
-        {formState.error && !formState.success && <ModalError>{formState.error}</ModalError>}
+        {formState.error && !formState.success && <p className={modal.error}>{formState.error}</p>}
 
-        <ModalSubmit type="submit" disabled={!agentId}>
+        <button className={modal.submit} type="submit" disabled={!agentId}>
           {isPending ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Adicionar servidor'}
-        </ModalSubmit>
-      </ModalFieldset>
-    </ModalForm>
+        </button>
+      </fieldset>
+    </form>
   );
 };
 

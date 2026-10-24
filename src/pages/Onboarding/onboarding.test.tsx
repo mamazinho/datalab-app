@@ -73,7 +73,8 @@ describe('<Onboarding />', () => {
       await user.type(await screen.findByLabelText('Nome da empresa'), 'Acme');
       await user.click(screen.getByRole('button', { name: 'Criar empresa' }));
 
-      expect(await screen.findByText(/Nome de empresa já existe\./)).toBeInTheDocument();
+      const [inlineError] = await screen.findAllByText(/Nome de empresa já existe\./);
+      expect(inlineError.tagName).toBe('P');
       expect(screen.queryByRole('heading', { name: 'Home' })).not.toBeInTheDocument();
     });
   });

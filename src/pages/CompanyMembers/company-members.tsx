@@ -1,3 +1,4 @@
+import styles from './company-members.module.css';
 import { useState } from 'react';
 import { QueryBoundary } from '../../components/Tools/query-boundary';
 import { StateTabs, type IStateTabItem } from '../../components/UI/Tabs';
@@ -7,13 +8,6 @@ import { useInvites } from '../../hooks/use-invites';
 import { InviteMemberModal } from './components/invite-member-modal';
 import { MembersList } from './components/members-list';
 import { InvitesList } from './components/invites-list';
-import {
-  InviteMemberButton,
-  MembersPageContainer,
-  MembersPageHeader,
-  MembersPageSubtitle,
-  MembersPageTitle,
-} from './company-members.style';
 
 type MembersTabValue = 'members' | 'invites';
 
@@ -40,18 +34,18 @@ export const CompanyMembers = () => {
   const [activeTab, setActiveTab] = useState<MembersTabValue>('members');
 
   return (
-    <MembersPageContainer>
-      <MembersPageHeader>
+    <div className={styles.membersPageContainer}>
+      <div className={styles.membersPageHeader}>
         <div>
-          <MembersPageTitle>Gerenciamento de membros</MembersPageTitle>
-          <MembersPageSubtitle>
+          <h1 className={styles.membersPageTitle}>Gerenciamento de membros</h1>
+          <p className={styles.membersPageSubtitle}>
             {currentCompany?.name} · Gerencie quem tem acesso e quais rotas cada membro pode usar.
-          </MembersPageSubtitle>
+          </p>
         </div>
-        <InviteMemberButton onClick={() => setIsInviteOpen(true)}>
+        <button className={styles.inviteMemberButton} onClick={() => setIsInviteOpen(true)}>
           + Convidar membros
-        </InviteMemberButton>
-      </MembersPageHeader>
+        </button>
+      </div>
 
       <StateTabs items={MEMBERS_TABS} value={activeTab} onChange={setActiveTab} />
 
@@ -63,6 +57,6 @@ export const CompanyMembers = () => {
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
       />
-    </MembersPageContainer>
+    </div>
   );
 };

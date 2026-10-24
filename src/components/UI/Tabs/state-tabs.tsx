@@ -1,4 +1,5 @@
-import { TabButton, TabsList, type TabsVariant } from './tabs.style';
+import type { TabsVariant } from './route-tabs';
+import styles from './tabs.module.css';
 
 export interface IStateTabItem<TValue extends string> {
   label: string;
@@ -24,23 +25,22 @@ export const StateTabs = <TValue extends string>({
   variant = 'tabs',
   label,
 }: IStateTabsProps<TValue>) => (
-  <TabsList as="div" $variant={variant} role="tablist" aria-label={label}>
+  <div className={styles.list} data-variant={variant} role="tablist" aria-label={label}>
     {items.map((item) => {
       const active = item.value === value;
 
       return (
-        <TabButton
+        <button
           key={item.value}
           type="button"
           role="tab"
           aria-selected={active}
-          $variant={variant}
-          $active={active}
+          className={styles.item}
           onClick={() => onChange(item.value)}
         >
           {item.label}
-        </TabButton>
+        </button>
       );
     })}
-  </TabsList>
+  </div>
 );

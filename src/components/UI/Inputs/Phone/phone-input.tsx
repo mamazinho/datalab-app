@@ -1,3 +1,4 @@
+import styles from './phone-input.module.css';
 import { useMemo, useState } from 'react';
 import {
   PhoneInput,
@@ -8,7 +9,6 @@ import {
   type CountryIso2,
   type ParsedCountry,
 } from 'react-international-phone';
-import { Wrapper } from './phone-input.style';
 
 interface IPhoneFieldProps {
   id?: string;
@@ -82,7 +82,7 @@ export const PhoneField = ({
   );
 
   return (
-    <Wrapper>
+    <div className={styles.wrapper}>
       {/* O input visível mostra o número no formato nacional; o form envia o E.164 */}
       {name && <input type="hidden" name={name} value={value} readOnly />}
 
@@ -102,6 +102,6 @@ export const PhoneField = ({
         }}
         inputProps={{ id, autoComplete, required }}
       />
-    </Wrapper>
+    </div>
   );
 };

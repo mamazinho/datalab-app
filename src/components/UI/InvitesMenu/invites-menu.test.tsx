@@ -29,7 +29,7 @@ describe('<InvitesMenu />', () => {
     givenInvites([pendingInvite, buildInvite({ id: uuid(8), status: 'accepted' })]);
     renderWithProviders(<InvitesMenu />);
 
-    expect(await screen.findByRole('button', { name: /Convites 1/ })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Convites\s*1/ })).toBeInTheDocument();
   });
 
   it('shows no badge when nothing is pending', async () => {
@@ -37,7 +37,7 @@ describe('<InvitesMenu />', () => {
     renderWithProviders(<InvitesMenu />);
 
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: /Convites 1/ })).not.toBeInTheDocument(),
+      expect(screen.queryByRole('button', { name: /Convites\s*1/ })).not.toBeInTheDocument(),
     );
   });
 

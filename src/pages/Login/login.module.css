@@ -1,0 +1,36 @@
+.loginContainer {
+  width: 100%;
+  min-height: 100%;
+}
+
+.loginButton {
+  composes: primaryButton from '../../styles/design-system.module.css';
+  margin-top: 0.35rem;
+}
+
+.loginFooterLinks {
+  composes: footerLinks from '../../styles/design-system.module.css';
+  margin-top: 1.25rem;
+}
+
+.loginRegisterLink {
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 0.92rem;
+  transition: color 0.18s ease;
+
+  &:hover {
+    color: var(--color-text);
+  }
+}
+
+.loginForgotLink {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  font-size: 0.84rem;
+  transition: color 0.18s ease;
+
+  &:hover {
+    color: var(--color-primary);
+  }
+}

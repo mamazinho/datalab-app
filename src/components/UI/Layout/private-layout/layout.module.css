@@ -1,0 +1,205 @@
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainContent {
+  flex: 1;
+  width: min(100%, 80rem);
+  margin: 1rem auto;
+  padding: 0 1rem;
+}
+
+.headerNav {
+  margin: 1rem auto 0;
+  width: min(100%, 80rem);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  box-shadow: 0 10px 20px var(--color-shadow);
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+}
+
+.brandLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 800;
+  color: var(--color-text);
+}
+
+.brandImage {
+  width: auto;
+  height: 2rem;
+}
+
+.brandText {
+  font-size: 1.2rem;
+}
+
+.rightActions {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.profileButton {
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profileAvatar {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 50%;
+  border: 2px solid var(--color-primary);
+  object-fit: cover;
+  box-shadow: 0 6px 12px var(--color-shadow);
+}
+
+.profileMenu {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  width: 14rem;
+  border-radius: 0.8rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 14px 24px var(--color-shadow);
+  overflow: hidden;
+  z-index: 120;
+}
+
+.profileMenuHeader {
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-input-background);
+}
+
+.profileName {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.profileEmail {
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.profileMenuItem {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  padding: 0.75rem 0.85rem;
+  color: var(--color-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background-color 0.16s ease;
+
+  &:hover {
+    background: var(--color-input-background);
+  }
+}
+
+.profileMenuLink {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  color: var(--color-text);
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background-color 0.16s ease;
+
+  &:hover {
+    background: var(--color-input-background);
+  }
+}
+
+.footerContainer {
+  width: min(100%, 80rem);
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.footerContent {
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  @media (max-width: 720px) {
+    flex-direction: column;
+  }
+}
+
+.footerCopy {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.86rem;
+}
+
+.footerBrandImage {
+  width: auto;
+  height: 1.8rem;
+}
+
+.socialLinks {
+  display: inline-flex;
+  gap: 0.75rem;
+}
+
+.socialLink {
+  color: var(--color-text-secondary);
+  transition: color 0.18s ease;
+
+  &:hover {
+    color: var(--color-primary);
+  }
+}
+
+.socialIcon {
+  width: 1.2rem;
+  height: 1.2rem;
+  fill: currentColor;
+}
+
+.profileAvatarBadge {
+    position: absolute;
+    top: -0.15rem;
+    right: -0.15rem;
+    min-width: 1rem;
+    height: 1rem;
+    padding: 0 0.22rem;
+    border-radius: 999px;
+    background: var(--color-error);
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--color-surface);
+    pointer-events: none;
+}

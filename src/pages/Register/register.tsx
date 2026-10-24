@@ -1,6 +1,8 @@
+import designSystemStyles from '../../styles/design-system.module.css';
+import styles from './register.module.css';
+import { Link } from 'react-router-dom';
 import React, { useRef, useActionState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RegisterCard, RegisterContainer, RegisterFooter, RegisterFooterLink, RegisterShell } from './register.style';
 import { DatalabAPI } from '../../services/datalab-api';
 import { StepsController, type StepsRef } from '../../components/UI/Steps/steps-controller';
 import { Step } from '../../components/UI/Steps/step';
@@ -48,9 +50,9 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <RegisterContainer>
-      <RegisterShell>
-        <RegisterCard>
+    <div className={styles.registerContainer}>
+      <div className={designSystemStyles.authShell}>
+        <section className={designSystemStyles.authCard}>
           <StepsController ref={stepsRef}>
             {/* STEP 1: Register Form */}
             <Step canGoForward={false}>
@@ -72,11 +74,11 @@ export const Register: React.FC = () => {
               />
             </Step>
           </StepsController>
-          <RegisterFooter>
-            <RegisterFooterLink to="/login">Já possui conta? Faça Login</RegisterFooterLink>
-          </RegisterFooter>
-        </RegisterCard>
-      </RegisterShell>
-    </RegisterContainer>
+          <div className={styles.registerFooter}>
+            <Link className={styles.registerFooterLink} to="/login">Já possui conta? Faça Login</Link>
+          </div>
+        </section>
+      </div>
+    </div>
   );
 };

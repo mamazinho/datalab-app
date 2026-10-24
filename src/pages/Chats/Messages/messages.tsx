@@ -1,3 +1,4 @@
+import styles from './messages.module.css';
 import { Suspense } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import axios from 'axios';
@@ -9,7 +10,6 @@ import { LoadingPiece } from '../../../components/Feedback/Loadings/loading';
 import { isUuid7, type UUID7 } from '../../../types/ids';
 import { useChat } from '../../../hooks/use-chat';
 import { useChatMessages } from '../../../hooks/use-chat-messages';
-import { MessagesBody, MessagesContainer, MessagesHeader, MessagesSubtitle, MessagesTitle } from './messages.style';
 
 // Chat inexistente / de outro usuário (404) manda de volta para a lista;
 // os demais erros seguem para a tela padrão de erro com "Tentar novamente".
@@ -26,14 +26,14 @@ const ChatView = ({ chatId }: { chatId: UUID7 }) => {
 
     return (
         <>
-            <MessagesHeader>
-                <MessagesTitle>{chat.title ?? 'Sem título'}</MessagesTitle>
-                <MessagesSubtitle>Converse com nossa IA e tire suas dúvidas</MessagesSubtitle>
-            </MessagesHeader>
+            <header className={styles.messagesHeader}>
+                <h2 className={styles.messagesTitle}>{chat.title ?? 'Sem título'}</h2>
+                <p className={styles.messagesSubtitle}>Converse com nossa IA e tire suas dúvidas</p>
+            </header>
 
-            <MessagesBody>
+            <div className={styles.messagesBody}>
                 <ChatConversation chatId={chatId} history={history} />
-            </MessagesBody>
+            </div>
         </>
     );
 };
@@ -44,7 +44,7 @@ export const ChatMessages = () => {
     if (!isUuid7(chatId)) return <Navigate to="/ia/conversas" replace />;
 
     return (
-        <MessagesContainer>
+        <div className={styles.messagesContainer}>
             <QueryErrorResetBoundary>
                 {({ reset }) => (
                     <ErrorBoundary FallbackComponent={ChatErrorFallback} onReset={reset}>
@@ -54,6 +54,6 @@ export const ChatMessages = () => {
                     </ErrorBoundary>
                 )}
             </QueryErrorResetBoundary>
-        </MessagesContainer>
+        </div>
     );
 };

@@ -1,7 +1,7 @@
+import styles from '../messages.module.css';
 import type { ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { IChatMember } from '../../../../services/datalab-api/chatsResource';
-import { Bubble, MainContent, MessageTime, StreamingCursor } from '../messages.style';
 import { AuthoredRow } from './authored-row';
 
 interface MessageBubbleProps {
@@ -18,17 +18,17 @@ const timeFormat = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '
 
 export const MessageBubble = ({ content, isUser, author, showAuthor, createdAt, isStreaming = false, children }: MessageBubbleProps) => (
     <AuthoredRow author={author} showAuthor={showAuthor} isUser={isUser}>
-        <Bubble $isUser={isUser}>
+        <div className={styles.bubble}>
             {(content || isStreaming) && (
-                <MainContent>
+                <div className={styles.mainContent}>
                     <ReactMarkdown>{content}</ReactMarkdown>
-                    {isStreaming && <StreamingCursor aria-hidden>▍</StreamingCursor>}
-                </MainContent>
+                    {isStreaming && <span className={styles.streamingCursor} aria-hidden>▍</span>}
+                </div>
             )}
             {children}
-            <MessageTime $isUser={isUser} dateTime={createdAt}>
+            <time className={styles.messageTime} dateTime={createdAt}>
                 {timeFormat.format(new Date(createdAt))}
-            </MessageTime>
-        </Bubble>
+            </time>
+        </div>
     </AuthoredRow>
 );

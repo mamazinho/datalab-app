@@ -1,21 +1,9 @@
+import styles from './company-management.module.css';
 import { useState } from 'react';
 import { useCompanyContext } from '../../contexts/company';
 import { CompanyFormModal } from '../../components/UI/CompanyFormModal';
 import { COMPANY_ROUTE_PERMISSIONS } from '../../utils/route-permissions';
 import { DeleteCompanyModal } from './components/delete-company-modal';
-import {
-  ActiveBadge,
-  CompanyActionButton,
-  CompanyActions,
-  CompanyDeleteButton,
-  CompanyInfo,
-  CompanyName,
-  CompanyPageContainer,
-  CompanyPageHeader,
-  CompanyPageSubtitle,
-  CompanyPageTitle,
-  CompanyRow,
-} from './company-management.style';
 
 // Painel da empresa ATIVA (trocar/criar vivem no seletor do header). Só chega
 // aqui quem tem permissão de editar ou deletar (CompanyManagementRoute).
@@ -30,36 +18,36 @@ export const CompanyManagement = () => {
   const canDelete = hasPermissionByRoute(COMPANY_ROUTE_PERMISSIONS.remove);
 
   return (
-    <CompanyPageContainer>
-      <CompanyPageHeader>
+    <div className={styles.companyPageContainer}>
+      <div className={styles.companyPageHeader}>
         <div>
-          <CompanyPageTitle>Gerenciamento de empresa</CompanyPageTitle>
-          <CompanyPageSubtitle>
+          <h1 className={styles.companyPageTitle}>Gerenciamento de empresa</h1>
+          <p className={styles.companyPageSubtitle}>
             Edite o nome ou remova a empresa ativa. Para trocar de empresa ou criar
             uma nova, use o seletor no topo.
-          </CompanyPageSubtitle>
+          </p>
         </div>
-      </CompanyPageHeader>
+      </div>
 
-      <CompanyRow $active>
-        <CompanyInfo>
-          <CompanyName>{currentCompany.name}</CompanyName>
-          <ActiveBadge>Empresa ativa</ActiveBadge>
-        </CompanyInfo>
+      <div className={styles.companyRow}>
+        <div className={styles.companyInfo}>
+          <span className={styles.companyName}>{currentCompany.name}</span>
+          <span className={styles.activeBadge}>Empresa ativa</span>
+        </div>
 
-        <CompanyActions>
+        <div className={styles.companyActions}>
           {canEdit && (
-            <CompanyActionButton onClick={() => setIsEditOpen(true)}>
+            <button className={styles.companyActionButton} onClick={() => setIsEditOpen(true)}>
               Editar nome
-            </CompanyActionButton>
+            </button>
           )}
           {canDelete && (
-            <CompanyDeleteButton onClick={() => setIsDeleteOpen(true)}>
+            <button className={styles.companyDeleteButton} onClick={() => setIsDeleteOpen(true)}>
               Deletar
-            </CompanyDeleteButton>
+            </button>
           )}
-        </CompanyActions>
-      </CompanyRow>
+        </div>
+      </div>
 
       <CompanyFormModal
         isOpen={isEditOpen}
@@ -73,6 +61,6 @@ export const CompanyManagement = () => {
         onClose={() => setIsDeleteOpen(false)}
         onDeleted={clearSelectedCompany}
       />
-    </CompanyPageContainer>
+    </div>
   );
 };

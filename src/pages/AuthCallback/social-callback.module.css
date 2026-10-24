@@ -1,0 +1,38 @@
+.callbackContainer {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.callbackCard {
+  width: min(100%, 26rem);
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 14px 24px var(--color-shadow);
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.callbackSpinner {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  border: 4px solid var(--color-surface-alt);
+  border-top-color: var(--color-primary);
+  animation: global(spin) 0.8s linear infinite;
+}
+
+.callbackTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--color-text);
+}
+
+.callbackText {
+  margin: 0.5rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+}

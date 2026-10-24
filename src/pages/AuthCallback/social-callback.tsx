@@ -1,10 +1,10 @@
+import styles from './social-callback.module.css';
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import type { ILoginUserResponse } from '../../services/datalab-api/authResource';
 import { SOCIAL_LOGIN_SUCCESS, type ISocialLoginCallbackEvent } from '../../types/auth';
 import { isProvider, type Provider } from '../../types/integrations';
 import { closeCallbackWindow, postAuthChannelMessage } from '../../utils/auth-channel';
-import { CallbackCard, CallbackContainer, CallbackSpinner, CallbackText, CallbackTitle } from './social-callback.style';
 
 /**
  * Retorno do login social (Google e Meta usam o mesmo formato de query string).
@@ -49,12 +49,12 @@ export const SocialCallback: React.FC = () => {
     }, [searchParams, provider]);
 
     return (
-        <CallbackContainer>
-            <CallbackCard>
-                {!error && <CallbackSpinner />}
-                <CallbackTitle>{error ? 'Não foi possível entrar' : 'Processando login...'}</CallbackTitle>
-                <CallbackText>{error ?? 'Por favor, aguarde um momento.'}</CallbackText>
-            </CallbackCard>
-        </CallbackContainer>
+        <div className={styles.callbackContainer}>
+            <div className={styles.callbackCard}>
+                {!error && <div className={styles.callbackSpinner} />}
+                <h2 className={styles.callbackTitle}>{error ? 'Não foi possível entrar' : 'Processando login...'}</h2>
+                <p className={styles.callbackText}>{error ?? 'Por favor, aguarde um momento.'}</p>
+            </div>
+        </div>
     );
 };

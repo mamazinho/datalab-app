@@ -1,3 +1,4 @@
+import styles from '../ia.module.css';
 import { useState } from 'react';
 import { QueryBoundary } from '../../../components/Tools/query-boundary';
 import { useCompanyContext } from '../../../contexts/company';
@@ -6,7 +7,6 @@ import type { IRetrieveMcpServer } from '../../../services/datalab-api/mcpServer
 import { MCP_SERVER_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
 import { McpServersTable } from './components/mcp-servers-table';
 import { McpServerFormModal } from './components/mcp-server-form-modal';
-import { CreateButton, PageContainer, PageHeader, PageSubtitle, PageTitle } from '../ia.style';
 
 interface IMcpServersListSectionProps {
   onEdit: (mcpServer: IRetrieveMcpServer) => void;
@@ -36,22 +36,22 @@ export const McpServers = () => {
   };
 
   return (
-    <PageContainer>
-      <PageHeader>
+    <div className={styles.pageContainer}>
+      <div className={styles.pageHeader}>
         <div>
-          <PageTitle>Servidores MCP</PageTitle>
-          <PageSubtitle>
+          <h1 className={styles.pageTitle}>Servidores MCP</h1>
+          <p className={styles.pageSubtitle}>
             {currentCompany?.name} · Conecte ferramentas externas aos agentes da empresa.
-          </PageSubtitle>
+          </p>
         </div>
-        <CreateButton
+        <button className={styles.createButton}
           onClick={openCreateModal}
           disabled={!canCreate}
           title={canCreate ? undefined : 'Você não tem permissão para adicionar servidores MCP'}
         >
           + Adicionar MCP
-        </CreateButton>
-      </PageHeader>
+        </button>
+      </div>
 
       <QueryBoundary>
         <McpServersListSection onEdit={openEditModal} />
@@ -62,6 +62,6 @@ export const McpServers = () => {
         mcpServer={editingMcpServer}
         onClose={() => setIsFormOpen(false)}
       />
-    </PageContainer>
+    </div>
   );
 };

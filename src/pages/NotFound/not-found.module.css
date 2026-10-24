@@ -1,0 +1,94 @@
+.notFoundContainer {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.notFoundCard {
+  width: min(100%, 26rem);
+  border-radius: 1rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: 0 14px 24px var(--color-shadow);
+  padding: 2rem 1.5rem 1.5rem;
+  text-align: center;
+}
+
+.notFoundCode {
+  display: block;
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--color-primary);
+}
+
+.notFoundTitle {
+  margin: 0.75rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.notFoundText {
+  margin: 0.5rem 0 0;
+  font-size: 0.88rem;
+  color: var(--color-text-secondary);
+}
+
+.notFoundPath {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.15rem 0.45rem;
+  max-width: 100%;
+  border-radius: 0.4rem;
+  background: var(--color-input-background);
+  border: 1px solid var(--color-border);
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+@keyframes drain {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+.countdownTrack {
+  margin: 1.25rem 0 0.75rem;
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--color-surface-alt);
+  overflow: hidden;
+}
+
+.notFoundLink {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  transition: color 0.18s ease;
+
+  &:hover {
+    color: var(--color-primary);
+  }
+}
+
+@keyframes drain {
+  from {
+    width: 100%;
+  }
+
+  to {
+    width: 0%;
+  }
+}
+
+.countdownBar {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-primary);
+  animation: drain linear forwards;
+}

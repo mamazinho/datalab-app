@@ -1,3 +1,5 @@
+import designSystemStyles from '../../../styles/design-system.module.css';
+import styles from './chats-components.module.css';
 import { useState, useActionState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -7,17 +9,6 @@ import { Toggle } from '../../../components/UI/Inputs/Toggle';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { chatListsQueryKey } from '../../../queries';
-import {
-    CreateChatActions,
-    CreateChatButton,
-    CreateChatField,
-    CreateChatFieldset,
-    CreateChatForm,
-    CreateChatIcon,
-    CreateChatInput,
-    CreateChatLabel,
-    CreateChatSubmit,
-} from './chats-components.style';
 
 export const CreateChat = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -36,25 +27,25 @@ export const CreateChat = () => {
 
     return (
         <>
-            <CreateChatButton onClick={() => setIsOpen(true)}>
-                <CreateChatIcon fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button className={styles.createChatButton} onClick={() => setIsOpen(true)}>
+                <svg className={styles.createChatIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                </CreateChatIcon>
+                </svg>
                 Criar nova conversa
-            </CreateChatButton>
+            </button>
 
             <Modal
                 isOpen={isOpen}
                 onClose={() => setIsOpen(false)}
                 title="Nova Conversa"
             >
-                <CreateChatForm action={createChatFormAction}>
-                    <CreateChatFieldset disabled={isCreateChatPending}>
-                        <CreateChatField>
-                            <CreateChatLabel htmlFor="chatTitle">
+                <form className={styles.createChatForm} action={createChatFormAction}>
+                    <fieldset className={styles.createChatFieldset} disabled={isCreateChatPending}>
+                        <div className={styles.createChatField}>
+                            <label className={designSystemStyles.label} htmlFor="chatTitle">
                                 Título da Conversa
-                            </CreateChatLabel>
-                            <CreateChatInput
+                            </label>
+                            <input className={designSystemStyles.input}
                                 id="chatTitle"
                                 type="text"
                                 name="title"
@@ -63,17 +54,17 @@ export const CreateChat = () => {
                                 required
                                 autoFocus
                             />
-                        </CreateChatField>
+                        </div>
 
                         <Toggle name="is_private" label="Conversa privada" defaultChecked />
 
-                        <CreateChatActions>
-                            <CreateChatSubmit type="submit">
+                        <div className={styles.createChatActions}>
+                            <button className={styles.createChatSubmit} type="submit">
                                 {isCreateChatPending ? "Criando..." : "Criar"}
-                            </CreateChatSubmit>
-                        </CreateChatActions>
-                    </CreateChatFieldset>
-                </CreateChatForm>
+                            </button>
+                        </div>
+                    </fieldset>
+                </form>
             </Modal>
         </>
     );

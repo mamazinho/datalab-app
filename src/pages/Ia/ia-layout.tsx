@@ -1,9 +1,9 @@
+import styles from './ia.module.css';
 import { useMemo } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useCompanyContext } from '../../contexts/company';
 import { RouteTabs, type IRouteTabItem } from '../../components/UI/Tabs';
 import { CHAT_ROUTE_PERMISSIONS, MCP_SERVER_ROUTE_PERMISSIONS } from '../../utils/route-permissions';
-import { IaContainer } from './ia.style';
 
 export const IaLayout = () => {
   const { hasPermissionByTag, hasPermissionByRoute, hasAnyAgentsPermission } = useCompanyContext();
@@ -19,9 +19,9 @@ export const IaLayout = () => {
   );
 
   return (
-    <IaContainer>
+    <div className={styles.iaContainer}>
       <RouteTabs items={tabs} label="Seções de IA" />
       <Outlet />
-    </IaContainer>
+    </div>
   );
 };

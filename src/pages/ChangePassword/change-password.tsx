@@ -1,18 +1,13 @@
+import designSystemStyles from '../../styles/design-system.module.css';
+import styles from './change-password.module.css';
+import { Link } from 'react-router-dom';
 import React, { useActionState, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  ChangePasswordCancelLink,
-  ChangePasswordCard,
-  ChangePasswordContainer,
-  ChangePasswordFooter,
-  ChangePasswordShell,
-} from './change-password.style';
 import { toast } from 'react-toastify';
 import { changePasswordAction } from './actions';
 import { INITIAL_ACTION_STATE } from '../../types/actions';
 import { useActionFeedback } from '../../hooks/use-action-feedback';
 import { PasswordInput } from '../../components/UI/Inputs/Password/password-input';
-import { AuthForm, AuthHeader, BrandHighlight, BrandTitle, Description, ErrorText, Field, FieldsWrapper, Label, PrimaryButton, Subtitle } from '../../styles/design-system.style';
 
 
 export const ChangePassword: React.FC = () => {
@@ -36,22 +31,20 @@ export const ChangePassword: React.FC = () => {
   });
 
   return (
-    <ChangePasswordContainer>
-      <ChangePasswordShell>
-        <ChangePasswordCard>
-          <AuthHeader>
-            <BrandTitle>DataLab <BrandHighlight>App</BrandHighlight></BrandTitle>
-            <Subtitle>Redefinir Senha</Subtitle>
-            <Description>Crie uma nova senha para sua conta.</Description>
-          </AuthHeader>
-          
-          <AuthForm action={changePasswordFormAction}>
+    <div className={styles.changePasswordContainer}>
+      <div className={designSystemStyles.authShell}>
+        <section className={designSystemStyles.authCard}>
+          <header className={designSystemStyles.authHeader}>
+            <h1 className={designSystemStyles.brandTitle}>DataLab <span className={designSystemStyles.brandHighlight}>App</span></h1>
+            <h2 className={designSystemStyles.subtitle}>Redefinir Senha</h2>
+            <p className={designSystemStyles.description}>Crie uma nova senha para sua conta.</p>
+          </header>
+          <form className={designSystemStyles.authForm} action={changePasswordFormAction}>
             <input type="hidden" name="email" value={email} />
             <input type="hidden" name="code" value={code} />
-            
-            <FieldsWrapper disabled={isChangePasswordPending}>
-              <Field>
-                <Label htmlFor="inputPassword">Nova Senha</Label>
+            <fieldset className={designSystemStyles.fieldsWrapper} disabled={isChangePasswordPending}>
+              <div className={designSystemStyles.field}>
+                <label className={designSystemStyles.label} htmlFor="inputPassword">Nova Senha</label>
                 <PasswordInput
                     id="inputPassword"
                     name="password"
@@ -62,10 +55,10 @@ export const ChangePassword: React.FC = () => {
                     autoComplete="new-password"
                     showRequirements
                 />
-              </Field>
+              </div>
 
-              <Field>
-                <Label htmlFor="inputConfirmPassword">Confirmar Senha</Label>
+              <div className={designSystemStyles.field}>
+                <label className={designSystemStyles.label} htmlFor="inputConfirmPassword">Confirmar Senha</label>
                 <PasswordInput
                     id="inputConfirmPassword" 
                     name="confirmPassword"
@@ -75,20 +68,19 @@ export const ChangePassword: React.FC = () => {
                     required 
                     autoComplete="new-password"
                 />
-                {changePasswordState.error && <ErrorText>{changePasswordState.error}</ErrorText>}
-              </Field>
+                {changePasswordState.error && <p className={designSystemStyles.errorText}>{changePasswordState.error}</p>}
+              </div>
 
-              <PrimaryButton type="submit">
+              <button className={designSystemStyles.primaryButton} type="submit">
                   {isChangePasswordPending ? 'Alterando...' : 'Alterar Senha'}
-              </PrimaryButton>
-            </FieldsWrapper>
-            
-            <ChangePasswordFooter>
-               <ChangePasswordCancelLink to="/login">Cancelar</ChangePasswordCancelLink>
-            </ChangePasswordFooter>
-          </AuthForm>
-        </ChangePasswordCard>
-      </ChangePasswordShell>
-    </ChangePasswordContainer>
+              </button>
+            </fieldset>
+            <div className={designSystemStyles.footerLinks}>
+               <Link className={styles.changePasswordCancelLink} to="/login">Cancelar</Link>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
   );
 };

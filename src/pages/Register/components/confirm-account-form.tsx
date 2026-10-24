@@ -1,18 +1,7 @@
+import styles from './confirm-account-form.module.css';
+import designSystemStyles from '../../../styles/design-system.module.css';
 import React from 'react';
 import { TimedButton } from '../../../components/UI/Buttons/timed-button';
-import {
-    AuthForm,
-    AuthHeader,
-    BrandHighlight,
-    BrandTitle,
-    Description,
-    Field,
-    FieldsWrapper,
-    Label,
-    PrimaryButton,
-    Subtitle,
-} from '../../../styles/design-system.style';
-import { Actions, CodeInput } from './confirm-account-form.style';
 import type { UUID7 } from '../../../types/ids';
 
 interface IConfirmAccountFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
@@ -30,19 +19,19 @@ export const ConfirmAccountForm: React.FC<IConfirmAccountFormProps> = ({
 }) => {
     return (
         <>
-            <AuthHeader>
-                <BrandTitle>DataLab <BrandHighlight>App</BrandHighlight></BrandTitle>
-                <Subtitle>Confirmar Conta</Subtitle>
-                <Description>
+            <header className={designSystemStyles.authHeader}>
+                <h1 className={designSystemStyles.brandTitle}>DataLab <span className={designSystemStyles.brandHighlight}>App</span></h1>
+                <h2 className={designSystemStyles.subtitle}>Confirmar Conta</h2>
+                <p className={designSystemStyles.description}>
                     Digite o código de 6 dígitos enviado para <b>{email}</b>.
-                </Description>
-            </AuthHeader>
-            <AuthForm {...props}>
-                <FieldsWrapper disabled={isPending}>
+                </p>
+            </header>
+            <form className={designSystemStyles.authForm} {...props}>
+                <fieldset className={designSystemStyles.fieldsWrapper} disabled={isPending}>
                     <input type="hidden" name="userId" value={userId || ''} />
-                    <Field>
-                        <Label htmlFor="inputCode">Código de Confirmação</Label>
-                        <CodeInput
+                    <div className={designSystemStyles.field}>
+                        <label className={designSystemStyles.label} htmlFor="inputCode">Código de Confirmação</label>
+                        <input className={styles.codeInput}
                             type="text"
                             id="inputCode"
                             name="code"
@@ -52,12 +41,12 @@ export const ConfirmAccountForm: React.FC<IConfirmAccountFormProps> = ({
                             maxLength={6}
                             autoComplete="one-time-code"
                         />
-                    </Field>
+                    </div>
 
-                    <Actions>
-                        <PrimaryButton type="submit">
+                    <div className={styles.actions}>
+                        <button className={designSystemStyles.primaryButton} type="submit">
                             {isPending ? "Processando..." : "Confirmar Conta"}
-                        </PrimaryButton>
+                        </button>
 
                         <TimedButton
                             cooldown={120}
@@ -67,9 +56,9 @@ export const ConfirmAccountForm: React.FC<IConfirmAccountFormProps> = ({
                             textWhenNoClicked="Reenviar Código"
                             appearance="secondary"
                         />
-                    </Actions>
-                </FieldsWrapper>
-            </AuthForm>
+                    </div>
+                </fieldset>
+            </form>
         </>
     );
 };

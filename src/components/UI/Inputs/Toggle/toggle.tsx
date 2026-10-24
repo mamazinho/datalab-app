@@ -1,13 +1,19 @@
 import type { ComponentPropsWithoutRef } from 'react';
-import { ToggleLabel, ToggleSwitch } from './toggle.style';
+import styles from './toggle.module.css';
 
-interface IToggleProps extends Omit<ComponentPropsWithoutRef<'input'>, 'type' | 'role'> {
+type ToggleSwitchProps = Omit<ComponentPropsWithoutRef<'input'>, 'type'>;
+
+export const ToggleSwitch = (props: ToggleSwitchProps) => (
+  <input type="checkbox" className={styles.toggleSwitch} {...props} />
+);
+
+interface IToggleProps extends Omit<ToggleSwitchProps, 'role'> {
   label: string;
 }
 
 export const Toggle = ({ label, ...inputProps }: IToggleProps) => (
-  <ToggleLabel>
+  <label className={styles.toggleLabel}>
     <ToggleSwitch role="switch" {...inputProps} />
     {label}
-  </ToggleLabel>
+  </label>
 );

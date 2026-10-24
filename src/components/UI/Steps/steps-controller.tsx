@@ -1,8 +1,8 @@
+import styles from './steps.module.css';
 import { type ReactNode, type ReactElement, forwardRef, useImperativeHandle, useState } from "react";
 import React from "react";
 import type { IStepProps } from "./step";
 import { StepsProgressBar } from "./steps-progress-bar";
-import { StepNavButton, StepNavIcon, StepsContainer, StepsContentWrapper, StepsNavigation } from "./steps.style";
 
 interface IStepsControllerProps {
   initialStep?: number;
@@ -21,11 +21,9 @@ export const StepsController = forwardRef<StepsRef, IStepsControllerProps>(({ ch
   const [currentStep, setCurrentStep] = useState(initialStep);
   const steps = React.Children.toArray(children) as ReactElement<IStepProps>[];
   const totalSteps = steps.length;
-  
   const next = () => {
     if (currentStep < totalSteps) setCurrentStep((prev) => prev + 1);
   };
-  
   const prev = () => {
     if (currentStep > 1) setCurrentStep((prev) => prev - 1);
   };
@@ -40,11 +38,9 @@ export const StepsController = forwardRef<StepsRef, IStepsControllerProps>(({ ch
   }));
 
   const currentChild = steps[currentStep - 1];
-  
   if (!currentChild) return null;
 
   const { canGoBack = false, canGoForward = false } = currentChild.props;
-  
   // Navigation Logic for Progress Bar
   const isStepClickable = (stepNumber: number) => {
       // Can go back to previous steps if current step allows going back
@@ -55,7 +51,7 @@ export const StepsController = forwardRef<StepsRef, IStepsControllerProps>(({ ch
   };
 
   return (
-    <StepsContainer>
+    <div className={styles.stepsContainer}>
       {/* Progress Bar / Stepper */}
       {showProgress && (
         <StepsProgressBar
@@ -67,38 +63,37 @@ export const StepsController = forwardRef<StepsRef, IStepsControllerProps>(({ ch
       )}
 
       {/* Navigation & Content Wrapper */}
-      <StepsContentWrapper>
-        <StepsNavigation>
+      <div className={styles.stepsContentWrapper}>
+        <div className={styles.stepsNavigation}>
              {/* Back Button */}
             {canGoBack && currentStep > 1 ? (
-                <StepNavButton 
+                <button className={styles.stepNavButton} 
                   onClick={prev}
                   type="button"
                 >
-                    <StepNavIcon $direction="left" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <svg className={styles.stepNavIcon} data-direction="left" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                    </StepNavIcon>
+                    </svg>
                     Voltar
-                </StepNavButton>
+                </button>
             ) : <span />}
 
             {/* Forward Button (if explicitly enabled) */}
             {canGoForward && currentStep < totalSteps && (
-                <StepNavButton 
+                <button className={styles.stepNavButton} 
                   onClick={next}
                   type="button"
                 >
                     Avançar
-                    <StepNavIcon $direction="right" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <svg className={styles.stepNavIcon} data-direction="right" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                    </StepNavIcon>
-                </StepNavButton>
+                    </svg>
+                </button>
             )}
-        </StepsNavigation>
-        
+        </div>
         {/* Step Content */}
         {currentChild}
-      </StepsContentWrapper>
-    </StepsContainer>
+      </div>
+    </div>
   );
 });

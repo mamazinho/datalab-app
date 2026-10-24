@@ -1,20 +1,12 @@
+import styles from '../edit-profile.module.css';
+import designSystemStyles from '../../../styles/design-system.module.css';
 import { useActionState, useState } from 'react';
 import { Modal } from '../../../components/UI/Modal/modal';
 import { useAuthContext } from '../../../contexts/auth';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import type { IUserResponse } from '../../../services/datalab-api/usersResource';
-import { Badge, ErrorText, Field, Input, Label } from '../../../styles/design-system.style';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { deleteAccountAction } from '../actions';
-import {
-  CompanyList,
-  DangerButton,
-  DangerText,
-  DangerTitle,
-  DangerZone,
-  DeleteAccountForm,
-  DeleteAccountSubmit,
-} from '../edit-profile.style';
 
 export const DeleteAccount = ({ me }: { me: IUserResponse }) => {
   const { logout } = useAuthContext();
@@ -35,54 +27,54 @@ export const DeleteAccount = ({ me }: { me: IUserResponse }) => {
   };
 
   return (
-    <DangerZone aria-labelledby="delete-account-title">
-      <DangerTitle id="delete-account-title">Excluir conta</DangerTitle>
-      <DangerText>Seus dados pessoais são apagados e você sai de todas as empresas. Não dá para desfazer.</DangerText>
-      <DangerButton type="button" onClick={() => setIsOpen(true)}>
+    <section className={styles.dangerZone} aria-labelledby="delete-account-title">
+      <h2 className={styles.dangerTitle} id="delete-account-title">Excluir conta</h2>
+      <p className={styles.dangerText}>Seus dados pessoais são apagados e você sai de todas as empresas. Não dá para desfazer.</p>
+      <button className={styles.dangerButton} type="button" onClick={() => setIsOpen(true)}>
         Excluir minha conta
-      </DangerButton>
+      </button>
 
       <Modal isOpen={isOpen} onClose={close} title="Excluir sua conta?">
-        <DeleteAccountForm action={formAction}>
+        <form className={styles.deleteAccountForm} action={formAction}>
           {me.companies.length > 0 && (
             <div>
-              <DangerText>Você vai sair de todas as empresas em que participa:</DangerText>
-              <CompanyList>
+              <p className={styles.dangerText}>Você vai sair de todas as empresas em que participa:</p>
+              <ul className={styles.companyList}>
                 {me.companies.map((company) => (
                   <li key={company.id}>
                     {company.name}
-                    {company.membership.membership_role === 'owner' && <Badge>Owner</Badge>}
+                    {company.membership.membership_role === 'owner' && <span className={designSystemStyles.badge}>Owner</span>}
                   </li>
                 ))}
-              </CompanyList>
+              </ul>
             </div>
           )}
 
           {ownsACompany && (
-            <DangerText>
+            <p className={styles.dangerText}>
               Nas empresas em que você é owner, transfira a posse para outro membro antes. Se você for o único
               membro, a empresa é excluída junto.
-            </DangerText>
+            </p>
           )}
 
-          <Field>
-            <Label htmlFor="confirm-account-email">Para confirmar, digite seu e-mail</Label>
-            <Input
+          <div className={designSystemStyles.field}>
+            <label className={designSystemStyles.label} htmlFor="confirm-account-email">Para confirmar, digite seu e-mail</label>
+            <input className={designSystemStyles.input}
               id="confirm-account-email"
               autoComplete="off"
               value={confirmation}
               onChange={(event) => setConfirmation(event.target.value)}
               placeholder={me.email}
             />
-          </Field>
+          </div>
 
-          {formState.error && <ErrorText role="alert">{formState.error}</ErrorText>}
+          {formState.error && <p className={designSystemStyles.errorText} role="alert">{formState.error}</p>}
 
-          <DeleteAccountSubmit type="submit" disabled={confirmation.trim().toLowerCase() !== me.email.toLowerCase() || isPending}>
+          <button className={styles.deleteAccountSubmit} type="submit" disabled={confirmation.trim().toLowerCase() !== me.email.toLowerCase() || isPending}>
             {isPending ? 'Excluindo...' : 'Excluir conta'}
-          </DeleteAccountSubmit>
-        </DeleteAccountForm>
+          </button>
+        </form>
       </Modal>
-    </DangerZone>
+    </section>
   );
 };

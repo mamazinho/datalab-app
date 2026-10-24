@@ -1,25 +1,8 @@
+import styles from './invites-menu.module.css';
 import { useState } from 'react';
 import { useMe } from '../../../hooks/use-me';
 import { useInviteActions } from '../../../hooks/use-invite-actions';
 import type { IUserInvite } from '../../../services/datalab-api/usersResource';
-import {
-  InviteRow,
-  InviteRowAccept,
-  InviteRowActions,
-  InviteRowBy,
-  InviteRowCompany,
-  InviteRowDecline,
-  InvitesBadge,
-  InvitesEmpty,
-  InvitesMenuChevron,
-  InvitesMenuPanel,
-  InvitesMenuToggle,
-  InvitesMenuToggleLabel,
-  InvitesMenuWrapper,
-  InvitesScrollArea,
-  InvitesTab,
-  InvitesTabs,
-} from './invites-menu.style';
 
 type InviteTab = 'pending' | 'accepted' | 'declined';
 
@@ -33,24 +16,24 @@ const InviteActionRow = ({ invite }: { invite: IUserInvite }) => {
   const { acceptFormAction, declineFormAction, isAccepting, isDeclining } = useInviteActions();
 
   return (
-    <InviteRow>
-      <InviteRowCompany>{invite.company?.name ?? `Empresa #${invite.company_id}`}</InviteRowCompany>
-      <InviteRowBy>Por {invite.invited_by?.name ?? 'alguém'}</InviteRowBy>
-      <InviteRowActions>
+    <div className={styles.inviteRow}>
+      <span className={styles.inviteRowCompany}>{invite.company?.name ?? `Empresa #${invite.company_id}`}</span>
+      <span className={styles.inviteRowBy}>Por {invite.invited_by?.name ?? 'alguém'}</span>
+      <div className={styles.inviteRowActions}>
         <form action={acceptFormAction}>
           <input type="hidden" name="inviteId" value={invite.id} />
-          <InviteRowAccept type="submit" disabled={isAccepting || isDeclining}>
+          <button className={styles.inviteRowAccept} type="submit" disabled={isAccepting || isDeclining}>
             {isAccepting ? '...' : 'Aceitar'}
-          </InviteRowAccept>
+          </button>
         </form>
         <form action={declineFormAction}>
           <input type="hidden" name="inviteId" value={invite.id} />
-          <InviteRowDecline type="submit" disabled={isAccepting || isDeclining}>
+          <button className={styles.inviteRowDecline} type="submit" disabled={isAccepting || isDeclining}>
             {isDeclining ? '...' : 'Recusar'}
-          </InviteRowDecline>
+          </button>
         </form>
-      </InviteRowActions>
-    </InviteRow>
+      </div>
+    </div>
   );
 };
 
@@ -64,53 +47,53 @@ export const InvitesMenu = () => {
   const filtered = allInvites.filter((i) => i.status === activeTab);
 
   return (
-    <InvitesMenuWrapper>
-      <InvitesMenuToggle onClick={() => setIsOpen((p) => !p)}>
-        <InvitesMenuToggleLabel>
+    <div className={styles.invitesMenuWrapper}>
+      <button className={styles.invitesMenuToggle} onClick={() => setIsOpen((p) => !p)}>
+        <span className={styles.invitesMenuToggleLabel}>
           Convites
-          {pendingCount > 0 && <InvitesBadge>{pendingCount}</InvitesBadge>}
-        </InvitesMenuToggleLabel>
-        <InvitesMenuChevron
+          {pendingCount > 0 && <span className={styles.invitesBadge}>{pendingCount}</span>}
+        </span>
+        <svg className={styles.invitesMenuChevron}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
           style={{ transform: isOpen ? 'rotate(180deg)' : undefined }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
-        </InvitesMenuChevron>
-      </InvitesMenuToggle>
+        </svg>
+      </button>
 
       {isOpen && (
-        <InvitesMenuPanel>
-          <InvitesTabs>
+        <div className={styles.invitesMenuPanel}>
+          <div className={styles.invitesTabs}>
             {(Object.keys(TAB_LABELS) as InviteTab[]).map((tab) => (
-              <InvitesTab
+              <button className={styles.invitesTab}
                 key={tab}
-                $active={activeTab === tab}
+                data-active={activeTab === tab}
                 onClick={() => setActiveTab(tab)}
               >
                 {TAB_LABELS[tab]}
-              </InvitesTab>
+              </button>
             ))}
-          </InvitesTabs>
-          <InvitesScrollArea>
+          </div>
+          <div className={styles.invitesScrollArea}>
             {filtered.length === 0 ? (
-              <InvitesEmpty>Nenhum convite aqui.</InvitesEmpty>
+              <p className={styles.invitesEmpty}>Nenhum convite aqui.</p>
             ) : (
               filtered.map((invite) =>
                 activeTab === 'pending' ? (
                   <InviteActionRow key={invite.id} invite={invite} />
                 ) : (
-                  <InviteRow key={invite.id}>
-                    <InviteRowCompany>{invite.company?.name ?? `Empresa #${invite.company_id}`}</InviteRowCompany>
-                    <InviteRowBy>Por {invite.invited_by?.name ?? 'alguém'}</InviteRowBy>
-                  </InviteRow>
+                  <div className={styles.inviteRow} key={invite.id}>
+                    <span className={styles.inviteRowCompany}>{invite.company?.name ?? `Empresa #${invite.company_id}`}</span>
+                    <span className={styles.inviteRowBy}>Por {invite.invited_by?.name ?? 'alguém'}</span>
+                  </div>
                 ),
               )
             )}
-          </InvitesScrollArea>
-        </InvitesMenuPanel>
+          </div>
+        </div>
       )}
-    </InvitesMenuWrapper>
+    </div>
   );
 };

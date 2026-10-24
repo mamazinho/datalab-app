@@ -1,16 +1,11 @@
+import designSystemStyles from '../../styles/design-system.module.css';
+import styles from './forgot-password.module.css';
+import { Link } from 'react-router-dom';
 import React, { useActionState } from 'react';
-import {
-    ForgotPasswordBackLink,
-    ForgotPasswordCard,
-    ForgotPasswordContainer,
-    ForgotPasswordFooter,
-    ForgotPasswordShell,
-} from './forgot-password.style';
 import { TimedButton } from '../../components/UI/Buttons/timed-button';
 import { forgotPasswordAction } from './actions';
 import { INITIAL_ACTION_STATE } from '../../types/actions';
 import { useActionFeedback } from '../../hooks/use-action-feedback';
-import { AuthForm, AuthHeader, BrandHighlight, BrandTitle, Description, Field, FieldsWrapper, Input, Label, Subtitle } from '../../styles/design-system.style';
 
 export const ForgotPassword: React.FC = () => {
     const [forgotPasswordState, forgotPasswordFormAction, isForgotPasswordPending] = useActionState(forgotPasswordAction, INITIAL_ACTION_STATE);
@@ -20,22 +15,22 @@ export const ForgotPassword: React.FC = () => {
     });
 
     return (
-        <ForgotPasswordContainer>
-            <ForgotPasswordShell>
-                <ForgotPasswordCard>
-                    <AuthHeader>
-                        <BrandTitle>DataLab <BrandHighlight>App</BrandHighlight></BrandTitle>
-                        <Subtitle>Recuperar Senha</Subtitle>
-                        <Description>
+        <div className={styles.forgotPasswordContainer}>
+            <div className={designSystemStyles.authShell}>
+                <section className={designSystemStyles.authCard}>
+                    <header className={designSystemStyles.authHeader}>
+                        <h1 className={designSystemStyles.brandTitle}>DataLab <span className={designSystemStyles.brandHighlight}>App</span></h1>
+                        <h2 className={designSystemStyles.subtitle}>Recuperar Senha</h2>
+                        <p className={designSystemStyles.description}>
                             Informe seu email para receber um link de recuperação.
-                        </Description>
-                    </AuthHeader>
+                        </p>
+                    </header>
 
-                    <AuthForm action={forgotPasswordFormAction}>
-                        <FieldsWrapper disabled={isForgotPasswordPending}>
-                            <Field>
-                                <Label htmlFor="inputEmail">Email</Label>
-                                <Input
+                    <form className={designSystemStyles.authForm} action={forgotPasswordFormAction}>
+                        <fieldset className={designSystemStyles.fieldsWrapper} disabled={isForgotPasswordPending}>
+                            <div className={designSystemStyles.field}>
+                                <label className={designSystemStyles.label} htmlFor="inputEmail">Email</label>
+                                <input className={designSystemStyles.input}
                                     type="email"
                                     id="inputEmail"
                                     name="email"
@@ -44,7 +39,7 @@ export const ForgotPassword: React.FC = () => {
                                     autoFocus
                                     autoComplete="email"
                                 />
-                            </Field>
+                            </div>
 
                             <TimedButton
                                 cooldown={120}
@@ -53,14 +48,14 @@ export const ForgotPassword: React.FC = () => {
                                 textWhenClicked="Reenviar Link"
                                 textWhenNoClicked="Enviar Link"
                             />
-                        </FieldsWrapper>
+                        </fieldset>
 
-                        <ForgotPasswordFooter>
-                            <ForgotPasswordBackLink to="/login">Voltar para Login</ForgotPasswordBackLink>
-                        </ForgotPasswordFooter>
-                    </AuthForm>
-                </ForgotPasswordCard>
-            </ForgotPasswordShell>
-        </ForgotPasswordContainer>
+                        <div className={designSystemStyles.footerLinks}>
+                            <Link className={styles.forgotPasswordBackLink} to="/login">Voltar para Login</Link>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
     );
 };

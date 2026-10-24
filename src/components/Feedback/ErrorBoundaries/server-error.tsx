@@ -1,20 +1,9 @@
+import styles from './server-error.module.css';
 import { useEffect, useRef } from "react";
 import type { FallbackProps } from "react-error-boundary";
 import { toast, type Id } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { isAxiosError, AxiosError } from 'axios';
-import {
-  AlertIcon,
-  ClientErrorCode,
-  ClientErrorInfo,
-  ErrorMessageCode,
-  Footer,
-  Header,
-  RetryButton,
-  ServerErrorBox,
-  Text,
-  Title,
-} from './server-error.style';
 
 export const ServerErrorComponent = ({ error, resetErrorBoundary }: FallbackProps) => {
   const toastId = useRef<Id | null>(null);
@@ -48,36 +37,33 @@ export const ServerErrorComponent = ({ error, resetErrorBoundary }: FallbackProp
 
   if (isClientError) {
     return (
-      <ClientErrorInfo>
-         <ClientErrorCode>Conteúdo indisponível ({status})</ClientErrorCode>
-      </ClientErrorInfo>
+      <div className={styles.clientErrorInfo}>
+         <span className={styles.clientErrorCode}>Conteúdo indisponível ({status})</span>
+      </div>
     );
   }
 
   return (
-    <ServerErrorBox role="alert">
-      <Header>
-        <AlertIcon xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className={styles.serverErrorBox} role="alert">
+      <div className={styles.header}>
+        <svg className={styles.alertIcon} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </AlertIcon>
-        <Title>Falha no Servidor</Title>
-      </Header>
-      
-      <Text>
+        </svg>
+        <h4 className={styles.title}>Falha no Servidor</h4>
+      </div>
+      <p className={styles.text}>
         Não foi possível carregar as informações. O servidor encontrou um problema momentâneo.
-      </Text>
-      
-      <Footer>
-        <ErrorMessageCode>
+      </p>
+      <div className={styles.footer}>
+        <code className={styles.errorMessageCode}>
           {(error as Error)?.message || "Erro desconhecido"}
-        </ErrorMessageCode>
-        
-        <RetryButton 
+        </code>
+        <button className={styles.retryButton} 
           onClick={resetErrorBoundary} 
         >
           Tentar novamente
-        </RetryButton>
-      </Footer>
-    </ServerErrorBox>
+        </button>
+      </div>
+    </div>
   );
 }

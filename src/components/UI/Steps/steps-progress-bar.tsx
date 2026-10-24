@@ -1,5 +1,5 @@
+import styles from './steps.module.css';
 import React from "react";
-import { ProgressBarWrapper, ProgressConnector, ProgressStep, ProgressStepButton } from "./steps.style";
 
 interface IStepsProgressBarProps {
   totalSteps: number;
@@ -15,30 +15,29 @@ export const StepsProgressBar: React.FC<IStepsProgressBarProps> = ({
   isStepClickable,
 }) => {
   return (
-    <ProgressBarWrapper>
+    <div className={styles.progressBarWrapper}>
       {Array.from({ length: totalSteps }).map((_, index) => {
         const stepNumber = index + 1;
         const isActive = stepNumber <= currentStep;
         const isClickable = isStepClickable(stepNumber);
 
         return (
-          <ProgressStep key={index}>
-            <ProgressStepButton
+          <div className={styles.progressStep} key={index}>
+            <button className={styles.progressStepButton}
               type="button"
               onClick={() => isClickable && onStepClick(stepNumber)}
               disabled={!isClickable}
-              $isActive={isActive}
-              $isClickable={isClickable}
+              data-active={isActive}
             >
               {stepNumber}
-            </ProgressStepButton>
+            </button>
             {/* Line connector */}
             {index < totalSteps - 1 && (
-              <ProgressConnector $isActive={stepNumber < currentStep} />
+              <div className={styles.progressConnector} data-active={stepNumber < currentStep} />
             )}
-          </ProgressStep>
+          </div>
         );
       })}
-    </ProgressBarWrapper>
+    </div>
   );
 };

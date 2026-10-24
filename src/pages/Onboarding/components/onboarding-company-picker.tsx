@@ -1,16 +1,7 @@
+import styles from '../onboarding.module.css';
 import { useNavigate } from 'react-router-dom';
 import { useMe } from '../../../hooks/use-me';
 import { useCompanyContext } from '../../../contexts/company';
-import {
-  CompanyPickerItem,
-  CompanyPickerList,
-  CompanyPickerName,
-  CompanyPickerRole,
-  OnboardingCard,
-  OnboardingSubtitle,
-  OnboardingTitle,
-  OnboardingWrapper,
-} from '../onboarding.style';
 import type { IUserCompany } from '../../../services/datalab-api/usersResource';
 
 export const OnboardingCompanyPicker = () => {
@@ -26,23 +17,23 @@ export const OnboardingCompanyPicker = () => {
   };
 
   return (
-    <OnboardingWrapper>
-      <OnboardingCard>
-        <OnboardingTitle>Selecione sua empresa</OnboardingTitle>
-        <OnboardingSubtitle>
+    <div className={styles.onboardingWrapper}>
+      <div className={styles.onboardingCard}>
+        <h1 className={styles.onboardingTitle}>Selecione sua empresa</h1>
+        <p className={styles.onboardingSubtitle}>
           Você faz parte de mais de uma empresa. Escolha com qual deseja continuar.
-        </OnboardingSubtitle>
-        <CompanyPickerList>
+        </p>
+        <ul className={styles.companyPickerList}>
           {userCompanies.map((userCompany) => (
             <li key={userCompany.id}>
-              <CompanyPickerItem type="button" onClick={() => handleSelect(userCompany)}>
-                <CompanyPickerName>{userCompany.name}</CompanyPickerName>
-                <CompanyPickerRole>{userCompany.membership.membership_role}</CompanyPickerRole>
-              </CompanyPickerItem>
+              <button className={styles.companyPickerItem} type="button" onClick={() => handleSelect(userCompany)}>
+                <span className={styles.companyPickerName}>{userCompany.name}</span>
+                <span className={styles.companyPickerRole}>{userCompany.membership.membership_role}</span>
+              </button>
             </li>
           ))}
-        </CompanyPickerList>
-      </OnboardingCard>
-    </OnboardingWrapper>
+        </ul>
+      </div>
+    </div>
   );
 };

@@ -1,3 +1,4 @@
+import styles from '../company-members.module.css';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
@@ -7,7 +8,6 @@ import { DatalabAPI } from '../../../services/datalab-api';
 import { currentMembershipQuery, meQuery, membersQuery } from '../../../queries';
 import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
 import type { UUID7 } from '../../../types/ids';
-import { MembersEmpty, MembersTableCellSecondary, RoleBadge } from '../company-members.style';
 import { MemberPermissionsModal } from './member-permissions-modal';
 
 interface IMembersListProps {
@@ -64,7 +64,7 @@ export const MembersList = ({ members }: IMembersListProps) => {
     );
 
   if (members.length === 0) {
-    return <MembersEmpty>Nenhum membro encontrado.</MembersEmpty>;
+    return <p className={styles.membersEmpty}>Nenhum membro encontrado.</p>;
   }
 
   return (
@@ -81,12 +81,12 @@ export const MembersList = ({ members }: IMembersListProps) => {
             <td>{member.user?.name ?? '—'}</td>
             <td>
               {member.user?.email ?? '—'}
-              <MembersTableCellSecondary>Status: {member.status}</MembersTableCellSecondary>
+              <span className={styles.membersTableCellSecondary}>Status: {member.status}</span>
             </td>
             <td>
-              <RoleBadge $owner={member.membership_role === 'owner'}>
+              <span className={styles.roleBadge} data-owner={member.membership_role === 'owner'}>
                 {member.membership_role === 'owner' ? 'Owner' : 'Membro'}
-              </RoleBadge>
+              </span>
             </td>
             <td>
               {member.membership_role !== 'owner' && (

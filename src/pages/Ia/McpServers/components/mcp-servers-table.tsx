@@ -1,3 +1,5 @@
+import mcpServersStyles from '../mcp-servers.module.css';
+import styles from '../../ia.module.css';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
@@ -8,9 +10,7 @@ import { DatalabAPI } from '../../../../services/datalab-api';
 import type { IRetrieveMcpServer } from '../../../../services/datalab-api/mcpServersResource';
 import type { UUID7 } from '../../../../types/ids';
 import { MCP_SERVER_ROUTE_PERMISSIONS } from '../../../../utils/route-permissions';
-import { EmptyMessage } from '../../ia.style';
 import { AUTH_TYPE_LABELS } from '../schemas';
-import { McpName, McpUrl } from '../mcp-servers.style';
 
 interface IMcpServersTableProps {
   mcpServers: IRetrieveMcpServer[];
@@ -40,7 +40,7 @@ export const McpServersTable = ({ mcpServers, onEdit }: IMcpServersTableProps) =
   };
 
   if (mcpServers.length === 0) {
-    return <EmptyMessage>Nenhum servidor MCP cadastrado.</EmptyMessage>;
+    return <p className={styles.emptyMessage}>Nenhum servidor MCP cadastrado.</p>;
   }
 
   return (
@@ -54,9 +54,9 @@ export const McpServersTable = ({ mcpServers, onEdit }: IMcpServersTableProps) =
 
       {mcpServers.map((mcpServer) => (
         <TableRow key={mcpServer.id}>
-          <td><McpName>{mcpServer.name}</McpName></td>
+          <td><span className={mcpServersStyles.mcpName}>{mcpServer.name}</span></td>
           <td>{mcpServer.agent_name}</td>
-          <td><McpUrl title={mcpServer.url}>{mcpServer.url}</McpUrl></td>
+          <td><span className={mcpServersStyles.mcpUrl} title={mcpServer.url}>{mcpServer.url}</span></td>
           <td>{AUTH_TYPE_LABELS[mcpServer.auth_type]}</td>
           <td>
             {(canUpdate || canRemove) && (

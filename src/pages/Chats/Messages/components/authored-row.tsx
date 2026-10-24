@@ -1,6 +1,7 @@
+import styles from '../messages.module.css';
+import { Avatar } from '../../../../components/UI/Avatar';
 import type { ReactNode } from 'react';
 import type { IChatMember } from '../../../../services/datalab-api/chatsResource';
-import { AuthorAvatar, AuthorName, AuthorSpacer, MessageColumn, MessageRow } from '../messages.style';
 
 interface IAuthoredRowProps {
     author: IChatMember | null;
@@ -13,12 +14,12 @@ export const AuthoredRow = ({ author, showAuthor, isUser, children }: IAuthoredR
     const visibleAuthor = showAuthor ? author : null;
 
     return (
-        <MessageRow $isUser={isUser} $continued={!showAuthor}>
-            {visibleAuthor ? <AuthorAvatar src={visibleAuthor.avatar_url} name={visibleAuthor.name} alt="" /> : <AuthorSpacer />}
-            <MessageColumn $isUser={isUser}>
-                {visibleAuthor && <AuthorName>{visibleAuthor.name}</AuthorName>}
+        <div className={styles.messageRow} data-user={isUser} data-continued={!showAuthor}>
+            {visibleAuthor ? <Avatar className={styles.authorAvatar} src={visibleAuthor.avatar_url} name={visibleAuthor.name} alt="" /> : <span className={styles.authorSpacer} />}
+            <div className={styles.messageColumn}>
+                {visibleAuthor && <span className={styles.authorName}>{visibleAuthor.name}</span>}
                 {children}
-            </MessageColumn>
-        </MessageRow>
+            </div>
+        </div>
     );
 };

@@ -1,34 +1,8 @@
+import styles from '../integrations.module.css';
 import { useId, type ReactNode } from 'react';
 import type { IIntegrationStatus } from '../../../services/datalab-api/authResource';
 import type { ICompanyProviderAsset } from '../../../services/datalab-api/companiesResource';
 import { groupAssets, PROVIDER_LABELS, scopeLabel } from '../../../utils/integrations';
-import {
-  AssetSummary,
-  AssetSummaryAccount,
-  AssetSummaryGroup,
-  AssetSummaryItem,
-  AssetSummaryItems,
-  AssetSummaryTitle,
-  IntegrationActions,
-  IntegrationAlert,
-  IntegrationAlertIcon,
-  IntegrationAlertList,
-  IntegrationAlertTooltip,
-  IntegrationButton,
-  IntegrationCardBox,
-  IntegrationCardHead,
-  IntegrationCardStatus,
-  IntegrationDangerButton,
-  IntegrationDescription,
-  IntegrationMeta,
-  IntegrationMetaRow,
-  IntegrationName,
-  IntegrationPrimaryButton,
-  IntegrationProviderTag,
-  ScopeChip,
-  ScopeList,
-  StatusBadge,
-} from '../integrations.style';
 
 interface IIntegrationCardProps {
   integration: IIntegrationStatus;
@@ -82,47 +56,47 @@ export const IntegrationCard = ({
       <>
         A conexão com o {providerLabel} está ativa, mas estas permissões ainda não foram
         concedidas para esta integração:
-        <ScopeList>
+        <div className={styles.scopeList}>
           {missingScopes.map((scope) => (
-            <ScopeChip key={scope} title={scope}>
+            <code className={styles.scopeChip} key={scope} title={scope}>
               {scopeLabel(scope)}
-            </ScopeChip>
+            </code>
           ))}
-        </ScopeList>
+        </div>
       </>,
     );
   }
 
   return (
-    <IntegrationCardBox $connected={integration.connected}>
-      <IntegrationCardHead>
+    <article className={styles.integrationCardBox} data-connected={integration.connected}>
+      <header className={styles.integrationCardHead}>
         <div>
-          <IntegrationName>{integration.label}</IntegrationName>
-          <IntegrationProviderTag>{providerLabel}</IntegrationProviderTag>
+          <h2 className={styles.integrationName}>{integration.label}</h2>
+          <span className={styles.integrationProviderTag}>{providerLabel}</span>
         </div>
 
-        <IntegrationCardStatus>
+        <div className={styles.integrationCardStatus}>
           {alerts.length > 0 && (
-            <IntegrationAlert>
-              <IntegrationAlertIcon
+            <span className={styles.integrationAlert}>
+              <button className={styles.integrationAlertIcon}
                 type="button"
                 aria-label={`Avisos de ${integration.label}`}
                 aria-describedby={tooltipId}
               >
                 !
-              </IntegrationAlertIcon>
-              <IntegrationAlertTooltip id={tooltipId} role="tooltip">
-                <IntegrationAlertList>
+              </button>
+              <span className={styles.integrationAlertTooltip} id={tooltipId} role="tooltip">
+                <span className={styles.integrationAlertList}>
                   {alerts.map((alert, index) => (
                     <span key={index}>{alert}</span>
                   ))}
-                </IntegrationAlertList>
-              </IntegrationAlertTooltip>
-            </IntegrationAlert>
+                </span>
+              </span>
+            </span>
           )}
 
-          <StatusBadge
-            $tone={!integration.connected ? 'neutral' : expired || needsScopes ? 'warning' : 'success'}
+          <span className={styles.statusBadge}
+            data-tone={!integration.connected ? 'neutral' : expired || needsScopes ? 'warning' : 'success'}
           >
             {!integration.connected
               ? 'Não conectado'
@@ -131,77 +105,77 @@ export const IntegrationCard = ({
                 : needsScopes
                   ? 'Permissões incompletas'
                   : 'Conectado'}
-          </StatusBadge>
-        </IntegrationCardStatus>
-      </IntegrationCardHead>
+          </span>
+        </div>
+      </header>
 
-      <IntegrationDescription>{integration.description}</IntegrationDescription>
+      <p className={styles.integrationDescription}>{integration.description}</p>
 
       {integration.connected_account_email && (
-        <IntegrationMeta>
-          <IntegrationMetaRow>
+        <dl className={styles.integrationMeta}>
+          <div className={styles.integrationMetaRow}>
             <dt>Conta:</dt>
             <dd>{integration.connected_account_email}</dd>
-          </IntegrationMetaRow>
-        </IntegrationMeta>
+          </div>
+        </dl>
       )}
 
       {/* Contagem não diz nada sozinha: o owner precisa ver QUAIS ativos são */}
       {assetGroups.length > 0 && (
-        <AssetSummary>
-          <AssetSummaryTitle>Ativos da empresa ({assets.length})</AssetSummaryTitle>
+        <div className={styles.assetSummary}>
+          <span className={styles.assetSummaryTitle}>Ativos da empresa ({assets.length})</span>
           {assetGroups.map((group) => (
-            <AssetSummaryGroup key={group.key}>
-              <AssetSummaryAccount>{group.label}</AssetSummaryAccount>
+            <div className={styles.assetSummaryGroup} key={group.key}>
+              <span className={styles.assetSummaryAccount}>{group.label}</span>
               {group.items.length > 0 && (
-                <AssetSummaryItems>
+                <ul className={styles.assetSummaryItems}>
                   {group.items.map((asset) => (
-                    <AssetSummaryItem key={asset.external_id} title={asset.external_id}>
+                    <li className={styles.assetSummaryItem} key={asset.external_id} title={asset.external_id}>
                       {asset.name}
-                    </AssetSummaryItem>
+                    </li>
                   ))}
-                </AssetSummaryItems>
+                </ul>
               )}
-            </AssetSummaryGroup>
+            </div>
           ))}
-        </AssetSummary>
+        </div>
       )}
 
-      <IntegrationActions>
+      <div className={styles.integrationActions}>
         {/* Com a conta já vinculada, liberar ativos para a empresa é a ação do
             dia a dia — refazer o OAuth vira secundário ("Reconectar"). */}
         {integration.connected ? (
           <>
             {isOwner && (
-              <IntegrationPrimaryButton type="button" onClick={() => onManageAssets(integration)}>
+              <button className={styles.integrationPrimaryButton} type="button" onClick={() => onManageAssets(integration)}>
                 Gerenciar permissões
-              </IntegrationPrimaryButton>
+              </button>
             )}
-            <IntegrationButton
+            <button className={styles.integrationButton}
               type="button"
               disabled={isBusy}
               onClick={() => onConnect(integration)}
             >
               {isBusy ? 'Abrindo...' : needsScopes ? 'Completar permissões' : 'Reconectar'}
-            </IntegrationButton>
-            <IntegrationDangerButton
+            </button>
+            <button className={styles.integrationDangerButton}
               type="button"
               disabled={isBusy}
               onClick={() => onDisconnect(integration)}
             >
               Desconectar
-            </IntegrationDangerButton>
+            </button>
           </>
         ) : (
-          <IntegrationPrimaryButton
+          <button className={styles.integrationPrimaryButton}
             type="button"
             disabled={isBusy}
             onClick={() => onConnect(integration)}
           >
             {isBusy ? 'Abrindo...' : 'Conectar'}
-          </IntegrationPrimaryButton>
+          </button>
         )}
-      </IntegrationActions>
-    </IntegrationCardBox>
+      </div>
+    </article>
   );
 };

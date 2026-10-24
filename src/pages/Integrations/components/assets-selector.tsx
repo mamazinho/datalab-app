@@ -1,25 +1,8 @@
+import styles from '../integrations.module.css';
 import { useCallback } from 'react';
 import type { IProviderAsset } from '../../../services/datalab-api/companiesResource';
 import { assetTypeLabel, groupAssets, type IAssetGroup } from '../../../utils/integrations';
 import type { Provider } from '../../../types/integrations';
-import {
-  AssetDetails,
-  AssetExternalId,
-  AssetGroup,
-  AssetGroupBody,
-  AssetGroupBodyCaption,
-  AssetGroupEmpty,
-  AssetGroupHeader,
-  AssetGroupHeading,
-  AssetGroupItems,
-  AssetGroupName,
-  AssetGroupToggle,
-  AssetInfo,
-  AssetName,
-  AssetRow,
-  AssetsList,
-  AssetTypeTag,
-} from '../integrations.style';
 
 interface IAssetsSelectorProps {
   assets: IProviderAsset[];
@@ -57,79 +40,79 @@ const AssetGroupItem = ({
   const showItems = !group.container || isContainerSelected || hasSelectedItems;
 
   return (
-    <AssetGroup $selected={isContainerSelected || hasSelectedItems}>
+    <section className={styles.assetGroup} data-selected={isContainerSelected || hasSelectedItems}>
       {group.container ? (
-        <AssetGroupHeader $selected={isContainerSelected} htmlFor={`asset-${group.container.external_id}`}>
-          <AssetGroupHeading>
+        <label className={styles.assetGroupHeader} data-selected={isContainerSelected} htmlFor={`asset-${group.container.external_id}`}>
+          <div className={styles.assetGroupHeading}>
             <input
               id={`asset-${group.container.external_id}`}
               type="checkbox"
               checked={isContainerSelected}
               onChange={() => onToggleContainer(group)}
             />
-            <AssetInfo>
-              <AssetName>{group.label}</AssetName>
-              <AssetDetails>
-                <AssetTypeTag>{assetTypeLabel(group.container.asset_type)}</AssetTypeTag>
-                <AssetExternalId>{group.container.external_id}</AssetExternalId>
-              </AssetDetails>
-              <AssetDetails>{ACCOUNT_HINT}</AssetDetails>
-            </AssetInfo>
-          </AssetGroupHeading>
-        </AssetGroupHeader>
+            <div className={styles.assetInfo}>
+              <span className={styles.assetName}>{group.label}</span>
+              <span className={styles.assetDetails}>
+                <span className={styles.assetTypeTag}>{assetTypeLabel(group.container.asset_type)}</span>
+                <code className={styles.assetExternalId}>{group.container.external_id}</code>
+              </span>
+              <span className={styles.assetDetails}>{ACCOUNT_HINT}</span>
+            </div>
+          </div>
+        </label>
       ) : (
-        <AssetGroupHeader as="div" $selected={hasSelectedItems}>
-          <AssetGroupHeading>
-            <AssetGroupName>{group.label}</AssetGroupName>
-          </AssetGroupHeading>
+        <div className={styles.assetGroupHeader} data-selected={hasSelectedItems}>
+          <div className={styles.assetGroupHeading}>
+            <span className={styles.assetGroupName}>{group.label}</span>
+          </div>
           {group.items.length > 0 && (
-            <AssetGroupToggle type="button" onClick={() => onToggleItems(group.items)}>
+            <button className={styles.assetGroupToggle} type="button" onClick={() => onToggleItems(group.items)}>
               {allItemsSelected ? 'Limpar' : 'Selecionar tudo'}
-            </AssetGroupToggle>
+            </button>
           )}
-        </AssetGroupHeader>
+        </div>
       )}
 
       {showItems && (
-        <AssetGroupBody>
+        <div className={styles.assetGroupBody}>
           {group.items.length === 0 ? (
-            <AssetGroupEmpty>Nenhum ativo dentro desta conta.</AssetGroupEmpty>
+            <p className={styles.assetGroupEmpty}>Nenhum ativo dentro desta conta.</p>
           ) : (
             <>
               {group.container && (
-                <AssetGroupBodyCaption>
+                <p className={styles.assetGroupBodyCaption}>
                   Confirme as properties que você quer liberar nesta conta.
-                  <AssetGroupToggle type="button" onClick={() => onToggleItems(group.items)}>
+                  <button className={styles.assetGroupToggle} type="button" onClick={() => onToggleItems(group.items)}>
                     {allItemsSelected ? 'Limpar' : 'Selecionar tudo'}
-                  </AssetGroupToggle>
-                </AssetGroupBodyCaption>
+                  </button>
+                </p>
               )}
 
-              <AssetGroupItems>
+              <div className={styles.assetGroupItems}>
                 {group.items.map((asset) => (
-                  <AssetRow key={asset.external_id} htmlFor={`asset-${asset.external_id}`}>
-                    <AssetInfo>
-                      <AssetName>{asset.name}</AssetName>
-                      <AssetDetails>
-                        <AssetTypeTag>{assetTypeLabel(asset.asset_type)}</AssetTypeTag>
+                  <label className={styles.assetRow} key={asset.external_id} htmlFor={`asset-${asset.external_id}`}>
+                    <div className={styles.assetInfo}>
+                      <span className={styles.assetName}>{asset.name}</span>
+                      <span className={styles.assetDetails}>
+                        <span className={styles.assetTypeTag}>{assetTypeLabel(asset.asset_type)}</span>
                         {/* Nomes se repetem entre clientes — o id é o desempate */}
-                        <AssetExternalId>{asset.external_id}</AssetExternalId>
-                      </AssetDetails>
-                    </AssetInfo>
+                        <code className={styles.assetExternalId}>{asset.external_id}</code>
+                      </span>
+                    </div>
                     <input
                       id={`asset-${asset.external_id}`}
                       type="checkbox"
                       checked={selected.has(asset.external_id)}
                       onChange={() => onToggleAsset(asset.external_id)}
                     />
-                  </AssetRow>
+                  </label>
                 ))}
-              </AssetGroupItems>
+              </div>
             </>
           )}
-        </AssetGroupBody>
+        </div>
       )}
-    </AssetGroup>
+    </section>
   );
 };
 
@@ -181,7 +164,7 @@ export const AssetsSelector = ({ assets, provider, selected, onChange }: IAssets
   );
 
   return (
-    <AssetsList>
+    <div className={styles.assetsList}>
       {groups.map((group) => (
         <AssetGroupItem
           key={group.key}
@@ -192,6 +175,6 @@ export const AssetsSelector = ({ assets, provider, selected, onChange }: IAssets
           onToggleItems={toggleItems}
         />
       ))}
-    </AssetsList>
+    </div>
   );
 };

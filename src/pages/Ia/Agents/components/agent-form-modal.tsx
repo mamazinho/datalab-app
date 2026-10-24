@@ -1,3 +1,4 @@
+import modal from '../../../../styles/modal-form.module.css';
 import { useActionState, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
@@ -9,16 +10,6 @@ import { useActionFeedback } from '../../../../hooks/use-action-feedback';
 import { agentsQuery } from '../../../../queries';
 import type { IRetrieveAgentWithState } from '../../../../services/datalab-api/agentsResource';
 import { createSaveAgentAction } from '../actions';
-import {
-  ModalError,
-  ModalField,
-  ModalFieldset,
-  ModalForm,
-  ModalInput,
-  ModalLabel,
-  ModalSubmit,
-  ModalTextarea,
-} from '../../ia.style';
 
 interface IAgentFormModalProps {
   isOpen: boolean;
@@ -48,11 +39,11 @@ export const AgentFormModal = ({ isOpen, agent, onClose }: IAgentFormModalProps)
       onClose={onClose}
       title={isEditing ? `Editar agente: ${agent.name}` : 'Criar agente'}
     >
-      <ModalForm key={agent?.id ?? 'new'} action={formAction}>
-        <ModalFieldset disabled={isPending}>
-          <ModalField>
-            <ModalLabel htmlFor="agent-name">Nome *</ModalLabel>
-            <ModalInput
+      <form className={modal.form} key={agent?.id ?? 'new'} action={formAction}>
+        <fieldset className={modal.fieldset} disabled={isPending}>
+          <div className={modal.field}>
+            <label className={modal.label} htmlFor="agent-name">Nome *</label>
+            <input className={modal.input}
               id="agent-name"
               name="name"
               type="text"
@@ -62,11 +53,11 @@ export const AgentFormModal = ({ isOpen, agent, onClose }: IAgentFormModalProps)
               required
               autoFocus
             />
-          </ModalField>
+          </div>
 
-          <ModalField>
-            <ModalLabel htmlFor="agent-description">Descrição</ModalLabel>
-            <ModalInput
+          <div className={modal.field}>
+            <label className={modal.label} htmlFor="agent-description">Descrição</label>
+            <input className={modal.input}
               id="agent-description"
               name="description"
               type="text"
@@ -74,13 +65,13 @@ export const AgentFormModal = ({ isOpen, agent, onClose }: IAgentFormModalProps)
               placeholder="Resumo do que esse agente faz"
               defaultValue={agent?.description ?? ''}
             />
-          </ModalField>
+          </div>
 
-          <ModalField>
-            <ModalLabel htmlFor="agent-instructions">
+          <div className={modal.field}>
+            <label className={modal.label} htmlFor="agent-instructions">
               {isEditing ? 'Instruções' : 'Instruções *'}
-            </ModalLabel>
-            <ModalTextarea
+            </label>
+            <textarea className={modal.textarea}
               id="agent-instructions"
               name="instructions"
               placeholder={isEditing
@@ -89,15 +80,15 @@ export const AgentFormModal = ({ isOpen, agent, onClose }: IAgentFormModalProps)
               rows={5}
               required={!isEditing}
             />
-          </ModalField>
+          </div>
 
           <Collapsible
             label="Configurações avançadas"
             defaultOpen={Boolean(agent?.avatar_url || agent?.model_name)}
           >
-            <ModalField>
-              <ModalLabel htmlFor="agent-avatar-url">URL do avatar</ModalLabel>
-              <ModalInput
+            <div className={modal.field}>
+              <label className={modal.label} htmlFor="agent-avatar-url">URL do avatar</label>
+              <input className={modal.input}
                 id="agent-avatar-url"
                 name="avatar_url"
                 type="url"
@@ -105,28 +96,28 @@ export const AgentFormModal = ({ isOpen, agent, onClose }: IAgentFormModalProps)
                 placeholder="https://..."
                 defaultValue={agent?.avatar_url ?? ''}
               />
-            </ModalField>
+            </div>
 
-            <ModalField>
-              <ModalLabel id="agent-model-label">Modelo</ModalLabel>
+            <div className={modal.field}>
+              <label className={modal.label} id="agent-model-label">Modelo</label>
               <ModelSelect
                 name="model_name"
                 defaultValue={agent?.model_name ?? ''}
                 emptyOptionLabel="Padrão do sistema"
                 labelId="agent-model-label"
               />
-            </ModalField>
+            </div>
           </Collapsible>
 
           {formState.error && !formState.success && (
-            <ModalError>{formState.error}</ModalError>
+            <p className={modal.error}>{formState.error}</p>
           )}
 
-          <ModalSubmit type="submit">
+          <button className={modal.submit} type="submit">
             {isPending ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Criar agente'}
-          </ModalSubmit>
-        </ModalFieldset>
-      </ModalForm>
+          </button>
+        </fieldset>
+      </form>
     </Modal>
   );
 };
