@@ -52,7 +52,7 @@ export interface ICompany {
   id: UUID7;
   name: string;
   status: string;
-  created_by_membership_id: UUID7 | null;
+  created_by_user_id: UUID7;
   created_at: string;
   updated_at: string;
   provider_assets?: ICompanyProviderAsset[];

@@ -45,7 +45,7 @@ describe('<Onboarding />', () => {
           body = await request.json();
           const company = buildCompany({ name: 'Acme' });
           return HttpResponse.json(
-            { company: { ...company, created_by_membership_id: uuid(2) }, membership: company.membership },
+            { company: { ...company, created_by_user_id: uuid(3) }, membership: company.membership },
             { status: 201 },
           );
         }),

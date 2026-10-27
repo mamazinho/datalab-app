@@ -59,7 +59,7 @@ export const handlers = [
     const company = buildCompany({ name });
     return HttpResponse.json(
       {
-        company: { ...company, created_by_membership_id: uuid(2) },
+        company: { ...company, created_by_user_id: uuid(3) },
         membership: { ...company.membership, user_id: uuid(3), company_id: company.id },
       },
       { status: 201 },

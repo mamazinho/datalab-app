@@ -1,51 +1,48 @@
 import styles from './social-callback.module.css';
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import type { ILoginUserResponse } from '../../services/datalab-api/authResource';
-import { SOCIAL_LOGIN_SUCCESS, type ISocialLoginCallbackEvent } from '../../types/auth';
-import { isProvider, type Provider } from '../../types/integrations';
+import { DatalabAPI } from '../../services/datalab-api';
+import { SOCIAL_LOGIN_SUCCESS } from '../../types/auth';
+import { isProvider } from '../../types/integrations';
 import { closeCallbackWindow, postAuthChannelMessage } from '../../utils/auth-channel';
 
 /**
- * Retorno do login social (Google e Meta usam o mesmo formato de query string).
- * Roda dentro do popup: publica o token no canal para a aba original concluir o
- * login e se fecha. Sem popup (aba única), cai no fallback de redirect.
+ * Retorno do login social. A API devolve só o cookie de sessão (token na URL ficaria
+ * no histórico); o access token sai do refresh. Roda dentro do popup: publica o login
+ * para a aba original e se fecha. Sem popup (aba única), cai no fallback de redirect.
  */
 export const SocialCallback: React.FC = () => {
     const { provider } = useParams<{ provider: string }>();
     const [searchParams] = useSearchParams();
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(searchParams.get('error'));
 
     useEffect(() => {
-        const errorParam = searchParams.get('error');
-        const accessToken = searchParams.get('access_token');
+        if (searchParams.get('error')) return;
 
-        if (errorParam || !accessToken) {
-            setError(errorParam ?? 'Não recebemos o token de acesso do provedor.');
-            return;
-        }
+        let stopClosing: (() => void) | undefined;
+        let cancelled = false;
 
-        const expiresIn = searchParams.get('expires_in');
-        const scope = searchParams.get('scope');
-        const tokenType = searchParams.get('token_type');
+        DatalabAPI.AuthResource.refresh()
+            .then((response) => {
+                if (cancelled) return;
+                postAuthChannelMessage({
+                    type: SOCIAL_LOGIN_SUCCESS,
+                    provider: isProvider(provider) ? provider : 'google',
+                    response,
+                });
+                stopClosing = closeCallbackWindow(() => {
+                    localStorage.setItem('accessToken', response.access_token);
+                    window.location.href = '/';
+                });
+            })
+            .catch(() => {
+                if (!cancelled) setError('Não foi possível concluir o login com o provedor.');
+            });
 
-        const message: ISocialLoginCallbackEvent = {
-            type: SOCIAL_LOGIN_SUCCESS,
-            provider: (isProvider(provider) ? provider : 'google') as Provider,
-            response: {
-                access_token: accessToken,
-                expires_in: expiresIn ? parseInt(expiresIn) : 3600,
-                scope: scope || 'read write',
-                token_type: tokenType || 'Bearer',
-            } as ILoginUserResponse,
+        return () => {
+            cancelled = true;
+            stopClosing?.();
         };
-
-        postAuthChannelMessage(message);
-
-        return closeCallbackWindow(() => {
-            localStorage.setItem('accessToken', accessToken);
-            window.location.href = '/';
-        });
     }, [searchParams, provider]);
 
     return (

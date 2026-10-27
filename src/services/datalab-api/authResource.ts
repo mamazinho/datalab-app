@@ -47,9 +47,14 @@ export const AuthResource = {
     await axiosInstance.post('auth/logout/');
   },
 
+  async refresh(): Promise<ILoginUserResponse> {
+    const response = await axiosInstance.post('auth/refresh/');
+    return response.data as ILoginUserResponse;
+  },
+
   // ── Login social ─────────────────────────────────────────────────────────────
   // Navegação do browser (popup), não XHR: o provider precisa renderizar a tela
-  // de consentimento e devolver o token na query string do nosso callback.
+  // de consentimento. O callback volta só com o cookie de sessão, sem token na URL.
   socialLoginUrl(provider: Provider): string {
     return `${import.meta.env.VITE_DATALAB_API_URL}/auth/${provider}/login/`;
   },
