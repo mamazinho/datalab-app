@@ -25,6 +25,8 @@ export const handlers = [
 
   http.post(api('auth/refresh/'), () => HttpResponse.json({ access_token: ACCESS_TOKEN })),
 
+  http.post(api('auth/logout/'), () => new HttpResponse(null, { status: 204 })),
+
   http.get(api('users/me'), () => HttpResponse.json(buildUser())),
 
   http.delete(api('users/me'), () => new HttpResponse(null, { status: 204 })),
@@ -51,8 +53,6 @@ export const handlers = [
   http.post(api('users/me/invites/:inviteId/decline'), () => HttpResponse.json(buildInvite({ status: 'declined' }))),
 
   http.get(api('memberships/current/'), () => HttpResponse.json(buildCurrentMembership())),
-
-  http.get(api('companies/'), () => HttpResponse.json([buildCompany()])),
 
   http.post(api('companies/'), async ({ request }) => {
     const { name } = (await request.json()) as { name: string };

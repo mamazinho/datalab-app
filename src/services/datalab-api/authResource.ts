@@ -43,6 +43,10 @@ export const AuthResource = {
     return response.data as ILoginUserResponse;
   },
 
+  async logout(): Promise<void> {
+    await axiosInstance.post('auth/logout/');
+  },
+
   // ── Login social ─────────────────────────────────────────────────────────────
   // Navegação do browser (popup), não XHR: o provider precisa renderizar a tela
   // de consentimento e devolver o token na query string do nosso callback.

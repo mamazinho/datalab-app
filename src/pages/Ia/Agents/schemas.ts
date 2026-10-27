@@ -17,5 +17,3 @@ export const createAgentSchema = agentFormBaseSchema.extend({
 
 // A API não retorna as instruções atuais — na edição, vazio significa "manter as atuais"
 export const updateAgentSchema = agentFormBaseSchema;
-
-export type AgentFormValues = z.infer<typeof agentFormBaseSchema>;

@@ -39,7 +39,7 @@ const assetsErrorMessage = (error: unknown): string => {
     case 403:
       return 'Apenas o owner da empresa pode gerenciar os ativos.';
     case 400:
-      return 'A conexão com o provedor não está válida. Feche esta janela e reconecte sua conta para escolher os ativos.';
+      return 'A conexão com o provedor não está válida ou não tem as permissões necessárias. Feche esta janela, clique em "Reconectar" e conceda todas as permissões pedidas.';
     case 502:
       return 'O serviço do provedor não respondeu agora. Isso costuma ser temporário — tente novamente.';
     default:

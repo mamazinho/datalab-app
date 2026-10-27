@@ -2,7 +2,7 @@ import axios from "axios";
 import { axiosCompanyInstance, axiosPrivateInstance } from "./axios";
 import type { UUID7 } from "../../types/ids";
 import type { AssetType, IntegrationKey, Provider } from "../../types/integrations";
-import type { CompanyMembershipRole, CompanyMembershipStatus, IUserCompany } from "./usersResource";
+import type { CompanyMembershipRole, CompanyMembershipStatus } from "./usersResource";
 const AVAILABLE_ASSETS_TIMEOUT_MS = 30_000;
 
 export interface ICreateCompanyRequest {
@@ -76,11 +76,6 @@ export interface ICreateCompanyResponse {
 }
 
 export const CompaniesResource = {
-  async listUserCompanies(): Promise<IUserCompany[]> {
-    const response = await axiosPrivateInstance.get('companies/');
-    return response.data as IUserCompany[];
-  },
-
   async createCompany(payload: ICreateCompanyRequest): Promise<ICreateCompanyResponse> {
     const response = await axiosPrivateInstance.post('companies/', payload);
     return response.data as ICreateCompanyResponse;

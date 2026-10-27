@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import { useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "./contexts";
 import { setSessionExpiredHandler } from "../../services/datalab-api/axios";
-import { type ILoginUserResponse } from '../../services/datalab-api/authResource';
+import { AuthResource, type ILoginUserResponse } from '../../services/datalab-api/authResource';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient();
@@ -17,6 +17,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const logout = useCallback(() => {
+    // O refresh mora num cookie httpOnly: só o backend consegue apagá-lo
+    AuthResource.logout().catch(() => undefined);
     setAccessToken(undefined);
     localStorage.removeItem("accessToken");
     // Dados do usuário anterior não podem vazar para a próxima sessão

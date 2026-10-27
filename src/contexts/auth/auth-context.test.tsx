@@ -63,6 +63,22 @@ describe('AuthProvider', () => {
     expect(queryClient.getQueryData(['me'])).toBeUndefined();
   });
 
+  it('asks the backend to drop the refresh cookie on logout', async () => {
+    let calledLogout = false;
+    server.use(
+      http.post(api('auth/logout/'), () => {
+        calledLogout = true;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const { result } = renderAuth();
+    await act(() => result.current.login(loginResponse));
+
+    act(() => result.current.logout());
+
+    await waitFor(() => expect(calledLogout).toBe(true));
+  });
+
   it('logs the user out when the backend rejects the session', async () => {
     localStorage.setItem('accessToken', 'token-expirado');
     server.use(
