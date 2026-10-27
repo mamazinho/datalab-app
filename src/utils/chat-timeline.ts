@@ -92,7 +92,7 @@ const newBubble = (content: string, createdAt = now()): IAssistantBubbleItem => 
   createdAt,
 });
 
-// O backend entrega o arquivo num evento próprio, logo depois do texto do supervisor
+// The backend sends the file in its own event, right after the supervisor text
 const attachFiles = (items: TimelineItem[], event: Extract<IChatStreamEvent, { type: 'file' }>): TimelineItem[] => {
   if (!event.files?.length) return items;
 

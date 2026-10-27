@@ -11,8 +11,6 @@ interface IAssetsSelectorProps {
   onChange: (selected: Set<string>) => void;
 }
 
-// Liberar a CONTA (não a property) é o que permite o agente criar dentro dela —
-// precisa estar explícito para o owner não liberar sem saber.
 const ACCOUNT_HINT = 'Liberar esta conta permite que o agente crie novas propriedades nela';
 
 interface IAssetGroupItemProps {
@@ -34,9 +32,7 @@ const AssetGroupItem = ({
   const hasSelectedItems = group.items.some((asset) => selected.has(asset.external_id));
   const allItemsSelected = group.items.length > 0 && group.items.every((asset) => selected.has(asset.external_id));
 
-  // Grupo sem conta (Meta) já nasce aberto. Com conta, o conteúdo aparece quando
-  // ela é liberada — e também se algo lá dentro estiver marcado, para nunca
-  // esconder uma seleção que já existe.
+  // A group with an account opens when the account is allowed or something inside is checked, so a selection is never hidden
   const showItems = !group.container || isContainerSelected || hasSelectedItems;
 
   return (
@@ -95,7 +91,7 @@ const AssetGroupItem = ({
                       <span className={styles.assetName}>{asset.name}</span>
                       <span className={styles.assetDetails}>
                         <span className={styles.assetTypeTag}>{assetTypeLabel(asset.asset_type)}</span>
-                        {/* Nomes se repetem entre clientes — o id é o desempate */}
+                        {/* Names repeat across clients; the id tells them apart */}
                         <code className={styles.assetExternalId}>{asset.external_id}</code>
                       </span>
                     </div>
@@ -129,8 +125,7 @@ export const AssetsSelector = ({ assets, provider, selected, onChange }: IAssets
     [selected, onChange],
   );
 
-  // A conta manda no grupo: liberá-la já traz tudo que é dela, e tirar a conta
-  // tira junto. Ajustes finos ficam por conta dos checkboxes das properties.
+  // The account drives its group: checking it checks everything inside, unchecking it clears them
   const toggleContainer = useCallback(
     (group: IAssetGroup<IProviderAsset>) => {
       if (!group.container) return;

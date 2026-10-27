@@ -4,7 +4,6 @@ import type { UUID7 } from '../../../types/ids';
 import type { IPermissionOption } from './permission-options';
 
 interface PermissionsSelectorProps {
-  /** Grupos já rotulados (tag da rota, provider da permissão de agente...) */
   groups: Record<string, IPermissionOption[]>;
   selected: Set<UUID7>;
   onChange: (selected: Set<UUID7>) => void;

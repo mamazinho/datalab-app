@@ -9,14 +9,11 @@ import { CustomThemeProvider } from '../contexts/theme';
 import type { IUserCompany } from '../services/datalab-api/usersResource';
 
 interface IRenderWithProvidersOptions extends Omit<RenderOptions, 'wrapper'> {
-  /** Rota inicial do MemoryRouter (para componentes que usam Link/useLocation) */
   route?: string;
-  /** Empresas do usuário; uma só é auto-selecionada pelo CompanyProvider */
   companies?: IUserCompany[];
   queryClient?: QueryClient;
 }
 
-/** QueryClient de teste: sem retry e sem cache entre testes, para falha virar erro na hora. */
 export const createTestQueryClient = (): QueryClient =>
   new QueryClient({
     defaultOptions: {
@@ -25,11 +22,6 @@ export const createTestQueryClient = (): QueryClient =>
     },
   });
 
-/**
- * Renderiza com a mesma árvore de providers do App (query, tema, auth, empresa,
- * router e toasts). Use no lugar do render puro: é o que torna teste de página
- * possível sem mockar hook nenhum — só a rede, via MSW.
- */
 export function renderWithProviders(
   ui: ReactElement,
   {

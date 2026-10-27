@@ -5,8 +5,6 @@ import { CompanyFormModal } from '../../components/UI/CompanyFormModal';
 import { COMPANY_ROUTE_PERMISSIONS } from '../../utils/route-permissions';
 import { DeleteCompanyModal } from './components/delete-company-modal';
 
-// Painel da empresa ATIVA (trocar/criar vivem no seletor do header). Só chega
-// aqui quem tem permissão de editar ou deletar (CompanyManagementRoute).
 export const CompanyManagement = () => {
   const { currentCompany, clearSelectedCompany, hasPermissionByRoute } = useCompanyContext();
   const [isEditOpen, setIsEditOpen] = useState(false);

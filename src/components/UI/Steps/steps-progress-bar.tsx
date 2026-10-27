@@ -31,8 +31,7 @@ export const StepsProgressBar: React.FC<IStepsProgressBarProps> = ({
             >
               {stepNumber}
             </button>
-            {/* Line connector */}
-            {index < totalSteps - 1 && (
+                        {index < totalSteps - 1 && (
               <div className={styles.progressConnector} data-active={stepNumber < currentStep} />
             )}
           </div>

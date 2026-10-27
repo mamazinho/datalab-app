@@ -17,23 +17,18 @@ export interface IMembershipUser {
   email: string;
 }
 
-// Membership completo — espelho de RetrieveMembership no backend
+// RetrieveMembership mirror
 export interface ICompanyMembership extends IUserMembership {
   user_id: UUID7;
   company_id: UUID7;
   user?: IMembershipUser | null;
 }
 
-// Membership atual — espelho de RetrieveCurrentMembership.
-// Fonte única do usuário logado na empresa ativa: traz a company embutida e as
-// permissões já ACHATADAS (RetrieveRoutePermission[]), diferente de
-// listMemberPermissions, que devolve a linha de concessão. Não existe mais
-// companies/current nem memberships/current/permissions separados.
+// RetrieveCurrentMembership mirror. permissions are already flattened, unlike the grant rows of listMemberPermissions.
 export interface ICurrentMembership extends ICompanyMembership {
   company: ICompany | null;
   permissions: IRoutePermission[];
-  // Dict POR PROVIDER (não lista) e já resolvido: owner recebe o catálogo
-  // inteiro, membro só o que lhe foi concedido — se está aqui, pode.
+  // Already resolved: the owner gets the whole catalog, a member only what was granted
   provider_permissions: Partial<Record<Provider, IProviderPermission[]>>;
 }
 
@@ -44,15 +39,10 @@ export interface ICreateInviteRequest {
 }
 
 export const MembershipsResource = {
-  // ── Current ──────────────────────────────────────────────────────────────────
-
-  // Empresa vai no X-Company-Id via interceptor (como todas as rotas de company).
   async getCurrentMembership(): Promise<ICurrentMembership> {
     const response = await axiosCompanyInstance.get("memberships/current/");
     return response.data as ICurrentMembership;
   },
-
-  // ── Members ─────────────────────────────────────────────────────────────────
 
   async listMembers(): Promise<ICompanyMembership[]> {
     const response = await axiosCompanyInstance.get("memberships/members/");
@@ -69,8 +59,6 @@ export const MembershipsResource = {
     });
     return response.data as ICompanyMembership;
   },
-
-  // ── Permissions ──────────────────────────────────────────────────────────────
 
   async listRoutePermissions(): Promise<IRoutePermission[]> {
     const response = await axiosCompanyInstance.get("memberships/route-permissions/");
@@ -100,10 +88,7 @@ export const MembershipsResource = {
     );
   },
 
-  // ── Provider permissions ─────────────────────────────────────────────────────
-  // Mesmo modelo das route permissions, só que para o que não é rota da Datalab.
-  // Conceder/revogar para um OWNER devolve 400 (ele tem todas implicitamente).
-
+  // Granting to or revoking from an owner returns 400: owners implicitly have every permission
   async listProviderPermissions(): Promise<IProviderPermission[]> {
     const response = await axiosCompanyInstance.get("memberships/provider-permissions/");
     return response.data as IProviderPermission[];
@@ -136,8 +121,6 @@ export const MembershipsResource = {
       `memberships/members/${membershipId}/provider-permissions/${providerPermissionId}/`,
     );
   },
-
-  // ── Invites ──────────────────────────────────────────────────────────────────
 
   async listInvites(): Promise<IUserInvite[]> {
     const response = await axiosCompanyInstance.get("memberships/invites/");

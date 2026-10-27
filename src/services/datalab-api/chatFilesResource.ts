@@ -26,7 +26,7 @@ export const ChatFilesResource = {
     const formData = new FormData();
     formData.append('file', file);
 
-    // Sem sobrescrever o Content-Type da instância (JSON), o axios serializa o FormData em JSON
+    // Without overriding the instance's JSON Content-Type, axios serializes the FormData as JSON
     const response = await axiosCompanyInstance.post(`chats/${chatId}/files/`, formData, {
       adapter: 'fetch',
       headers: { 'Content-Type': 'multipart/form-data' },

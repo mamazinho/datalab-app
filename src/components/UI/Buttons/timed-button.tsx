@@ -38,7 +38,7 @@ export const TimedButton = ({
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
         setClicked(true);
         if (onClick) onClick(e);
-        // Delay timer set to allow form submission to trigger first if this is a submit button
+        // Lets the form submission of a submit button fire first
         setTimeout(() => {
             setTimer(cooldown);
         }, 0);

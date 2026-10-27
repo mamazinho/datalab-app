@@ -14,9 +14,7 @@ export interface ILoginUserResponse {
   scope: string;
 }
 
-// Catálogo de integrações COM o status do usuário logado (GET auth/integrations/).
-// connected = todos os escopos concedidos; missing_scopes preenchido com conta já
-// vinculada significa ativação incremental ("Gerenciar permissões").
+// IntegrationStatus mirror. missing_scopes on a connected integration means the consent must be completed, not redone.
 export interface IIntegrationStatus {
   key: IntegrationKey;
   provider: Provider;
@@ -52,21 +50,16 @@ export const AuthResource = {
     return response.data as ILoginUserResponse;
   },
 
-  // ── Login social ─────────────────────────────────────────────────────────────
-  // Navegação do browser (popup), não XHR: o provider precisa renderizar a tela
-  // de consentimento. O callback volta só com o cookie de sessão, sem token na URL.
+  // A browser navigation, not an XHR: the provider has to render its consent screen
   socialLoginUrl(provider: Provider): string {
     return `${import.meta.env.VITE_DATALAB_API_URL}/auth/${provider}/login/`;
   },
-
-  // ── Integrações ──────────────────────────────────────────────────────────────
 
   async listIntegrations(): Promise<IIntegrationStatus[]> {
     const response = await axiosPrivateInstance.get('auth/integrations/');
     return response.data as IIntegrationStatus[];
   },
 
-  // Gera a URL de consentimento da integração; quem navega até ela é o front.
   async getIntegrationAuthorizationUrl(
     provider: Provider,
     integration: IntegrationKey,
@@ -77,8 +70,7 @@ export const AuthResource = {
     return (response.data as IAuthorizationUrlResponse).authorization_url;
   },
 
-  // Remove a conexão do provider INTEIRO (todas as integrações dele).
-  // 404 = já não havia conexão, que é o estado final desejado.
+  // Drops every integration of the provider. 404 means it was already disconnected.
   async disconnectProvider(provider: Provider): Promise<void> {
     try {
       await axiosPrivateInstance.delete(`auth/${provider}/connection/`);

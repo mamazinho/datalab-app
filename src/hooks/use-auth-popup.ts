@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SOCIAL_AUTH_CHANNEL, type AuthChannelEvent } from '../types/auth';
 
-// O consentimento do Meta lista portfólios, contas e páginas; a tela de login é compacta.
+// Meta's consent lists portfolios, accounts and pages, so it needs a bigger window than login
 const POPUP_SIZES = {
   login: { width: 500, height: 600 },
   consent: { width: 720, height: 780 },
@@ -11,21 +11,13 @@ export type AuthPopupFlow = keyof typeof POPUP_SIZES;
 
 const POPUP_WATCH_INTERVAL_MS = 500;
 
-/**
- * Janela separada + BroadcastChannel: é assim que o app fala com Google e Meta,
- * tanto no login quanto ao conectar uma integração. A aba original nunca navega
- * para fora, então nada de estado da SPA se perde no caminho.
- *
- * Ao receber o resultado a janela é fechada e `onMessage` é chamado. Um watcher
- * acompanha o fechamento manual do popup — sem ele, desistir no meio deixaria a
- * tela travada em "conectando".
- */
+// A popup plus BroadcastChannel keeps the SPA state; the watcher unlocks the screen if the user closes the popup
 export function useAuthPopup(onMessage: (event: AuthChannelEvent) => void) {
   const popupRef = useRef<Window | null>(null);
   const watcherRef = useRef<number | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  // Handler sempre atualizado sem reassinar o canal a cada render
+  // Keeps the latest handler without resubscribing to the channel on every render
   const onMessageRef = useRef(onMessage);
   onMessageRef.current = onMessage;
 

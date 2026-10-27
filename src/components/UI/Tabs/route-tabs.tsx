@@ -6,13 +6,9 @@ export type TabsVariant = 'tabs' | 'nav';
 export interface IRouteTabItem {
   label: string;
   to: string;
-  /**
-   * Prefixo que decide a aba ativa quando ele difere do destino — é o caso do
-   * item "Gerenciamento" do header, que aponta para a primeira sub-aba visível
-   * mas precisa acender em qualquer uma delas.
-   */
+  // Marks the tab active when the path differs from the destination, like the header's management item
   match?: string;
-  /** Ativa só no path exato (padrão para "/") */
+  // Active only on the exact path, the default for "/"
   end?: boolean;
 }
 
@@ -22,7 +18,6 @@ interface IRouteTabsProps {
   label?: string;
 }
 
-// Regra única de "aba ativa" no app: igualdade de path ou subrota do prefixo.
 const isItemActive = (item: IRouteTabItem, pathname: string): boolean => {
   const base = item.match ?? item.to;
 
@@ -31,10 +26,6 @@ const isItemActive = (item: IRouteTabItem, pathname: string): boolean => {
   return pathname === base || pathname.startsWith(`${base}/`);
 };
 
-/**
- * Abas navegáveis: cada item é uma rota. Quem monta a lista decide quais itens
- * aparecem (permissões), não este componente.
- */
 export const RouteTabs = ({ items, variant = 'tabs', label }: IRouteTabsProps) => {
   const { pathname } = useLocation();
 

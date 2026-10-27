@@ -6,10 +6,6 @@ import { DatalabAPI } from '../services/datalab-api';
 import { SOCIAL_LOGIN_SUCCESS } from '../types/auth';
 import type { Provider } from '../types/integrations';
 
-/**
- * Login social (Google/Meta) na janela separada do `useAuthPopup`. O fluxo é
- * idêntico nos dois providers — só o path muda.
- */
 export function useSocialLogin() {
   const { login } = useAuthContext();
   const navigate = useNavigate();

@@ -5,7 +5,7 @@ interface MetaButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
   label?: string;
 }
 
-// Marca do Meta (o "infinito"), não o "f" do Facebook.
+// The Meta mark (the infinity), not Facebook's "f"
 const MetaIcon = (
   <SocialIcon viewBox="0 0 24 24">
     <path

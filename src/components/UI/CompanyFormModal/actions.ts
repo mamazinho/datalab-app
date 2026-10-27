@@ -3,8 +3,7 @@ import { createFormAction } from '../../../utils/create-form-action';
 import type { UUID7 } from '../../../types/ids';
 import { companyNameSchema } from './schemas';
 
-// Retornam void para que criar e editar compartilhem o mesmo ActionState<void>
-// (o modal só invalida ['me'] no sucesso, não usa o payload de resposta).
+// Both return void so create and edit share the same ActionState<void>
 export const createCompanyAction = createFormAction(
   companyNameSchema,
   async ({ name }) => {
@@ -13,7 +12,6 @@ export const createCompanyAction = createFormAction(
   { errorPrefix: 'Falha ao criar empresa: ' },
 );
 
-// Factory: a action de edição nasce já sabendo o id da empresa alvo (a ativa).
 export const createUpdateCompanyAction = (companyId: UUID7) =>
   createFormAction(
     companyNameSchema,

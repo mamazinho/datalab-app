@@ -2,21 +2,14 @@ import type { z } from 'zod';
 import type { ActionState } from '../types/actions';
 
 interface ICreateFormActionOptions {
-  /** Fallback quando o zod reprova e a issue não tem mensagem própria */
   invalidMessage?: string;
-  /** Prefixo do erro quando o handler lança (ex.: "Falha no login: ") */
+  // Prepended to the thrown error message
   errorPrefix?: string;
-  /** Erro fixo quando o handler lança (substitui a mensagem original) */
+  // Replaces the thrown error message
   errorMessage?: string;
-  /** Como extrair o input do FormData (default: Object.fromEntries) */
   mapFormData?: (formData: FormData) => unknown;
 }
 
-/**
- * Cria uma form action (useActionState) a partir de um schema zod:
- * valida o FormData, executa o handler com os dados tipados e devolve
- * um ActionState — todo formulário passa por zod por construção.
- */
 export function createFormAction<TSchema extends z.ZodType, TData>(
   schema: TSchema,
   handler: (data: z.output<TSchema>) => Promise<TData>,

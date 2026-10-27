@@ -23,7 +23,6 @@ import { COMPANY_PATH, INTEGRATION_CALLBACK_PATH, INTEGRATIONS_PATH, MEMBERS_PAT
 import { CHAT_ROUTE_PERMISSIONS, MCP_SERVER_ROUTE_PERMISSIONS } from "../utils/route-permissions";
 
 export const routes = createBrowserRouter([
-    // Public routes
     {
         element: <PublicRoutes />,
         children: [
@@ -43,14 +42,12 @@ export const routes = createBrowserRouter([
                 path: "/alterar-senha",
                 element: <ChangePassword />,
             },
-            // Retorno do login social — Google e Meta usam o mesmo formato
             {
                 path: "/auth/:provider/callback",
                 element: <SocialCallback />,
             },
         ],
     },
-    // Onboarding: autenticado, mas sem layout (sem header/footer)
     {
         element: <OnboardingRoute />,
         children: [
@@ -60,8 +57,6 @@ export const routes = createBrowserRouter([
             },
         ],
     },
-    // Protected routes — PrivateRoutes já garante /me resolvido e empresa selecionada
-    // (sem empresa vai pro onboarding antes de montar o layout).
     {
         element: <PrivateRoutes />,
         children: [
@@ -69,7 +64,6 @@ export const routes = createBrowserRouter([
                 path: "/",
                 element: <Home />,
             },
-            // Seção IA — conversas, agentes, MCP e consumo; cada aba tem o seu gate de permissão
             {
                 element: <IaRoute />,
                 children: [
@@ -125,7 +119,6 @@ export const routes = createBrowserRouter([
                     },
                 ],
             },
-            // Redirects dos paths antigos de chat
             {
                 path: "/conversas",
                 element: <Navigate to="/ia/conversas" replace />,
@@ -138,12 +131,10 @@ export const routes = createBrowserRouter([
                 path: "/perfil/editar",
                 element: <EditProfile />,
             },
-            // Gerenciamento — abas Membros | Empresa | Integrações sob um layout
-            // comum. Cada aba tem seu próprio gate de permissão.
             {
                 element: <ManagementLayout />,
                 children: [
-                    // Conectar Google/Meta é da conta de cada um: sem gate de permissão.
+                    // Connecting Google or Meta belongs to each person's account, so there is no permission gate
                     {
                         path: INTEGRATIONS_PATH,
                         element: <Integrations />,
@@ -170,10 +161,7 @@ export const routes = createBrowserRouter([
             },
         ],
     },
-    // Retorno do consentimento de uma integração: roda dentro do popup, então
-    // fica fora dos wrappers de sessão (o PublicRoutes mandaria o usuário
-    // logado para "/" e o PrivateRoutes montaria o app inteiro à toa).
-    // Path ditado pelo backend (CLIENT_URL/integrations/callback).
+    // Runs inside the consent popup, so it stays out of the session wrappers. The backend dictates this path.
     {
         path: INTEGRATION_CALLBACK_PATH,
         element: <IntegrationCallback />,

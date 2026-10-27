@@ -29,7 +29,7 @@ export const AgentFormModal = ({ isOpen, agent, onClose }: IAgentFormModalProps)
       void queryClient.invalidateQueries({ queryKey: agentsQuery.queryKey });
       onClose();
     },
-    // Erro já aparece inline no formulário — sem toast duplicado
+    // The error shows inline in the form
     onError: () => {},
   });
 

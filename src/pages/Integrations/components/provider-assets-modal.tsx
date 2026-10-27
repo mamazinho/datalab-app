@@ -30,8 +30,7 @@ interface IProviderAssetsModalProps {
   integration: IIntegrationStatus | null;
 }
 
-// Cada status tem um significado próprio nesta tela — em especial o 502, que
-// NÃO pode ser lido como "não há ativos" (a core-api só está fora do ar).
+// A 502 must never read as "no assets": it means the provider or the core-api is down
 const assetsErrorMessage = (error: unknown): string => {
   if (!axios.isAxiosError(error)) return 'Não foi possível carregar os ativos.';
 
@@ -72,8 +71,7 @@ const ProviderAssetsContent = ({ companyId, integration, onClose }: IProviderAss
     ],
   });
 
-  // Numa empresa nova nada vem marcado: esquecer de marcar deixa sem acesso
-  // (chato), esquecer de desmarcar daria acesso indevido (grave).
+  // Nothing starts checked: forgetting to check is an annoyance, forgetting to uncheck would leak access
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(available.allowed_external_ids),
   );
@@ -106,13 +104,13 @@ const ProviderAssetsContent = ({ companyId, integration, onClose }: IProviderAss
       void queryClient.invalidateQueries({
         queryKey: companyProviderAssetsQuery(companyId).queryKey,
       });
-      // company.provider_assets (contagem dos cards) mora no membership atual
+      // company.provider_assets, used by the cards, comes with the current membership
       void queryClient.invalidateQueries({
         queryKey: currentMembershipQuery(companyId).queryKey,
       });
       onClose();
     },
-    // Erro aparece inline no formulário — sem toast duplicado
+    // The error shows inline in the form
     onError: () => {},
   });
 
@@ -128,8 +126,6 @@ const ProviderAssetsContent = ({ companyId, integration, onClose }: IProviderAss
     [available, saved, selected, integration.key],
   );
 
-  // Tirar um ativo faz o agente perder acesso NA HORA — o diálogo precisa dizer
-  // isso. Cancelar impede o submit (e, com ele, a action do formulário).
   const handleSubmitClick = useCallback(
     (event: React.MouseEvent<HTMLButtonElement>) => {
       if (removedCount === 0) return;

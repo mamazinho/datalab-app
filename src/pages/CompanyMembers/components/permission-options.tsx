@@ -4,11 +4,7 @@ import type { IProviderPermission, IRoutePermission } from '../../../services/da
 import type { UUID7 } from '../../../types/ids';
 import { groupPermissionsByTag, groupProviderPermissionsByProvider } from '../permissions-helpers';
 
-/**
- * Forma neutra que as listas de permissão consomem — é o que permite os mesmos
- * componentes servirem às permissões de rota e às de provider, que são coisas
- * independentes e ficam em seções separadas na tela.
- */
+// A neutral shape, so the same lists serve route and provider permissions
 export interface IPermissionOption {
   id: UUID7;
   name: string;

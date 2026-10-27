@@ -56,8 +56,7 @@ export const OnboardingWelcome = () => {
     onSuccess: async (data) => {
       if (!data) return;
       selectCompanyById(data.company.id);
-      // /memberships/current (com o novo X-Company-Id) já traz o membership fresco;
-      // invalidar me repõe a empresa na lista antes de navegar.
+      // /memberships/current already brings the fresh membership; invalidating /me puts the company back in the list before navigating
       await queryClient.invalidateQueries({ queryKey: meQuery.queryKey });
       navigate('/');
     },

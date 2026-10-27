@@ -8,10 +8,6 @@ interface IActionFeedbackHandlers<T> {
   onError?: (error: string) => void;
 }
 
-/**
- * Reage ao resultado de uma action do useActionState uma única vez por submissão:
- * sucesso → successMessage (toast) e/ou onSuccess; erro → onError (default: toast.error).
- */
 export function useActionFeedback<T>(
   state: ActionState<T>,
   handlers: IActionFeedbackHandlers<T>,

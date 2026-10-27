@@ -59,13 +59,11 @@ const ThemeBootstrap = () => {
     return null;
 };
 
-// Wrapper interno que lê o me do AuthContext e injeta as companies no CompanyProvider
 const CompanyBootstrap = ({ children }: { children: ReactNode }) => {
     const { data: me } = useMe();
     const companies = me?.companies ?? [];
     return <CompanyProvider companies={companies}>{children}</CompanyProvider>;
 };
-
 
 export function App() {
     return (
@@ -75,7 +73,7 @@ export function App() {
                     <CompanyBootstrap>
                         <ThemeBootstrap />
                         <ToastContainer />
-                        {/* Boundary global: erro de render fora dos QueryBoundary não vira tela branca */}
+                        {/* Catches render errors outside any QueryBoundary, so they never blank the app */}
                         <ErrorBoundary
                             FallbackComponent={ServerErrorComponent}
                             onError={(error, info) => logfire.reportError("React error boundary caught", error, { component_stack: info.componentStack })}

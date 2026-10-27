@@ -41,18 +41,14 @@ export const StepsController = forwardRef<StepsRef, IStepsControllerProps>(({ ch
   if (!currentChild) return null;
 
   const { canGoBack = false, canGoForward = false } = currentChild.props;
-  // Navigation Logic for Progress Bar
   const isStepClickable = (stepNumber: number) => {
-      // Can go back to previous steps if current step allows going back
       if (stepNumber < currentStep && canGoBack) return true;
-      // Can go to immediate next step if current step allows going forward
       if (stepNumber === currentStep + 1 && canGoForward) return true;
       return false;
   };
 
   return (
     <div className={styles.stepsContainer}>
-      {/* Progress Bar / Stepper */}
       {showProgress && (
         <StepsProgressBar
           totalSteps={totalSteps}
@@ -62,10 +58,8 @@ export const StepsController = forwardRef<StepsRef, IStepsControllerProps>(({ ch
         />
       )}
 
-      {/* Navigation & Content Wrapper */}
       <div className={styles.stepsContentWrapper}>
         <div className={styles.stepsNavigation}>
-             {/* Back Button */}
             {canGoBack && currentStep > 1 ? (
                 <button className={styles.stepNavButton} 
                   onClick={prev}
@@ -78,7 +72,6 @@ export const StepsController = forwardRef<StepsRef, IStepsControllerProps>(({ ch
                 </button>
             ) : <span />}
 
-            {/* Forward Button (if explicitly enabled) */}
             {canGoForward && currentStep < totalSteps && (
                 <button className={styles.stepNavButton} 
                   onClick={next}
@@ -91,7 +84,6 @@ export const StepsController = forwardRef<StepsRef, IStepsControllerProps>(({ ch
                 </button>
             )}
         </div>
-        {/* Step Content */}
         {currentChild}
       </div>
     </div>

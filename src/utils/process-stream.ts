@@ -47,7 +47,7 @@ export async function* parseChatStream(
     try {
       await reader.cancel();
     } catch {
-      // stream já encerrado
+      // The stream is already closed
     }
     reader.releaseLock();
   }

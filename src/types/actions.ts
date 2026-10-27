@@ -5,9 +5,7 @@ export interface ActionState<T = unknown> {
   timestamp: number;
 }
 
-// O tipo 'never' no data garante que esse objeto seja compatível com qualquer ActionState<T>,
-// pois T | undefined é sempre compatível com undefined.
-// Não usamos 'any' para manter segurança de tipo.
+// never in data makes this compatible with any ActionState<T> without falling back to any
 export const INITIAL_ACTION_STATE: ActionState<never> = {
     success: false,
     timestamp: 0

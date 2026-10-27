@@ -17,8 +17,7 @@ export type CompanyMembershipRole = 'owner' | 'member';
 export type CompanyMembershipStatus = 'active' | 'inactive';
 export type InviteStatus = 'pending' | 'accepted' | 'declined';
 
-// Membership mínimo que vem embutido na lista de empresas do usuário (/users/me)
-// Espelho de RetrieveUserMembership no backend
+// RetrieveUserMembership mirror
 export interface IUserMembership {
   id: UUID7;
   membership_role: CompanyMembershipRole;
@@ -27,7 +26,7 @@ export interface IUserMembership {
   updated_at: string;
 }
 
-// Empresa da lista do usuário (/users/me) — espelho de RetrieveUserCompany
+// RetrieveUserCompany mirror
 export interface IUserCompany {
   id: UUID7;
   name: string;
@@ -57,10 +56,7 @@ export interface IMembershipPermission {
   route_permission: IRoutePermission;
 }
 
-// Permissão de provider ("permissão nos agentes"): NÃO é rota da Datalab — é o
-// que a core-api/MCP consulta para decidir se o agente pode executar uma tool de
-// escrita por esta pessoa (ex.: criar property no GA4). Independente das
-// route permissions, e por isso mora em uma seção separada nas telas.
+// Checked by the core-api before an agent runs a write tool on this person's behalf; unrelated to route permissions
 export interface IProviderPermission {
   id: UUID7;
   key: ProviderPermissionKey;
@@ -71,7 +67,7 @@ export interface IProviderPermission {
   updated_at: string;
 }
 
-// Concessão membership × provider permission — espelha IMembershipPermission
+// RetrieveMembershipProviderPermission mirror
 export interface IMembershipProviderPermission {
   id: UUID7;
   membership_id: UUID7;
@@ -81,8 +77,7 @@ export interface IMembershipProviderPermission {
   provider_permission: IProviderPermission;
 }
 
-// O convite carrega as concessões como LINHAS (invite × permissão), não os
-// objetos direto — mesmo formato das concessões de membership.
+// RetrieveMembershipInvitePermission mirror
 export interface IInvitePermission {
   id: UUID7;
   invite_id: UUID7;

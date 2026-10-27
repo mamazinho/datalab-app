@@ -15,5 +15,5 @@ export const createAgentSchema = agentFormBaseSchema.extend({
   instructions: z.string().trim().min(1, 'As instruções do agente são obrigatórias'),
 });
 
-// A API não retorna as instruções atuais — na edição, vazio significa "manter as atuais"
+// The API does not return the current instructions, so an empty field on edit keeps them
 export const updateAgentSchema = agentFormBaseSchema;

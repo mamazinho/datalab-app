@@ -9,7 +9,7 @@ export function groupPermissionsByTag(permissions: IRoutePermission[]): Record<s
   }, {});
 }
 
-// Permissões de provider não têm tag: o agrupamento natural é a plataforma.
+// Provider permissions have no tag, so they group by platform
 export function groupProviderPermissionsByProvider(
   permissions: IProviderPermission[],
 ): Record<string, IProviderPermission[]> {

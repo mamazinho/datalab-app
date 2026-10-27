@@ -11,8 +11,7 @@ import { isUuid7, type UUID7 } from '../../../types/ids';
 import { useChat } from '../../../hooks/use-chat';
 import { useChatMessages } from '../../../hooks/use-chat-messages';
 
-// Chat inexistente / de outro usuário (404) manda de volta para a lista;
-// os demais erros seguem para a tela padrão de erro com "Tentar novamente".
+// A missing or inaccessible chat (404) goes back to the list; other errors show the retry screen
 const ChatErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
         return <Navigate to="/ia/conversas" replace />;

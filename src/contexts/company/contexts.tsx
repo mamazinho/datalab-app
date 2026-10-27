@@ -11,12 +11,10 @@ interface ICompanyContextProps {
   selectCompanyById: (id: UUID7) => void;
   clearSelectedCompany: () => void;
   currentMembership: IUserMembership | null;
-  /** true enquanto /memberships/current não respondeu — as permissões ainda não são conclusivas */
+  // True until /memberships/current answers: permissions are not conclusive before that
   isMembershipLoading: boolean;
   memberPermissions: IRoutePermission[];
-  /** Permissões nos agentes (provider) do usuário na empresa ativa — já resolvidas */
   providerPermissions: IProviderPermission[];
-  /** Allowlist de ativos da EMPRESA (todo membro vê a mesma lista) */
   companyProviderAssets: ICompanyProviderAsset[];
   hasPermissionByTag: (tag: string) => boolean;
   hasPermissionByRoute: (ref: IRoutePermissionRef) => boolean;

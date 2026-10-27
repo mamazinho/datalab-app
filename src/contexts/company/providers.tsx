@@ -23,41 +23,31 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
     return isUuid7(saved) ? saved : null;
   });
 
-  // A lista (de /users/me) decide QUAL empresa está ativa e alimenta o dropdown;
-  // os dados autoritativos da empresa ativa vêm de /memberships/current.
   const currentCompany = useMemo<IUserCompany | null>(() => {
     if (selectedCompanyId) {
       const found = companies.find((c) => c.id === selectedCompanyId);
       if (found) return found;
     }
-    // Auto-seleciona apenas quando há exatamente 1 empresa.
     if (companies.length === 1) return companies[0];
     return null;
   }, [selectedCompanyId, companies]);
 
-  // Header global de empresa para os demais recursos (members, invites, agents...).
   useEffect(() => {
     setCompanyId(currentCompany?.id ?? null);
   }, [currentCompany]);
 
-  // Fonte única do usuário na empresa ativa: membership + company + permissões (flat).
   const { data: currentMembershipData, isLoading: isMembershipLoading } = useQuery({
     ...currentMembershipQuery(currentCompany?.id as UUID7),
     enabled: !!currentCompany,
   });
 
-  // Role disponível de imediato pelo membership embutido em me.companies — evita
-  // "bounce" de owner enquanto /memberships/current ainda carrega; é promovido ao
-  // membership autoritativo assim que a query resolve.
+  // Falls back to the membership embedded in /users/me so an owner is not bounced while /memberships/current loads
   const currentMembership = useMemo<IUserMembership | null>(
     () => currentMembershipData ?? currentCompany?.membership ?? null,
     [currentMembershipData, currentCompany],
   );
 
-  // /memberships/current devolve as route permissions achatadas. O shape de
-  // junção (.route_permission) já valeu aqui um dia, e o custo de errar é o
-  // provider inteiro cair em tela branca — então aceitamos os dois e
-  // descartamos entrada inválida, no mesmo espírito do guard de normalizeRoutePath.
+  // Accepts the old grant shape too: a bad entry here would blank the whole provider
   const memberPermissions = useMemo<IRoutePermission[]>(
     () =>
       (currentMembershipData?.permissions ?? [])
@@ -66,20 +56,18 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
     [currentMembershipData],
   );
 
-  // provider_permissions vem como dict por plataforma; achatamos porque as
-  // checagens são por key ("ga4_property_create"), que já é única entre providers.
+  // Flattened because checks go by key, which is already unique across providers
   const providerPermissions = useMemo<IProviderPermission[]>(
     () => Object.values(currentMembershipData?.provider_permissions ?? {}).flat(),
     [currentMembershipData],
   );
 
-  // Allowlist da empresa ativa — trocar de empresa troca a lista inteira.
   const companyProviderAssets = useMemo<ICompanyProviderAsset[]>(
     () => currentMembershipData?.company?.provider_assets ?? [],
     [currentMembershipData],
   );
 
-  // As queries da empresa não levam o id na chave: trocar de empresa refaz todas, menos o /me.
+  // Company queries have no company id in their keys, so switching resets all of them but /me
   const selectCompanyById = useCallback((id: UUID7) => {
     setCompanyId(id);
     setSelectedCompanyId(id);
@@ -89,8 +77,6 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
 
   const setCurrentCompany = useCallback((company: IUserCompany) => selectCompanyById(company.id), [selectCompanyById]);
 
-  // Limpa a empresa selecionada (ex.: após deletar a ativa) — currentCompany vira
-  // null e o PrivateContent redireciona para o onboarding.
   const clearSelectedCompany = useCallback(() => {
     setSelectedCompanyId(null);
     localStorage.removeItem(SELECTED_COMPANY_KEY);
@@ -114,8 +100,7 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
     [currentMembership, memberPermissions],
   );
 
-  // Conveniência de tela (ex.: exibir a ação de criar property). Quem aplica a
-  // regra de verdade é a core-api — nunca dependa disto para segurança.
+  // UI convenience only: the core-api enforces this rule
   const hasProviderPermission = useCallback(
     (key: ProviderPermissionKey): boolean => {
       if (!currentMembership) return false;

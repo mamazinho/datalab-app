@@ -30,11 +30,6 @@ export const declineInviteAction = createFormAction(
   },
 );
 
-/**
- * Par de form actions de aceitar/recusar convite com feedback,
- * compartilhado entre o menu de convites do header e o onboarding.
- * O sucesso invalida ['me'] — todos os consumidores do usuário se atualizam.
- */
 export function useInviteActions() {
   const queryClient = useQueryClient();
   const [acceptState, acceptFormAction, isAccepting] = useActionState(acceptInviteAction, INITIAL_ACTION_STATE);

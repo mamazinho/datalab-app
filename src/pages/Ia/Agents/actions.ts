@@ -4,7 +4,6 @@ import { createFormAction } from '../../../utils/create-form-action';
 import { createAgentSchema, updateAgentSchema } from './schemas';
 import type { UUID7 } from '../../../types/ids';
 
-// Factory: a action nasce já sabendo se é criação (agentId null) ou edição
 export const createSaveAgentAction = (agentId: UUID7 | null) =>
   createFormAction(
     agentId !== null ? updateAgentSchema : createAgentSchema,

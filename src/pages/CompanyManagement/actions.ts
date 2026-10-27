@@ -3,8 +3,6 @@ import { DatalabAPI } from '../../services/datalab-api';
 import { createFormAction } from '../../utils/create-form-action';
 import type { UUID7 } from '../../types/ids';
 
-// Deleção não tem campos — a confirmação (digitar o nome) é feita na UI.
-// Criar/editar vivem no CompanyFormModal compartilhado (components/UI).
 export const createDeleteCompanyAction = (companyId: UUID7) =>
   createFormAction(
     z.object({}),

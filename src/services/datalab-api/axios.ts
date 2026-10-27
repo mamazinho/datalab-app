@@ -21,9 +21,7 @@ export function getCompanyId(): UUID7 | null {
   return _currentCompanyId;
 }
 
-// ── Fim de sessão ────────────────────────────────────────────────────────────
-// O AuthProvider registra um handler (logout via React) para encerrar a sessão
-// sem recarregar a página. Enquanto não houver handler, usa o fallback de reload.
+// Set by the AuthProvider so a dead session logs out through React instead of reloading the page
 let _onSessionExpired: (() => void) | null = null;
 
 export function setSessionExpiredHandler(handler: (() => void) | null): void {
@@ -105,7 +103,7 @@ const STATUS_MESSAGES: Partial<Record<number, string>> = {
   429: 'Muitas requisições. Tente novamente em instantes.',
 };
 
-// O 422 do FastAPI manda `detail` como lista: [{ loc, msg: "Value error, URL inválida", type }]
+// FastAPI 422 sends detail as a list: [{ loc, msg: "Value error, ...", type }]
 function readDetail(detail: unknown): string {
   if (typeof detail === 'string') return detail;
 
@@ -153,7 +151,6 @@ function createAuthenticatedErrorHandler(instance: AxiosInstance) {
     if (error.response.status === 401) {
       const config = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
 
-      // Tenta um refresh silencioso uma única vez para 401 recuperáveis
       if (config && !config._retry && refreshableErrors.some((msg) => message.includes(msg))) {
         config._retry = true;
         try {
@@ -161,13 +158,12 @@ function createAuthenticatedErrorHandler(instance: AxiosInstance) {
           config.headers['Authorization'] = `Bearer ${newToken}`;
           return instance(config);
         } catch {
-          // refreshToken já encerra a sessão no seu catch
+          // refreshToken already ended the session
           return Promise.reject(error);
         }
       }
 
-      // Qualquer outro 401 = sessão inválida/expirada → encerra e volta ao login
-      // (em vez de deixar o app cair em /onboarding por falta de dados do usuário)
+      // Ending the session here keeps the app from falling into /onboarding without user data
       endSession();
       if (message) error.message = message;
       return Promise.reject(error);

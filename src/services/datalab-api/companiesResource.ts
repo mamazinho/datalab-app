@@ -13,8 +13,7 @@ export interface IUpdateCompanyRequest {
   name: string;
 }
 
-// Ativo de provider (property do GA4, ad account/página/instagram do Meta...)
-// como o provider o descreve — é o que vem de provider-assets/available/.
+// ProviderAsset mirror
 export interface IProviderAsset {
   asset_type: AssetType;
   external_id: string;
@@ -23,7 +22,7 @@ export interface IProviderAsset {
   extra: Record<string, unknown>;
 }
 
-// Ativo já salvo na allowlist da empresa (tem id, usado no DELETE)
+// RetrieveCompanyProviderAsset mirror
 export interface ICompanyProviderAsset extends IProviderAsset {
   id: UUID7;
   provider: Provider;
@@ -32,8 +31,7 @@ export interface ICompanyProviderAsset extends IProviderAsset {
   updated_at: string;
 }
 
-// Insumo da tela de seleção: tudo que a conta conectada do owner enxerga +
-// o que já está liberado para a empresa (marca os checkboxes iniciais).
+// RetrieveAvailableProviderAssets mirror
 export interface IAvailableProviderAssets {
   provider: Provider;
   integration: IntegrationKey;
@@ -46,8 +44,7 @@ export interface IAddProviderAssetRequest {
   asset: IProviderAsset;
 }
 
-// Empresa plain — espelho de RetrieveCompany no backend (sem membership).
-// provider_assets é a allowlist da empresa: onde qualquer membro pode operar.
+// RetrieveCompany mirror. provider_assets is the company allowlist: the only assets its members can operate.
 export interface ICompany {
   id: UUID7;
   name: string;
@@ -58,7 +55,7 @@ export interface ICompany {
   provider_assets?: ICompanyProviderAsset[];
 }
 
-// Membership retornado na criação da empresa — espelho de RetrieveCompanyMembership
+// RetrieveCompanyMembership mirror
 export interface ICreateCompanyMembership {
   id: UUID7;
   user_id: UUID7;
@@ -69,7 +66,7 @@ export interface ICreateCompanyMembership {
   updated_at: string;
 }
 
-// Resposta do POST /companies/ — espelho de RetrieveCompanyWithMembership
+// RetrieveCompanyWithMembership mirror
 export interface ICreateCompanyResponse {
   company: ICompany;
   membership: ICreateCompanyMembership;
@@ -81,8 +78,6 @@ export const CompaniesResource = {
     return response.data as ICreateCompanyResponse;
   },
 
-  // update/delete usam axiosCompanyInstance: o X-Company-Id do interceptor
-  // (empresa ativa) é o alvo da ação e o que o backend usa para autorizar.
   async updateCompany(companyId: UUID7, payload: IUpdateCompanyRequest): Promise<ICompany> {
     const response = await axiosCompanyInstance.patch(`companies/${companyId}/`, payload);
     return response.data as ICompany;
@@ -91,11 +86,6 @@ export const CompaniesResource = {
   async deleteCompany(companyId: UUID7): Promise<void> {
     await axiosCompanyInstance.delete(`companies/${companyId}/`);
   },
-
-  // ── Allowlist de ativos ──────────────────────────────────────────────────────
-  // Todas exigem X-Company-Id igual ao {id} do path (o interceptor manda a
-  // empresa ativa, que é sempre o alvo destas telas). available/, listagem e
-  // remoção são só do owner; a inclusão é gated por route permission.
 
   async listAvailableProviderAssets(
     companyId: UUID7,
@@ -118,7 +108,7 @@ export const CompaniesResource = {
     return response.data as ICompanyProviderAsset[];
   },
 
-  // Idempotente: repetir o mesmo external_id atualiza o nome em vez de duplicar.
+  // Idempotent: sending an external_id again updates its name
   async addProviderAsset(
     companyId: UUID7,
     payload: IAddProviderAssetRequest,
@@ -130,7 +120,7 @@ export const CompaniesResource = {
     return response.data as ICompanyProviderAsset;
   },
 
-  // 404 = o ativo já não está na allowlist, que é o estado final desejado.
+  // 404 means the asset is already gone, which is the desired end state
   async removeProviderAsset(companyId: UUID7, assetId: UUID7): Promise<void> {
     try {
       await axiosCompanyInstance.delete(`companies/${companyId}/provider-assets/${assetId}/`);

@@ -18,7 +18,7 @@ const buildInitialsUrl = (name: string, seed: AvatarSeed): string => {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 };
 
-// no-referrer: o Google recusa a foto de perfil quando recebe o referrer.
+// Google refuses profile photos requested with a referrer
 export const Avatar = ({ src, name, seed = 'first-name', ...imgProps }: IAvatarProps) => {
   const [brokenSrc, setBrokenSrc] = useState<string | null>(null);
 

@@ -41,7 +41,7 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
   const { data: me } = useMe();
   const [items, dispatch] = useReducer(timelineReducer, initialHistory, replay);
   const [isStreaming, setIsStreaming] = useState(false);
-  // Identifica a "geração" ativa do stream: trocar de chat/desmontar invalida loops em andamento
+  // Stream generation: switching chats or unmounting invalidates the loops still running
   const generationRef = useRef(0);
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
       });
     } catch (requestError) {
       if (generationRef.current !== generation) return;
-      // POST falhou antes do stream iniciar: reabre a clarification para nova tentativa
+      // The POST failed before the stream started, so the clarification reopens for a retry
       if (answerToToolCallId) {
         dispatch({ type: 'reopen_clarification', toolCallId: answerToToolCallId });
       }
@@ -94,7 +94,7 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
       dispatch({ type: 'event', event: { type: 'error', content: STREAM_INTERRUPTED_MESSAGE } });
     } finally {
       if (generationRef.current === generation) {
-        // Fecha a bolha em streaming mesmo se o backend encerrar sem evento "done"
+        // Closes the streaming bubble even if the backend ends without a done event
         dispatch({ type: 'event', event: { type: 'done' } });
         setIsStreaming(false);
       }
@@ -105,7 +105,7 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
     const trimmedPrompt = prompt.trim();
     if ((!trimmedPrompt && attachments.length === 0) || isStreaming) return;
 
-    // Com clarification pendente, texto livre também é resposta a ela (sempre permitido)
+    // With a pending clarification, free text also answers it
     await submitPrompt(
       trimmedPrompt || EMPTY_PROMPT_WITH_ATTACHMENTS,
       attachments,

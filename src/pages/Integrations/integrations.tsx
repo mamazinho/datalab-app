@@ -16,8 +16,6 @@ import { IntegrationCard } from './components/integration-card';
 import { ProviderAssetsModal } from './components/provider-assets-modal';
 import { useConnectIntegration } from './use-connect-integration';
 
-// O callback da integração volta para cá pedindo a seleção de ativos daquela
-// integração (?ativos=google_analytics).
 const ASSETS_PARAM = 'ativos';
 
 const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
@@ -29,11 +27,8 @@ const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
   const [assetsIntegration, setAssetsIntegration] = useState<IIntegrationStatus | null>(null);
   const [disconnectingKey, setDisconnectingKey] = useState<IntegrationKey | null>(null);
 
-  // Integrações de login não aparecem aqui: elas se resolvem na tela de login.
   const connectable = useMemo(() => integrations.filter((i) => !i.is_login), [integrations]);
 
-  // Emenda a seleção de ativos logo após o consentimento — é o único momento em
-  // que o owner tem fresco o contexto do que acabou de autorizar.
   const openAssetsFor = useCallback(
     (key: IntegrationKey) => {
       const target = connectable.find((i) => i.key === key);
@@ -42,9 +37,7 @@ const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
     [connectable, isOwner],
   );
 
-  // Só emenda a seleção quando a empresa ainda não tem ativos desta integração:
-  // é o caso que deixaria a empresa com acesso zero. Numa reconexão (token
-  // expirado, escopo novo) a allowlist continua lá — reabrir o modal seria ruído.
+  // Opens the asset picker only while the company has no asset of this integration; a reconnection keeps the allowlist
   const handleConnected = useCallback(
     (key: IntegrationKey) => {
       const alreadyConfigured = companyProviderAssets.some((asset) =>
@@ -58,7 +51,7 @@ const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
 
   const { connect, connectingKey } = useConnectIntegration({ onConnected: handleConnected });
 
-  // Caminho sem popup: o callback volta pela aba principal com ?ativos=
+  // Without the popup, the callback comes back to this tab with ?ativos=
   const requestedAssets = searchParams.get(ASSETS_PARAM);
 
   useEffect(() => {

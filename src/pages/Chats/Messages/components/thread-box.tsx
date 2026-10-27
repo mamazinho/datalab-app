@@ -6,7 +6,7 @@ interface ThreadBoxProps {
     item: IThreadBoxItem;
 }
 
-// O chat não busca a lista de agentes — exibe o agent_key do stream de forma legível
+// The chat does not load the agents list, so the agent_key is made readable here
 const formatAgentKey = (agentKey: string | null): string =>
     agentKey ? agentKey.replace(/_/g, ' ') : 'Especialista';
 

@@ -28,8 +28,7 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
   const [theme, setTheme] = useState<IUserConfig['theme']>(user?.config?.theme || 'system');
   const firstName = user.name.trim().split(' ')[0] || 'Usuário';
 
-  // O submit segue pelo action do React 19; aqui só limpamos as senhas
-  // (controladas por causa do matchValue) — o FormData já foi capturado com elas.
+  // The React 19 action already captured the FormData; this only clears the controlled password fields
   const handleSubmit = () => {
     setPassword('');
     setConfirmPassword('');

@@ -11,12 +11,11 @@ import { createCompanyAction, createUpdateCompanyAction } from './actions';
 
 interface ICompanyFormModalProps {
   isOpen: boolean;
-  /** null = criar (qualquer usuário); definido = editar o nome (empresa ativa). */
+  // null creates a company; a company edits the active one's name
   company: IUserCompany | null;
   onClose: () => void;
 }
 
-// Reutilizado pelo dropdown (criar, todos) e pela página de empresa (editar a ativa).
 export const CompanyFormModal = ({ isOpen, company, onClose }: ICompanyFormModalProps) => {
   const isEditing = company !== null;
   const queryClient = useQueryClient();
@@ -30,7 +29,7 @@ export const CompanyFormModal = ({ isOpen, company, onClose }: ICompanyFormModal
     onSuccess: () => {
       toast.success(isEditing ? 'Empresa atualizada.' : 'Empresa criada.');
       void queryClient.invalidateQueries({ queryKey: meQuery.queryKey });
-      // O nome também vive em currentMembership.company (a edição é sempre na ativa).
+      // The name also lives in currentMembership.company
       if (company) void queryClient.invalidateQueries({ queryKey: currentMembershipQuery(company.id).queryKey });
       onClose();
     },

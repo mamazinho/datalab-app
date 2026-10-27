@@ -9,15 +9,9 @@ import { INTEGRATION_CALLBACK } from '../../types/auth';
 import type { IntegrationKey } from '../../types/integrations';
 
 interface IUseConnectIntegrationOptions {
-  /** Chamado no sucesso — a tela emenda a seleção de ativos daquela integração */
   onConnected: (integration: IntegrationKey) => void;
 }
 
-/**
- * Conectar uma integração é o mesmo fluxo do login social: o consentimento
- * acontece numa janela separada e o resultado volta pelo canal, sem a tela de
- * integrações perder o estado (nem a empresa ativa) por uma navegação.
- */
 export const useConnectIntegration = ({ onConnected }: IUseConnectIntegrationOptions) => {
   const queryClient = useQueryClient();
   const [connectingKey, setConnectingKey] = useState<IntegrationKey | null>(null);
@@ -26,7 +20,7 @@ export const useConnectIntegration = ({ onConnected }: IUseConnectIntegrationOpt
     if (event.type !== INTEGRATION_CALLBACK) return;
 
     setConnectingKey(null);
-    // Conectado ou não, o status da conexão mudou do lado do provider.
+    // Connected or not, the connection status changed on the provider side
     void queryClient.invalidateQueries({ queryKey: integrationsQuery.queryKey });
 
     if (event.status !== 'connected') {
@@ -38,8 +32,7 @@ export const useConnectIntegration = ({ onConnected }: IUseConnectIntegrationOpt
     if (event.integration) onConnected(event.integration);
   });
 
-  // Desistir fechando a janela também destrava o botão.
-  useEffect(() => {
+    useEffect(() => {
     if (!isPopupOpen) setConnectingKey(null);
   }, [isPopupOpen]);
 

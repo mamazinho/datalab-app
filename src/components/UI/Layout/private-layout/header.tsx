@@ -23,17 +23,14 @@ export const Header = () => {
 
     const canSeeIaSection = hasPermissionByTag('chat') || hasAnyAgentsPermission;
     const canManageMembers = hasPermissionByTag('company');
-    // Gerenciamento está sempre disponível: mesmo sem permissão de empresa, todo
-    // membro precisa da aba de integrações para conectar a conta dele.
-    // Cai na primeira aba que o usuário pode ver.
+    // Always reachable: every member needs the integrations tab to connect their own account
     const managementHref = canManageMembers
         ? MEMBERS_PATH
         : hasAnyCompanyPermission
             ? COMPANY_PATH
             : INTEGRATIONS_PATH;
 
-    // `match` existe para itens cujo destino é uma sub-aba: o menu continua
-    // ativo em qualquer aba de gerenciamento, não só na de entrada.
+    // match keeps the item active on any management sub-tab, not only the landing one
     const menuPages: IRouteTabItem[] = [
         { label: 'Página inicial', to: '/' },
         ...(canSeeIaSection ? [{ label: 'IA', to: '/ia' }] : []),

@@ -30,8 +30,7 @@ export const Modal: React.FC<IModalProps> = ({ isOpen, onClose, title, children 
 
     return createPortal(
         <div className={styles.overlay}>
-            {/* Backdrop click handler */}
-            <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
+                        <div className={styles.backdrop} onClick={onClose} aria-hidden="true" />
             <div className={styles.dialog} 
                 role="dialog"
                 aria-modal="true"

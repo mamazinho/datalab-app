@@ -6,11 +6,7 @@ import { SOCIAL_LOGIN_SUCCESS } from '../../types/auth';
 import { isProvider } from '../../types/integrations';
 import { closeCallbackWindow, postAuthChannelMessage } from '../../utils/auth-channel';
 
-/**
- * Retorno do login social. A API devolve só o cookie de sessão (token na URL ficaria
- * no histórico); o access token sai do refresh. Roda dentro do popup: publica o login
- * para a aba original e se fecha. Sem popup (aba única), cai no fallback de redirect.
- */
+// The API only sets the session cookie (a token in the URL would stay in the history); the access token comes from the refresh
 export const SocialCallback: React.FC = () => {
     const { provider } = useParams<{ provider: string }>();
     const [searchParams] = useSearchParams();

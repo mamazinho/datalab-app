@@ -2,7 +2,7 @@ import { DatalabAPI } from '../../services/datalab-api';
 import { createFormAction } from '../../utils/create-form-action';
 import { inviteMembersSchema } from './schemas';
 
-// data = quantidade de convites enviados (para o toast singular/plural)
+// data is the number of invites sent, for the singular or plural toast
 export const inviteMembersAction = createFormAction(
   inviteMembersSchema,
   async (payload) => {
@@ -10,7 +10,7 @@ export const inviteMembersAction = createFormAction(
     return payload.emails.length;
   },
   {
-    // Junta os e-mails tokenizados com o draft ainda não tokenizado (comportamento do modal)
+    // Joins the tokenized e-mails with the draft that was not tokenized yet
     mapFormData: (formData) => {
       const emails = String(formData.get('emails') ?? '')
         .split(',')

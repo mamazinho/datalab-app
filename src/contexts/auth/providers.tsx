@@ -17,16 +17,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const logout = useCallback(() => {
-    // O refresh mora num cookie httpOnly: só o backend consegue apagá-lo
+    // The refresh token lives in an httpOnly cookie that only the backend can clear
     AuthResource.logout().catch(() => undefined);
     setAccessToken(undefined);
     localStorage.removeItem("accessToken");
-    // Dados do usuário anterior não podem vazar para a próxima sessão
+    // The previous user's data must not leak into the next session
     queryClient.clear();
   }, [queryClient]);
 
-  // Permite ao interceptor axios encerrar a sessão via React (sem reload de página)
-  // quando o backend responde 401 — o token some e os guards mandam para /login.
   useEffect(() => {
     setSessionExpiredHandler(logout);
     return () => setSessionExpiredHandler(null);

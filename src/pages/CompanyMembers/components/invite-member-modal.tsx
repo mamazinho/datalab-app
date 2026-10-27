@@ -42,8 +42,6 @@ const InvitePermissionsField = ({ selected, onChange }: IPermissionsFieldProps) 
   );
 };
 
-// Mesmo componente, outra chave de payload e outro catálogo: as duas listas são
-// independentes e o convite carrega as duas.
 const InviteProviderPermissionsField = ({ selected, onChange }: IPermissionsFieldProps) => {
   const { data: providerPermissions } = useProviderPermissions();
 
@@ -82,7 +80,7 @@ export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) 
       void queryClient.invalidateQueries({ queryKey: invitesQuery.queryKey });
       onClose();
     },
-    // Erro já aparece inline no formulário — sem toast duplicado
+    // The error shows inline in the form
     onError: () => {},
   });
 

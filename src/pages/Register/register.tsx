@@ -54,8 +54,7 @@ export const Register: React.FC = () => {
       <div className={designSystemStyles.authShell}>
         <section className={designSystemStyles.authCard}>
           <StepsController ref={stepsRef}>
-            {/* STEP 1: Register Form */}
-            <Step canGoForward={false}>
+                        <Step canGoForward={false}>
               <RegisterForm 
                 action={registerFormAction}
                 isPending={isRegisterPending}
@@ -63,8 +62,7 @@ export const Register: React.FC = () => {
               />
             </Step>
 
-            {/* STEP 2: Confirm Account */}
-            <Step canGoBack={true}>
+                        <Step canGoBack={true}>
               <ConfirmAccountForm 
                 action={confirmFormAction}
                 isPending={isConfirmPending}

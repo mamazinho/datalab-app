@@ -6,7 +6,6 @@ import { groupAssets, PROVIDER_LABELS, scopeLabel } from '../../../utils/integra
 
 interface IIntegrationCardProps {
   integration: IIntegrationStatus;
-  /** Ativos desta integração que já estão liberados para a empresa */
   assets: ICompanyProviderAsset[];
   isOwner: boolean;
   isBusy: boolean;
@@ -29,15 +28,11 @@ export const IntegrationCard = ({
   const expired = isExpired(integration.token_expires_at);
   const providerLabel = PROVIDER_LABELS[integration.provider];
   const assetGroups = groupAssets(assets, integration.provider);
-  // Campo opcional na prática: uma resposta sem ele não pode derrubar o card.
   const missingScopes = integration.missing_scopes ?? [];
-  // `connected` = já passou pelo consentimento desta integração, mesmo que
-  // incompleto. Com escopo faltando o caminho é completar, não reconectar do zero.
+  // connected means the consent happened, even if incomplete: missing scopes call for completing it, not reconnecting
   const needsScopes = integration.connected && missingScopes.length > 0;
   const tooltipId = useId();
 
-  // Avisos moram atrás do "!" do cabeçalho: sinalizam sem disputar espaço com o
-  // conteúdo do card. Quem quiser o detalhe passa o mouse ou foca pelo teclado.
   const alerts: ReactNode[] = [];
 
   if (integration.connected && assets.length === 0) {
@@ -120,7 +115,6 @@ export const IntegrationCard = ({
         </dl>
       )}
 
-      {/* Contagem não diz nada sozinha: o owner precisa ver QUAIS ativos são */}
       {assetGroups.length > 0 && (
         <div className={styles.assetSummary}>
           <span className={styles.assetSummaryTitle}>Ativos da empresa ({assets.length})</span>
@@ -142,8 +136,6 @@ export const IntegrationCard = ({
       )}
 
       <div className={styles.integrationActions}>
-        {/* Com a conta já vinculada, liberar ativos para a empresa é a ação do
-            dia a dia — refazer o OAuth vira secundário ("Reconectar"). */}
         {integration.connected ? (
           <>
             {isOwner && (

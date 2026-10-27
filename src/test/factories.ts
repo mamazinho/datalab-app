@@ -21,18 +21,9 @@ import type {
   IUserResponse,
 } from '../services/datalab-api/usersResource';
 
-/**
- * Fábricas de payload do backend. Sempre com valores fixos e overrides parciais:
- * teste que depende de um campo declara esse campo, o resto some do ruído.
- */
-
 const TIMESTAMPS = { created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' };
 
-/**
- * UUID v7 válido e determinístico a partir de um número — id legível no output
- * do teste. O padStart é o que mantém o primeiro bloco com 8 dígitos: sem ele
- * seeds de dois dígitos produzem um id que o isUuid rejeita.
- */
+// padStart keeps the first block at 8 digits; without it, two-digit seeds make ids that isUuid rejects
 export const uuid = (seed: number): UUID7 =>
   `${String(seed).padStart(8, '0')}-0000-7000-8000-000000000000` as UUID7;
 

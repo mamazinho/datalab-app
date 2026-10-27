@@ -1,5 +1,3 @@
-// Vocabulário compartilhado das integrações OAuth (login + conexões de provider).
-// Vive em /types porque services, contexts e páginas dependem dos mesmos literais.
 
 export type Provider = 'google' | 'meta';
 
@@ -18,8 +16,7 @@ export type AssetType =
   | 'meta_page'
   | 'meta_instagram_account';
 
-// Tools de escrita que o agente pode executar por uma pessoa no provider —
-// espelha o enum ProviderPermissionKey do backend.
+// ProviderPermissionKey mirror
 export type ProviderPermissionKey = 'ga4_account_create' | 'ga4_property_create';
 
 export const PROVIDERS: Provider[] = ['google', 'meta'];

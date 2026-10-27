@@ -9,7 +9,6 @@ import { INITIAL_ACTION_STATE } from '../../types/actions';
 import { useActionFeedback } from '../../hooks/use-action-feedback';
 import { PasswordInput } from '../../components/UI/Inputs/Password/password-input';
 
-
 export const ChangePassword: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -26,7 +25,7 @@ export const ChangePassword: React.FC = () => {
       toast.success('Senha alterada com sucesso!');
       setTimeout(() => navigate('/login'), 3000);
     },
-    // Erro já aparece inline no formulário — sem toast duplicado
+    // The error shows inline in the form
     onError: () => {},
   });
 

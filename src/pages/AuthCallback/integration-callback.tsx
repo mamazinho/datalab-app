@@ -6,14 +6,6 @@ import { isProvider, type IntegrationKey, type Provider } from '../../types/inte
 import { INTEGRATIONS_PATH } from '../../routes/paths';
 import { closeCallbackWindow, postAuthChannelMessage } from '../../utils/auth-channel';
 
-/**
- * Retorno do consentimento de uma integração. Mesma mecânica do login social:
- * roda no popup, publica o resultado no canal e se fecha — quem reage é a tela
- * de integrações, que continuou viva na aba original.
- *
- * O caminho "/integrations/callback" é ditado pelo backend (CLIENT_URL fixo),
- * por isso está em inglês, diferente das demais rotas do app.
- */
 export const IntegrationCallback = () => {
   const [searchParams] = useSearchParams();
 
@@ -32,8 +24,7 @@ export const IntegrationCallback = () => {
 
     postAuthChannelMessage(message);
 
-    // Sem popup, a própria aba volta para a tela de integrações — e no sucesso
-    // já pedindo a seleção de ativos daquela integração.
+    // Without a popup, this tab goes back to integrations and, on success, asks for the asset picker
     return closeCallbackWindow(() => {
       window.location.href =
         status === 'connected' && integration

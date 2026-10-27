@@ -10,8 +10,6 @@ interface IPermissionTogglesProps {
   onToggle: (id: UUID7, isGranted: boolean) => void;
 }
 
-// Lista de switches de concessão — serve tanto às permissões de rota quanto às
-// de provider; quem sabe o que fazer com o toggle é o dono da seção.
 export const PermissionToggles = ({ groups, grantedIds, togglingId, onToggle }: IPermissionTogglesProps) => (
   <div className={styles.permissionsList}>
     {Object.entries(groups).map(([label, options]) => (

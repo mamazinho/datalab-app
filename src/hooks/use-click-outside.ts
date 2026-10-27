@@ -2,10 +2,6 @@ import { useEffect, useRef, type RefObject } from 'react';
 
 type ClickOutsideRefs = RefObject<HTMLElement | null> | Array<RefObject<HTMLElement | null>>;
 
-/**
- * Executa onOutside quando um mousedown acontece fora do(s) elemento(s) referenciado(s).
- * Aceita múltiplas refs para casos como trigger + menu flutuante.
- */
 export function useClickOutside(refs: ClickOutsideRefs, onOutside: () => void, enabled = true): void {
   const refsRef = useRef(refs);
   refsRef.current = refs;

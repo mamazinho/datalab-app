@@ -14,10 +14,6 @@ interface IStateTabsProps<TValue extends string> {
   label?: string;
 }
 
-/**
- * Abas que trocam conteúdo sem mudar de rota (ex.: Membros | Convites).
- * Mesmo visual das navegáveis — muda só quem guarda a aba ativa.
- */
 export const StateTabs = <TValue extends string>({
   items,
   value,

@@ -3,16 +3,10 @@ import { buildAgent, buildChat, buildChatUsageReport, buildCompany, buildCurrent
 
 const BASE_URL = import.meta.env.VITE_DATALAB_API_URL;
 
-/** Monta a URL absoluta que o axios vai emitir a partir do baseURL. */
 export const api = (path: string): string => `${BASE_URL}/${path.replace(/^\//, '')}`;
 
 export const ACCESS_TOKEN = 'access-token-do-teste';
 
-/**
- * Happy path de tudo que a árvore de providers pede ao montar. Cada teste
- * sobrescreve o que interessa com server.use(...) — o resto continua respondendo,
- * então nenhuma tela quebra por endpoint esquecido.
- */
 export const handlers = [
   http.post(api('auth/login/'), () =>
     HttpResponse.json({
@@ -133,7 +127,7 @@ export const handlers = [
     HttpResponse.json(buildChat(await request.json() as object), { status: 201 }),
   ),
 
-  // Antes de chats/:chatId/, que também casaria com "usage".
+  // Before chats/:chatId/, which would also match "usage"
   http.get(api('chats/usage/'), () => HttpResponse.json(buildChatUsageReport())),
 
   http.get(api('chats/:chatId/'), () => HttpResponse.json(buildChat())),

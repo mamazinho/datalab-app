@@ -46,8 +46,7 @@
     background: var(--color-surface);
   }
 
-  /* Bandeira, código do país e número dividem a mesma caixa: as bordas
-     internas da lib virariam linhas duplicadas dentro do campo. */
+  /* Flag, dial code and number share one box, so the library's inner borders would double up */
   :global(.react-international-phone-country-selector-button),
   :global(.react-international-phone-dial-code-preview),
   :global(.react-international-phone-input) {
@@ -68,7 +67,6 @@
     margin: 0;
   }
 
-  /* Separador único entre "bandeira +55" e o número */
   :global(.react-international-phone-input) {
     flex: 1;
     min-width: 0;

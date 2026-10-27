@@ -1,8 +1,6 @@
 import type { ILoginUserResponse } from "../services/datalab-api/authResource";
 import type { IntegrationKey, Provider } from "./integrations";
 
-// Canal único entre a janela de callback e a aba que abriu o popup: tanto o
-// login social quanto a conexão de uma integração voltam por aqui.
 export const SOCIAL_AUTH_CHANNEL = 'auth_channel';
 
 export const SOCIAL_LOGIN_SUCCESS = 'SOCIAL_LOGIN_SUCCESS';

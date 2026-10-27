@@ -9,11 +9,6 @@ interface IQueryBoundaryProps {
   loadingFallback?: ReactNode;
 }
 
-/**
- * Padrão oficial de leitura do app: envolve componentes com useSuspenseQuery
- * em Suspense + ErrorBoundary. O "Tentar novamente" do fallback de erro
- * reseta as queries com falha e refaz o fetch.
- */
 export const QueryBoundary = ({ children, loadingFallback }: IQueryBoundaryProps) => (
   <QueryErrorResetBoundary>
     {({ reset }) => (

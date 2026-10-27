@@ -44,7 +44,7 @@ const MemberPermissionsContent = ({ memberId }: { memberId: UUID7 }) => {
     ],
   });
 
-  // O cache é a fonte de verdade: os toggles atualizam a query via setQueryData
+  // The cache is the source of truth: toggles update it with setQueryData
   const grantedRouteIds = useMemo(
     () => new Set(memberPermissions.map((p) => p.route_permission_id)),
     [memberPermissions],
@@ -61,7 +61,7 @@ const MemberPermissionsContent = ({ memberId }: { memberId: UUID7 }) => {
     [providerPermissions],
   );
 
-  // Um toggle por vez: concessões concorrentes embaralhariam o estado otimista.
+  // One toggle at a time: concurrent grants would scramble the optimistic state
   const withToggle = useCallback(
     async (id: UUID7, run: () => Promise<void>) => {
       if (togglingId !== null) return;
@@ -162,7 +162,7 @@ export const MemberPermissionsModal = ({ isOpen, onClose, member }: IMemberPermi
     title={`Permissões — ${member?.user?.name ?? 'Membro'}`}
   >
     {member && (
-      // Owner tem tudo implicitamente — a API recusa conceder e revogar para ele.
+      // Owners have everything implicitly; the API refuses to grant or revoke for them
       member.membership_role === 'owner' ? (
         <p className={styles.ownerNotice}>
           Este membro é owner da empresa e tem todas as permissões implicitamente — não há o

@@ -15,7 +15,6 @@ interface IPhoneFieldProps {
   name?: string;
   value: string;
   onValueChange: (value: string) => void;
-  /** Sobrescreve o placeholder derivado do formato do país */
   placeholder?: string;
   autoComplete?: string;
   required?: boolean;
@@ -33,8 +32,7 @@ const normalizePhoneValue = (value?: string) => {
   return `+${digitsOnly}`;
 };
 
-// Nomes traduzidos pelo próprio browser (Intl), em vez de carregar um pacote de
-// locale: a lista da lib vem em inglês.
+// The library ships English names; Intl translates them without a locale package
 const regionNames = new Intl.DisplayNames(['pt-BR'], { type: 'region' });
 
 const translatedCountries = defaultCountries
@@ -45,17 +43,14 @@ const translatedCountries = defaultCountries
     try {
       name = regionNames.of(parsed.iso2.toUpperCase()) ?? parsed.name;
     } catch {
-      // iso2 fora do padrão (ex.: "xk") — mantém o nome original da lib
+      // Non-standard iso2 codes ("xk") keep the library name
     }
 
     return buildCountryData({ ...parsed, name });
   })
   .sort((a, b) => parseCountry(a).name.localeCompare(parseCountry(b).name, 'pt-BR'));
 
-/**
- * Placeholder com o formato real do país: a máscara da lib usa "." por dígito
- * ("(..) .....-...." no BR), então trocamos por 9 → "(99) 99999-9999".
- */
+// The library mask uses "." per digit ("(..) .....-...."), so it becomes "(99) 99999-9999"
 const placeholderFromCountry = (country?: ParsedCountry) => {
   const format = country?.format;
   const mask = typeof format === 'string' ? format : format?.default;
@@ -83,7 +78,7 @@ export const PhoneField = ({
 
   return (
     <div className={styles.wrapper}>
-      {/* O input visível mostra o número no formato nacional; o form envia o E.164 */}
+      {/* The visible input shows the national format; the form sends E.164 */}
       {name && <input type="hidden" name={name} value={value} readOnly />}
 
       <PhoneInput
@@ -91,7 +86,6 @@ export const PhoneField = ({
         defaultCountry={defaultCountry}
         countries={translatedCountries}
         preferredCountries={[defaultCountry]}
-        // Tira o "+55" de dentro do campo e o coloca colado na bandeira
         disableDialCodeAndPrefix
         showDisabledDialCodeAndPrefix
         placeholder={placeholder ?? placeholderFromCountry(currentCountry)}
