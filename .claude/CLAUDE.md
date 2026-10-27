@@ -60,7 +60,7 @@ project-root/
 2. **SOLID Principles:** Seguir princípios SOLID quando aplicável
 3. **Component-Based:** Componentes pequenos e reutilizáveis
 4. **Type Safety:** Usar typescript para segurança de tipos
-5. **Comments:** Comentar apenas em funções muito especificas que ficaram muito complexas, não comente o código em excesso
+5. **Comments:** Só quando for muito necessário, para o porquê que o código não mostra, e sempre em inglês. Se o nome da função ou do teste já diz o que acontece, não comente
 
 ### Convenções Importantes
 
