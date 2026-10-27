@@ -10,7 +10,7 @@ import { COMPANY_PATH, INTEGRATIONS_PATH, MANAGEMENT_BASE_PATH, MEMBERS_PATH } f
 import { RouteTabs, type IRouteTabItem } from "../../Tabs";
 import { CompanyDropdown } from "../../CompanyDropdown/company-dropdown";
 import { InvitesMenu } from "../../InvitesMenu/invites-menu";
-import favicon from '../../../../assets/favicon.png';
+import logo from '../../../../assets/logo.png';
 
 export const Header = () => {
 
@@ -54,7 +54,7 @@ export const Header = () => {
         <nav className={styles.headerNav}>
             <div className={styles.headerContent}>
                 <Link className={styles.brandLink} to="/">
-                    <img className={styles.brandImage} src={favicon} alt="Logo da DataLab" />
+                    <img className={styles.brandImage} src={logo} alt="Logo da DataLab" />
                     <span className={styles.brandText}>DataLab</span>
                 </Link>
                 <RouteTabs items={menuPages} variant="nav" label="Menu principal" />

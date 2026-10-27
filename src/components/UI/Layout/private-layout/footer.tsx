@@ -1,5 +1,5 @@
 import styles from './layout.module.css';
-import favicon from '../../../../assets/favicon.png';
+import logo from '../../../../assets/logo.png';
 
 export const Footer = () => {
 
@@ -8,7 +8,7 @@ export const Footer = () => {
     return (
         <footer className={styles.footerContainer}>
             <div className={styles.footerContent}>
-            <a href="/"><img className={styles.footerBrandImage} src={favicon} alt="Logo da DataLab" /></a>
+            <a href="/"><img className={styles.footerBrandImage} src={logo} alt="Logo da DataLab" /></a>
 
             <p className={styles.footerCopy}>© Copyright {currentYear}. All Rights Reserved.</p>
 
