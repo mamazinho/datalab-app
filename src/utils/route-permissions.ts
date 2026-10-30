@@ -1,8 +1,6 @@
 import type { IRoutePermission } from '../services/datalab-api/usersResource';
 
 export interface IRoutePermissionRef {
-  // Backend route name; preferred over method and path when present
-  name?: string;
   method: string;
   path: string;
 }
@@ -11,9 +9,6 @@ const PARAM_SEGMENT_REGEX = /^\{.+\}$/;
 
 // "/v1/agents/{agent_id}/company-state/" → "/agents/{param}/company-state/"
 export const normalizeRoutePath = (path: string): string => {
-  // A malformed permission must not break the whole CompanyProvider
-  if (!path) return '/';
-
   const segments = path.split('/').filter(Boolean);
 
   if (segments[0] === 'v1') {
@@ -32,35 +27,9 @@ export const normalizeRoutePath = (path: string): string => {
 export const matchesRoutePermission = (
   permission: IRoutePermission,
   ref: IRoutePermissionRef,
-): boolean => {
-  if (ref.name && permission.name === ref.name) return true;
-
-  return (
-    permission.method.toUpperCase() === ref.method.toUpperCase() &&
-    normalizeRoutePath(permission.path) === normalizeRoutePath(ref.path)
-  );
-};
-
-// Accepts both the flat permission and the old grant row (.route_permission): a contract change must not blank the app
-export const toRoutePermission = (entry: unknown): IRoutePermission | null => {
-  if (!entry || typeof entry !== 'object') return null;
-
-  const permission =
-    'route_permission' in entry
-      ? (entry as { route_permission: unknown }).route_permission
-      : entry;
-
-  if (!permission || typeof permission !== 'object') return null;
-
-  const { method, path } = permission as Partial<IRoutePermission>;
-
-  return typeof method === 'string' && typeof path === 'string'
-    ? (permission as IRoutePermission)
-    : null;
-};
-
-export const isAgentsRoutePermission = (permission: IRoutePermission): boolean =>
-  permission.tag === 'agents' || normalizeRoutePath(permission.path).startsWith('/agents/');
+): boolean =>
+  permission.method.toUpperCase() === ref.method.toUpperCase() &&
+  normalizeRoutePath(permission.path) === normalizeRoutePath(ref.path);
 
 export const AGENT_ROUTE_PERMISSIONS = {
   create: { method: 'POST', path: 'agents/' },
@@ -78,9 +47,21 @@ export const MCP_SERVER_ROUTE_PERMISSIONS = {
 } as const satisfies Record<string, IRoutePermissionRef>;
 
 export const CHAT_ROUTE_PERMISSIONS = {
+  list: { method: 'GET', path: 'chats/' },
   usageReport: { method: 'GET', path: 'chats/usage/' },
   update: { method: 'PATCH', path: 'chats/{chat_id}/' },
   remove: { method: 'DELETE', path: 'chats/{chat_id}/' },
+} as const satisfies Record<string, IRoutePermissionRef>;
+
+export const MEMBERSHIP_ROUTE_PERMISSIONS = {
+  list: { method: 'GET', path: 'memberships/members/' },
+  listInvites: { method: 'GET', path: 'memberships/invites/' },
+  listMemberRoutePermissions: { method: 'GET', path: 'memberships/members/{membership_id}/route-permissions/' },
+  listMemberProviderPermissions: { method: 'GET', path: 'memberships/members/{membership_id}/provider-permissions/' },
+  invite: { method: 'PUT', path: 'memberships/invites/' },
+  removeInvite: { method: 'DELETE', path: 'memberships/invites/{invite_id}/' },
+  updatePermissions: { method: 'PUT', path: 'memberships/members/{membership_id}/permissions/' },
+  remove: { method: 'DELETE', path: 'memberships/members/{membership_id}/' },
 } as const satisfies Record<string, IRoutePermissionRef>;
 
 export const COMPANY_ROUTE_PERMISSIONS = {

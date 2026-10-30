@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../../components/UI/Tables/ActionTable';
-import { useCompanyContext } from '../../../../contexts/company';
+import { PermissionGate } from '../../../../components/Tools/permission-gate';
 import { mcpServersQuery } from '../../../../queries';
 import { DatalabAPI } from '../../../../services/datalab-api';
 import type { IRetrieveMcpServer } from '../../../../services/datalab-api/mcpServersResource';
@@ -18,12 +18,8 @@ interface IMcpServersTableProps {
 }
 
 export const McpServersTable = ({ mcpServers, onEdit }: IMcpServersTableProps) => {
-  const { hasPermissionByRoute } = useCompanyContext();
   const queryClient = useQueryClient();
   const [removingId, setRemovingId] = useState<UUID7 | null>(null);
-
-  const canUpdate = hasPermissionByRoute(MCP_SERVER_ROUTE_PERMISSIONS.update);
-  const canRemove = hasPermissionByRoute(MCP_SERVER_ROUTE_PERMISSIONS.remove);
 
   const handleRemove = async (mcpServer: IRetrieveMcpServer) => {
     if (!window.confirm(`Remover o servidor MCP "${mcpServer.name}"?`)) return;
@@ -59,20 +55,20 @@ export const McpServersTable = ({ mcpServers, onEdit }: IMcpServersTableProps) =
           <td><span className={mcpServersStyles.mcpUrl} title={mcpServer.url}>{mcpServer.url}</span></td>
           <td>{AUTH_TYPE_LABELS[mcpServer.auth_type]}</td>
           <td>
-            {(canUpdate || canRemove) && (
+            <PermissionGate route={[MCP_SERVER_ROUTE_PERMISSIONS.update, MCP_SERVER_ROUTE_PERMISSIONS.remove]}>
               <TableActions>
-                {canUpdate && (
+                <PermissionGate route={MCP_SERVER_ROUTE_PERMISSIONS.update}>
                   <TableAction disabled={removingId === mcpServer.id} onClick={() => onEdit(mcpServer)}>
                     Editar
                   </TableAction>
-                )}
-                {canRemove && (
+                </PermissionGate>
+                <PermissionGate route={MCP_SERVER_ROUTE_PERMISSIONS.remove}>
                   <TableAction disabled={removingId === mcpServer.id} onClick={() => void handleRemove(mcpServer)}>
                     {removingId === mcpServer.id ? 'Removendo...' : 'Remover'}
                   </TableAction>
-                )}
+                </PermissionGate>
               </TableActions>
-            )}
+            </PermissionGate>
           </td>
         </TableRow>
       ))}

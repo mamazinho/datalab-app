@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { QueryBoundary } from '../../components/Tools/query-boundary';
-import { useCompanyContext, useCompanyPermissions } from '../../contexts/company';
+import { useCompanyContext } from '../../contexts/company';
 import { useIntegrations } from '../../hooks/use-integrations';
 import { integrationsQuery } from '../../queries';
 import { DatalabAPI } from '../../services/datalab-api';
@@ -21,8 +21,7 @@ const ASSETS_PARAM = 'ativos';
 const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
   const queryClient = useQueryClient();
   const { data: integrations } = useIntegrations();
-  const { companyProviderAssets } = useCompanyContext();
-  const { isOwner } = useCompanyPermissions();
+  const { companyProviderAssets, isOwner } = useCompanyContext();
   const [searchParams, setSearchParams] = useSearchParams();
   const [assetsIntegration, setAssetsIntegration] = useState<IIntegrationStatus | null>(null);
   const [disconnectingKey, setDisconnectingKey] = useState<IntegrationKey | null>(null);

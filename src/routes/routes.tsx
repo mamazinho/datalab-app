@@ -18,9 +18,9 @@ import { IaLayout } from "../pages/Ia";
 import { Agents } from "../pages/Ia/Agents";
 import { McpServers } from "../pages/Ia/McpServers";
 import { Usage } from "../pages/Ia/Usage";
-import { PrivateRoutes, PublicRoutes, OnboardingRoute, PermissionRoute, IaRoute, AgentsRoute, RoutePermissionRoute, CompanyManagementRoute, IaIndexRedirect, RedirectLegacyChatMessages } from "./wrappers";
+import { PrivateRoutes, PublicRoutes, OnboardingRoute, PermissionRoute, RoutePermissionRoute, IaIndexRedirect, RedirectLegacyChatMessages } from "./wrappers";
 import { COMPANY_PATH, INTEGRATION_CALLBACK_PATH, INTEGRATIONS_PATH, MEMBERS_PATH } from "./paths";
-import { CHAT_ROUTE_PERMISSIONS, MCP_SERVER_ROUTE_PERMISSIONS } from "../utils/route-permissions";
+import { CHAT_ROUTE_PERMISSIONS, COMPANY_ROUTE_PERMISSIONS, MCP_SERVER_ROUTE_PERMISSIONS } from "../utils/route-permissions";
 
 export const routes = createBrowserRouter([
     {
@@ -65,7 +65,7 @@ export const routes = createBrowserRouter([
                 element: <Home />,
             },
             {
-                element: <IaRoute />,
+                element: <PermissionRoute tag={['chat', 'agents']} />,
                 children: [
                     {
                         path: "/ia",
@@ -76,7 +76,7 @@ export const routes = createBrowserRouter([
                                 element: <IaIndexRedirect />,
                             },
                             {
-                                element: <PermissionRoute tag="chat" />,
+                                element: <RoutePermissionRoute permission={CHAT_ROUTE_PERMISSIONS.list} />,
                                 children: [
                                     {
                                         path: "conversas",
@@ -89,7 +89,7 @@ export const routes = createBrowserRouter([
                                 ],
                             },
                             {
-                                element: <AgentsRoute />,
+                                element: <PermissionRoute tag="agents" />,
                                 children: [
                                     {
                                         path: "agentes",
@@ -140,7 +140,7 @@ export const routes = createBrowserRouter([
                         element: <Integrations />,
                     },
                     {
-                        element: <PermissionRoute tag="company" />,
+                        element: <PermissionRoute tag="memberships" />,
                         children: [
                             {
                                 path: MEMBERS_PATH,
@@ -149,7 +149,7 @@ export const routes = createBrowserRouter([
                         ],
                     },
                     {
-                        element: <CompanyManagementRoute />,
+                        element: <RoutePermissionRoute permission={Object.values(COMPANY_ROUTE_PERMISSIONS)} />,
                         children: [
                             {
                                 path: COMPANY_PATH,

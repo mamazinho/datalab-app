@@ -3,16 +3,13 @@ import styles from '../company-members.module.css';
 import { useActionState, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRoutePermissions } from '../../../hooks/use-route-permissions';
-import { useProviderPermissions } from '../../../hooks/use-provider-permissions';
 import { invitesQuery } from '../../../queries';
 import { Modal } from '../../../components/UI/Modal/modal';
 import { QueryBoundary } from '../../../components/Tools/query-boundary';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { inviteMembersAction } from '../actions';
-import { PermissionsSelector } from './permissions-list';
-import { providerPermissionGroups, routePermissionGroups } from './permission-options';
+import { ProviderPermissionsField, RoutePermissionsField } from './permission-fields';
 import type { UUID7 } from '../../../types/ids';
 
 interface IInviteMemberModalProps {
@@ -20,50 +17,11 @@ interface IInviteMemberModalProps {
   onClose: () => void;
 }
 
-interface IPermissionsFieldProps {
-  selected: Set<UUID7>;
-  onChange: (selected: Set<UUID7>) => void;
-}
-
-const InvitePermissionsField = ({ selected, onChange }: IPermissionsFieldProps) => {
-  const { data: routePermissions } = useRoutePermissions();
-
-  if (routePermissions.length === 0) return null;
-
-  return (
-    <div className={modal.field}>
-      <label className={modal.label}>Permissões do app</label>
-      <PermissionsSelector
-        groups={routePermissionGroups(routePermissions)}
-        selected={selected}
-        onChange={onChange}
-      />
-    </div>
-  );
-};
-
-const InviteProviderPermissionsField = ({ selected, onChange }: IPermissionsFieldProps) => {
-  const { data: providerPermissions } = useProviderPermissions();
-
-  if (providerPermissions.length === 0) return null;
-
-  return (
-    <div className={modal.field}>
-      <label className={modal.label}>Permissões nos agentes</label>
-      <PermissionsSelector
-        groups={providerPermissionGroups(providerPermissions)}
-        selected={selected}
-        onChange={onChange}
-      />
-    </div>
-  );
-};
-
 export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) => {
   const queryClient = useQueryClient();
   const [emails, setEmails] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
-  const [selectedPermissions, setSelectedPermissions] = useState<Set<UUID7>>(new Set());
+  const [selectedRoutePermissions, setSelectedRoutePermissions] = useState<Set<UUID7>>(new Set());
   const [selectedProviderPermissions, setSelectedProviderPermissions] = useState<Set<UUID7>>(new Set());
   const [tagError, setTagError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -88,7 +46,7 @@ export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) 
     if (!isOpen) {
       setEmails([]);
       setInputValue('');
-      setSelectedPermissions(new Set());
+      setSelectedRoutePermissions(new Set());
       setSelectedProviderPermissions(new Set());
       setTagError(null);
     }
@@ -133,12 +91,6 @@ export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) 
     <Modal isOpen={isOpen} onClose={onClose} title="Convidar membros">
       <form className={modal.form} action={inviteFormAction}>
         <input type="hidden" name="emails" value={emails.join(',')} />
-        {Array.from(selectedPermissions).map((permissionId) => (
-          <input key={permissionId} type="hidden" name="permissions" value={permissionId} />
-        ))}
-        {Array.from(selectedProviderPermissions).map((permissionId) => (
-          <input key={permissionId} type="hidden" name="provider_permissions" value={permissionId} />
-        ))}
 
         <fieldset className={modal.fieldset} disabled={isPending}>
           <div className={modal.field}>
@@ -170,14 +122,14 @@ export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) 
           </div>
 
           <QueryBoundary>
-            <InvitePermissionsField
-              selected={selectedPermissions}
-              onChange={setSelectedPermissions}
+            <RoutePermissionsField
+              selected={selectedRoutePermissions}
+              onChange={setSelectedRoutePermissions}
             />
           </QueryBoundary>
 
           <QueryBoundary>
-            <InviteProviderPermissionsField
+            <ProviderPermissionsField
               selected={selectedProviderPermissions}
               onChange={setSelectedProviderPermissions}
             />

@@ -3,7 +3,7 @@ import type { UUID7 } from "../../types/ids";
 import type { Provider } from "../../types/integrations";
 import type { ICompany } from "./companiesResource";
 import type {
-  IMembershipPermission,
+  IMembershipRoutePermission,
   IMembershipProviderPermission,
   IProviderPermission,
   IRoutePermission,
@@ -24,18 +24,22 @@ export interface ICompanyMembership extends IUserMembership {
   user?: IMembershipUser | null;
 }
 
-// RetrieveCurrentMembership mirror. permissions are already flattened, unlike the grant rows of listMemberPermissions.
+// RetrieveCurrentMembership mirror. route_permissions are already flattened, unlike the grant rows of listMemberRoutePermissions.
 export interface ICurrentMembership extends ICompanyMembership {
   company: ICompany | null;
-  permissions: IRoutePermission[];
+  route_permissions: IRoutePermission[];
   // Already resolved: the owner gets the whole catalog, a member only what was granted
   provider_permissions: Partial<Record<Provider, IProviderPermission[]>>;
 }
 
-export interface ICreateInviteRequest {
-  emails: string[];
-  permissions: UUID7[];
+// PermissionSelection mirror
+export interface IPermissionSelection {
+  route_permissions: UUID7[];
   provider_permissions: UUID7[];
+}
+
+export interface ICreateInviteRequest extends IPermissionSelection {
+  emails: string[];
 }
 
 export const MembershipsResource = {
@@ -65,30 +69,18 @@ export const MembershipsResource = {
     return response.data as IRoutePermission[];
   },
 
-  async listMemberPermissions(membershipId: UUID7): Promise<IMembershipPermission[]> {
+  async listMemberRoutePermissions(membershipId: UUID7): Promise<IMembershipRoutePermission[]> {
     const response = await axiosCompanyInstance.get(
-      `memberships/members/${membershipId}/permissions/`,
+      `memberships/members/${membershipId}/route-permissions/`,
     );
-    return response.data as IMembershipPermission[];
+    return response.data as IMembershipRoutePermission[];
   },
 
-  async grantPermission(
-    membershipId: UUID7,
-    routePermissionId: UUID7,
-  ): Promise<IMembershipPermission> {
-    const response = await axiosCompanyInstance.post(
-      `memberships/members/${membershipId}/permissions/${routePermissionId}/`,
-    );
-    return response.data as IMembershipPermission;
+  // Replaces both sets at once; an owner gets 400 because owners implicitly have every permission
+  async updateMemberPermissions(membershipId: UUID7, payload: IPermissionSelection): Promise<void> {
+    await axiosCompanyInstance.put(`memberships/members/${membershipId}/permissions/`, payload);
   },
 
-  async revokePermission(membershipId: UUID7, routePermissionId: UUID7): Promise<void> {
-    await axiosCompanyInstance.delete(
-      `memberships/members/${membershipId}/permissions/${routePermissionId}/`,
-    );
-  },
-
-  // Granting to or revoking from an owner returns 400: owners implicitly have every permission
   async listProviderPermissions(): Promise<IProviderPermission[]> {
     const response = await axiosCompanyInstance.get("memberships/provider-permissions/");
     return response.data as IProviderPermission[];
@@ -101,25 +93,6 @@ export const MembershipsResource = {
       `memberships/members/${membershipId}/provider-permissions/`,
     );
     return response.data as IMembershipProviderPermission[];
-  },
-
-  async grantProviderPermission(
-    membershipId: UUID7,
-    providerPermissionId: UUID7,
-  ): Promise<IMembershipProviderPermission> {
-    const response = await axiosCompanyInstance.post(
-      `memberships/members/${membershipId}/provider-permissions/${providerPermissionId}/`,
-    );
-    return response.data as IMembershipProviderPermission;
-  },
-
-  async revokeProviderPermission(
-    membershipId: UUID7,
-    providerPermissionId: UUID7,
-  ): Promise<void> {
-    await axiosCompanyInstance.delete(
-      `memberships/members/${membershipId}/provider-permissions/${providerPermissionId}/`,
-    );
   },
 
   async listInvites(): Promise<IUserInvite[]> {

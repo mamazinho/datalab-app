@@ -79,6 +79,33 @@ describe('<Register />', () => {
     expect(screen.getByLabelText('Email')).toHaveValue('convidado@acme.com');
   });
 
+  it('keeps a plus address from the invite link intact', () => {
+    renderRegister('/cadastro?email=convidado%2Btime%40acme.com');
+
+    expect(screen.getByLabelText('Email')).toHaveValue('convidado+time@acme.com');
+  });
+
+  it('registers a plus address as typed', async () => {
+    const user = setupUser();
+    let body: { email?: string } = {};
+    server.use(
+      http.post(api('users'), async ({ request }) => {
+        body = (await request.json()) as { email: string };
+        return HttpResponse.json(buildUser({ email: body.email }), { status: 201 });
+      }),
+    );
+    renderRegister('/cadastro?email=ana%2Btime%40datalab.com');
+
+    await user.type(screen.getByLabelText('Nome Completo'), 'Ana Souza');
+    await user.type(screen.getByLabelText('Telefone'), '41999');
+    await user.type(screen.getByLabelText('Senha'), 'Senha@123');
+    await user.type(screen.getByLabelText('Confirmar Senha'), 'Senha@123');
+    await submitRegister(user);
+
+    expect(await screen.findByText('ana+time@datalab.com')).toBeInTheDocument();
+    expect(body.email).toBe('ana+time@datalab.com');
+  });
+
   it('blocks a weak password before reaching the backend', async () => {
     const user = setupUser();
     let called = false;
@@ -154,6 +181,76 @@ describe('<Register />', () => {
 
     expect(await screen.findByText(/Novo código enviado para ana@datalab\.com/)).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole('button', { name: /Reenviar em/ })).toBeDisabled());
+  });
+
+  it('returns to the confirmation step after a reload', async () => {
+    const user = setupUser();
+    const { unmount } = renderRegister();
+    await advanceToConfirmationStep(user);
+
+    unmount();
+    renderRegister();
+
+    expect(screen.getByLabelText('Código de Confirmação')).toBeInTheDocument();
+    expect(screen.getByText('ana@datalab.com')).toBeInTheDocument();
+  });
+
+  it('resends the code of the pending registration after a reload', async () => {
+    const user = setupUser();
+    let resentFor: string | undefined;
+    server.use(
+      http.post(api('users/:userId/resend-confirmation'), ({ params }) => {
+        resentFor = params.userId as string;
+        return HttpResponse.json(buildUser());
+      }),
+    );
+    const { unmount } = renderRegister();
+    await advanceToConfirmationStep(user);
+    unmount();
+    renderRegister();
+
+    await user.click(screen.getByRole('button', { name: 'Reenviar Código' }));
+
+    expect(await screen.findByText(/Novo código enviado para ana@datalab\.com/)).toBeInTheDocument();
+    expect(resentFor).toBe(uuid(3));
+  });
+
+  it('fills in the code when the link from the confirmation e-mail is opened', async () => {
+    const user = setupUser();
+    const { unmount } = renderRegister();
+    await advanceToConfirmationStep(user);
+
+    unmount();
+    renderRegister('/cadastro?code=654321&email=ana@datalab.com');
+
+    expect(screen.getByLabelText('Código de Confirmação')).toHaveValue('654321');
+  });
+
+  it('starts a new signup when an invite link is for another e-mail', async () => {
+    const user = setupUser();
+    const { unmount } = renderRegister();
+    await advanceToConfirmationStep(user);
+
+    unmount();
+    renderRegister('/cadastro?email=convidado@acme.com');
+
+    expect(screen.getByLabelText('Email')).toHaveValue('convidado@acme.com');
+    expect(screen.queryByLabelText('Código de Confirmação')).not.toBeInTheDocument();
+  });
+
+  it('starts from the first step again once the account is confirmed', async () => {
+    const user = setupUser();
+    const { unmount } = renderRegister();
+    await advanceToConfirmationStep(user);
+    await user.type(screen.getByLabelText('Código de Confirmação'), '123456');
+    await user.click(screen.getByRole('button', { name: 'Confirmar Conta' }));
+    await screen.findByRole('heading', { name: 'Login' });
+
+    unmount();
+    renderRegister();
+
+    expect(screen.getByLabelText('Nome Completo')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Código de Confirmação')).not.toBeInTheDocument();
   });
 
   it('reports a failure when the resend request breaks', async () => {

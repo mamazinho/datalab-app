@@ -88,7 +88,7 @@ export const buildCurrentMembership = (
   status: 'active',
   ...TIMESTAMPS,
   company: null,
-  permissions: [],
+  route_permissions: [],
   provider_permissions: {},
   ...overrides,
 });
@@ -172,7 +172,7 @@ export const buildInvite = (overrides: Partial<IUserInvite> = {}): IUserInvite =
   ...TIMESTAMPS,
   company: buildCompany({ name: 'Acme' }),
   invited_by: { id: uuid(8), name: 'Carla Dias', email: 'carla@acme.com' },
-  permissions: [],
+  route_permissions: [],
   provider_permissions: [],
   ...overrides,
 });

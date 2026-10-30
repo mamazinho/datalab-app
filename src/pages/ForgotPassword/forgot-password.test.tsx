@@ -24,6 +24,12 @@ describe('<ForgotPassword />', () => {
     expect(body).toEqual({ user_email: 'ana@datalab.com' });
   });
 
+  it('pre-fills the address coming from the locked account e-mail', () => {
+    renderWithProviders(<ForgotPassword />, { route: '/esqueci-senha?email=ana%2Btime%40datalab.com' });
+
+    expect(screen.getByLabelText('Email')).toHaveValue('ana+time@datalab.com');
+  });
+
   it('blocks resending until the cooldown is over', async () => {
     const user = userEvent.setup();
     renderWithProviders(<ForgotPassword />);

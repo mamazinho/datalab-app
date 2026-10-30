@@ -7,6 +7,7 @@ import { useAuthContext } from "../../../../contexts/auth";
 import { useMe } from "../../../../hooks/use-me";
 import { useCompanyContext } from "../../../../contexts/company";
 import { COMPANY_PATH, INTEGRATIONS_PATH, MANAGEMENT_BASE_PATH, MEMBERS_PATH } from "../../../../routes/paths";
+import { COMPANY_ROUTE_PERMISSIONS } from "../../../../utils/route-permissions";
 import { RouteTabs, type IRouteTabItem } from "../../Tabs";
 import { CompanyDropdown } from "../../CompanyDropdown/company-dropdown";
 import { InvitesMenu } from "../../InvitesMenu/invites-menu";
@@ -16,17 +17,17 @@ export const Header = () => {
 
     const { logout } = useAuthContext();
     const { data: me } = useMe();
-    const { hasPermissionByTag, hasAnyAgentsPermission, hasAnyCompanyPermission } = useCompanyContext();
+    const { hasPermissionByTag, hasPermissionByRoute } = useCompanyContext();
     const location = useLocation();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement | null>(null);
 
-    const canSeeIaSection = hasPermissionByTag('chat') || hasAnyAgentsPermission;
-    const canManageMembers = hasPermissionByTag('company');
+    const canSeeIaSection = hasPermissionByTag(['chat', 'agents']);
+    const canManageMembers = hasPermissionByTag('memberships');
     // Always reachable: every member needs the integrations tab to connect their own account
     const managementHref = canManageMembers
         ? MEMBERS_PATH
-        : hasAnyCompanyPermission
+        : hasPermissionByRoute(Object.values(COMPANY_ROUTE_PERMISSIONS))
             ? COMPANY_PATH
             : INTEGRATIONS_PATH;
 

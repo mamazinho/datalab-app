@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext } from "react";
 import type { IProviderPermission, IUserCompany, IUserMembership, IRoutePermission } from "../../services/datalab-api/usersResource";
 import type { ICompanyProviderAsset } from "../../services/datalab-api/companiesResource";
 import type { IRoutePermissionRef } from "../../utils/route-permissions";
@@ -13,14 +13,13 @@ interface ICompanyContextProps {
   currentMembership: IUserMembership | null;
   // True until /memberships/current answers: permissions are not conclusive before that
   isMembershipLoading: boolean;
-  memberPermissions: IRoutePermission[];
+  isOwner: boolean;
+  memberRoutePermissions: IRoutePermission[];
   providerPermissions: IProviderPermission[];
   companyProviderAssets: ICompanyProviderAsset[];
-  hasPermissionByTag: (tag: string) => boolean;
-  hasPermissionByRoute: (ref: IRoutePermissionRef) => boolean;
+  hasPermissionByTag: (tag: string | string[]) => boolean;
+  hasPermissionByRoute: (ref: IRoutePermissionRef | IRoutePermissionRef[]) => boolean;
   hasProviderPermission: (key: ProviderPermissionKey) => boolean;
-  hasAnyAgentsPermission: boolean;
-  hasAnyCompanyPermission: boolean;
 }
 
 export const CompanyContext = createContext<ICompanyContextProps | null>(null);
@@ -33,18 +32,4 @@ export const useCompanyContext = () => {
   }
 
   return context;
-};
-
-export const useCompanyPermissions = () => {
-  const { currentMembership } = useCompanyContext();
-
-  const isOwner = useMemo(
-    () => currentMembership?.membership_role === 'owner',
-    [currentMembership],
-  );
-
-  return {
-    isOwner,
-    canManageUsers: isOwner,
-  };
 };

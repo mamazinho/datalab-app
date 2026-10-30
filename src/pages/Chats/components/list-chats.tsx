@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { ChatMember } from '../../../components/UI/ChatMember';
-import { useCompanyContext, useCompanyPermissions } from '../../../contexts/company';
+import { useCompanyContext } from '../../../contexts/company';
 import { chatListsQueryKey } from '../../../queries';
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { IRetrieveChat } from '../../../services/datalab-api/chatsResource';
@@ -13,8 +13,7 @@ import type { UUID7 } from '../../../types/ids';
 import { CHAT_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
 
 export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
-    const { currentMembership, hasPermissionByRoute } = useCompanyContext();
-    const { isOwner } = useCompanyPermissions();
+    const { currentMembership, isOwner, hasPermissionByRoute } = useCompanyContext();
     const queryClient = useQueryClient();
     const [busyChatId, setBusyChatId] = useState<UUID7 | null>(null);
 

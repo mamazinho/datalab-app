@@ -22,7 +22,7 @@ const givenMemberWith = (paths: { method: string; path: string }[]) => {
       HttpResponse.json(
         buildCurrentMembership({
           membership_role: 'member',
-          permissions: paths.map(({ method, path }) =>
+          route_permissions: paths.map(({ method, path }) =>
             buildRoutePermission({ method, path, tag: 'companies' }),
           ),
         }),

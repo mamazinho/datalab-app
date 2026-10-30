@@ -1,24 +1,16 @@
+import modal from '../../../styles/modal-form.module.css';
 import styles from '../company-members.module.css';
-import { useCallback, useMemo, useState } from 'react';
-import { toast } from 'react-toastify';
+import { useActionState, useState } from 'react';
 import { useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
-import {
-  memberPermissionsQuery,
-  memberProviderPermissionsQuery,
-  providerPermissionsQuery,
-  routePermissionsQuery,
-} from '../../../queries';
+import { memberProviderPermissionsQuery, memberRoutePermissionsQuery } from '../../../queries';
 import { Modal } from '../../../components/UI/Modal/modal';
 import { QueryBoundary } from '../../../components/Tools/query-boundary';
-import { DatalabAPI } from '../../../services/datalab-api';
+import { INITIAL_ACTION_STATE } from '../../../types/actions';
+import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
-import type {
-  IMembershipPermission,
-  IMembershipProviderPermission,
-} from '../../../services/datalab-api/usersResource';
 import type { UUID7 } from '../../../types/ids';
-import { providerPermissionGroups, routePermissionGroups } from './permission-options';
-import { PermissionToggles } from './permission-toggles';
+import { updateMemberPermissionsAction } from '../actions';
+import { ProviderPermissionsField, RoutePermissionsField } from './permission-fields';
 
 interface IMemberPermissionsModalProps {
   isOpen: boolean;
@@ -26,132 +18,56 @@ interface IMemberPermissionsModalProps {
   member: ICompanyMembership | null;
 }
 
-const MemberPermissionsContent = ({ memberId }: { memberId: UUID7 }) => {
-  const queryClient = useQueryClient();
-  const [togglingId, setTogglingId] = useState<UUID7 | null>(null);
+interface IMemberPermissionsFormProps {
+  memberId: UUID7;
+  onSaved: () => void;
+}
 
-  const [
-    { data: routes },
-    { data: memberPermissions },
-    { data: providerPermissions },
-    { data: memberProviderPermissions },
-  ] = useSuspenseQueries({
-    queries: [
-      routePermissionsQuery,
-      memberPermissionsQuery(memberId),
-      providerPermissionsQuery,
-      memberProviderPermissionsQuery(memberId),
-    ],
+const MemberPermissionsForm = ({ memberId, onSaved }: IMemberPermissionsFormProps) => {
+  const queryClient = useQueryClient();
+  const [{ data: memberRoutePermissions }, { data: memberProviderPermissions }] = useSuspenseQueries({
+    queries: [memberRoutePermissionsQuery(memberId), memberProviderPermissionsQuery(memberId)],
+  });
+  const [selectedRoutePermissions, setSelectedRoutePermissions] = useState(
+    () => new Set(memberRoutePermissions.map((granted) => granted.route_permission_id)),
+  );
+  const [selectedProviderPermissions, setSelectedProviderPermissions] = useState(
+    () => new Set(memberProviderPermissions.map((granted) => granted.provider_permission_id)),
+  );
+
+  const [saveState, saveFormAction, isPending] = useActionState(updateMemberPermissionsAction, INITIAL_ACTION_STATE);
+
+  useActionFeedback(saveState, {
+    successMessage: 'Permissões salvas com sucesso!',
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: memberRoutePermissionsQuery(memberId).queryKey });
+      void queryClient.invalidateQueries({ queryKey: memberProviderPermissionsQuery(memberId).queryKey });
+      onSaved();
+    },
+    // The error shows inline in the form
+    onError: () => {},
   });
 
-  // The cache is the source of truth: toggles update it with setQueryData
-  const grantedRouteIds = useMemo(
-    () => new Set(memberPermissions.map((p) => p.route_permission_id)),
-    [memberPermissions],
-  );
-
-  const grantedProviderIds = useMemo(
-    () => new Set(memberProviderPermissions.map((p) => p.provider_permission_id)),
-    [memberProviderPermissions],
-  );
-
-  const routeGroups = useMemo(() => routePermissionGroups(routes), [routes]);
-  const providerGroups = useMemo(
-    () => providerPermissionGroups(providerPermissions),
-    [providerPermissions],
-  );
-
-  // One toggle at a time: concurrent grants would scramble the optimistic state
-  const withToggle = useCallback(
-    async (id: UUID7, run: () => Promise<void>) => {
-      if (togglingId !== null) return;
-      setTogglingId(id);
-      try {
-        await run();
-      } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : 'Erro ao alterar permissão.');
-      } finally {
-        setTogglingId(null);
-      }
-    },
-    [togglingId],
-  );
-
-  const handleToggleRoute = useCallback(
-    (routeId: UUID7, isGranted: boolean) =>
-      void withToggle(routeId, async () => {
-        const { queryKey } = memberPermissionsQuery(memberId);
-        if (isGranted) {
-          await DatalabAPI.MembershipsResource.revokePermission(memberId, routeId);
-          queryClient.setQueryData<IMembershipPermission[]>(queryKey, (old = []) =>
-            old.filter((p) => p.route_permission_id !== routeId),
-          );
-          return;
-        }
-        const created = await DatalabAPI.MembershipsResource.grantPermission(memberId, routeId);
-        queryClient.setQueryData<IMembershipPermission[]>(queryKey, (old = []) => [...old, created]);
-      }),
-    [memberId, queryClient, withToggle],
-  );
-
-  const handleToggleProvider = useCallback(
-    (providerPermissionId: UUID7, isGranted: boolean) =>
-      void withToggle(providerPermissionId, async () => {
-        const { queryKey } = memberProviderPermissionsQuery(memberId);
-        if (isGranted) {
-          await DatalabAPI.MembershipsResource.revokeProviderPermission(
-            memberId,
-            providerPermissionId,
-          );
-          queryClient.setQueryData<IMembershipProviderPermission[]>(queryKey, (old = []) =>
-            old.filter((p) => p.provider_permission_id !== providerPermissionId),
-          );
-          return;
-        }
-        const created = await DatalabAPI.MembershipsResource.grantProviderPermission(
-          memberId,
-          providerPermissionId,
-        );
-        queryClient.setQueryData<IMembershipProviderPermission[]>(queryKey, (old = []) => [
-          ...old,
-          created,
-        ]);
-      }),
-    [memberId, queryClient, withToggle],
-  );
-
   return (
-    <div className={styles.permissionSections}>
-      <section className={styles.permissionSection}>
-        <h3 className={styles.permissionSectionTitle}>Permissões do app</h3>
-        <p className={styles.permissionSectionHint}>
-          Rotas da Datalab que este membro pode chamar.
-        </p>
-        <PermissionToggles
-          groups={routeGroups}
-          grantedIds={grantedRouteIds}
-          togglingId={togglingId}
-          onToggle={handleToggleRoute}
-        />
-      </section>
+    <form className={modal.form} action={saveFormAction}>
+      <input type="hidden" name="membershipId" value={memberId} />
 
-      {providerPermissions.length > 0 && (
-        <section className={styles.permissionSection}>
-          <h3 className={styles.permissionSectionTitle}>Permissões nos agentes</h3>
-          <p className={styles.permissionSectionHint}>
-            O que o agente pode executar por este membro dentro do Google/Meta. É independente
-            das permissões do app: quem pode criar uma property pelo agente não necessariamente
-            pode adicioná-la à empresa.
-          </p>
-          <PermissionToggles
-            groups={providerGroups}
-            grantedIds={grantedProviderIds}
-            togglingId={togglingId}
-            onToggle={handleToggleProvider}
-          />
-        </section>
-      )}
-    </div>
+      <fieldset className={modal.fieldset} disabled={isPending}>
+        <QueryBoundary>
+          <RoutePermissionsField selected={selectedRoutePermissions} onChange={setSelectedRoutePermissions} />
+        </QueryBoundary>
+
+        <QueryBoundary>
+          <ProviderPermissionsField selected={selectedProviderPermissions} onChange={setSelectedProviderPermissions} />
+        </QueryBoundary>
+
+        {!saveState.success && saveState.error && <p className={modal.error}>{saveState.error}</p>}
+
+        <button className={modal.submit} type="submit" disabled={isPending}>
+          {isPending ? 'Salvando...' : 'Salvar permissões'}
+        </button>
+      </fieldset>
+    </form>
   );
 };
 
@@ -162,7 +78,7 @@ export const MemberPermissionsModal = ({ isOpen, onClose, member }: IMemberPermi
     title={`Permissões — ${member?.user?.name ?? 'Membro'}`}
   >
     {member && (
-      // Owners have everything implicitly; the API refuses to grant or revoke for them
+      // Owners have everything implicitly; the API refuses to change them
       member.membership_role === 'owner' ? (
         <p className={styles.ownerNotice}>
           Este membro é owner da empresa e tem todas as permissões implicitamente — não há o
@@ -170,7 +86,7 @@ export const MemberPermissionsModal = ({ isOpen, onClose, member }: IMemberPermi
         </p>
       ) : (
         <QueryBoundary>
-          <MemberPermissionsContent memberId={member.id} />
+          <MemberPermissionsForm key={member.id} memberId={member.id} onSaved={onClose} />
         </QueryBoundary>
       )
     )}

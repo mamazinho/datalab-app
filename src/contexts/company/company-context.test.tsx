@@ -11,7 +11,7 @@ import { AGENT_ROUTE_PERMISSIONS, COMPANY_ROUTE_PERMISSIONS } from '../../utils/
 import type { ICurrentMembership } from '../../services/datalab-api/membershipsResource';
 import type { IUserCompany } from '../../services/datalab-api/usersResource';
 import { CompanyProvider } from './providers';
-import { useCompanyContext, useCompanyPermissions } from './contexts';
+import { useCompanyContext } from './contexts';
 
 const acme = buildCompany({ id: uuid(1), name: 'Acme' });
 const globex = buildCompany({ id: uuid(2), name: 'Globex' });
@@ -38,7 +38,7 @@ const renderCompanyContext = (companies: IUserCompany[] = [acme]) => {
     </QueryClientProvider>
   );
 
-  return { queryClient, ...renderHook(() => ({ ...useCompanyContext(), ...useCompanyPermissions() }), { wrapper }) };
+  return { queryClient, ...renderHook(() => useCompanyContext(), { wrapper }) };
 };
 
 describe('CompanyProvider', () => {
@@ -114,16 +114,14 @@ describe('CompanyProvider', () => {
 
   describe('owner permissions', () => {
     it('grants everything without consulting the permission list', async () => {
-      givenMembership({ membership_role: 'owner', permissions: [] });
+      givenMembership({ membership_role: 'owner', route_permissions: [] });
       const { result } = renderCompanyContext();
 
       await waitFor(() => expect(result.current.isOwner).toBe(true));
       expect(result.current.hasPermissionByTag('agents')).toBe(true);
       expect(result.current.hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.create)).toBe(true);
       expect(result.current.hasProviderPermission('ga4_property_create')).toBe(true);
-      expect(result.current.hasAnyAgentsPermission).toBe(true);
-      expect(result.current.hasAnyCompanyPermission).toBe(true);
-      expect(result.current.canManageUsers).toBe(true);
+      expect(result.current.hasPermissionByRoute(Object.values(COMPANY_ROUTE_PERMISSIONS))).toBe(true);
     });
   });
 
@@ -131,29 +129,41 @@ describe('CompanyProvider', () => {
     it('grants only what was explicitly given', async () => {
       givenMembership({
         membership_role: 'member',
-        permissions: [buildRoutePermission({ method: 'POST', path: '/v1/agents/', tag: 'agents' })],
+        route_permissions: [buildRoutePermission({ method: 'POST', path: '/v1/agents/', tag: 'agents' })],
       });
       const { result } = renderCompanyContext([acmeAsMember]);
 
-      await waitFor(() => expect(result.current.memberPermissions).toHaveLength(1));
+      await waitFor(() => expect(result.current.memberRoutePermissions).toHaveLength(1));
       expect(result.current.hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.create)).toBe(true);
       expect(result.current.hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.remove)).toBe(false);
       expect(result.current.hasPermissionByTag('agents')).toBe(true);
       expect(result.current.hasPermissionByTag('companies')).toBe(false);
       expect(result.current.isOwner).toBe(false);
-      expect(result.current.canManageUsers).toBe(false);
     });
 
     it('exposes company management only with an explicit company permission', async () => {
       givenMembership({
         membership_role: 'member',
-        permissions: [buildRoutePermission({ method: 'PATCH', path: '/v1/companies/{id}/', tag: 'companies' })],
+        route_permissions: [buildRoutePermission({ method: 'PATCH', path: '/v1/companies/{id}/', tag: 'companies' })],
       });
       const { result } = renderCompanyContext([acmeAsMember]);
 
-      await waitFor(() => expect(result.current.hasAnyCompanyPermission).toBe(true));
-      expect(result.current.hasPermissionByRoute(COMPANY_ROUTE_PERMISSIONS.update)).toBe(true);
-      expect(result.current.hasAnyAgentsPermission).toBe(false);
+      await waitFor(() => expect(result.current.hasPermissionByRoute(COMPANY_ROUTE_PERMISSIONS.update)).toBe(true));
+      expect(result.current.hasPermissionByRoute(COMPANY_ROUTE_PERMISSIONS.remove)).toBe(false);
+      expect(result.current.hasPermissionByTag('agents')).toBe(false);
+    });
+
+    it('grants a list when any of its entries is granted', async () => {
+      givenMembership({
+        membership_role: 'member',
+        route_permissions: [buildRoutePermission({ method: 'DELETE', path: '/v1/agents/{agent_id}/', tag: 'agents' })],
+      });
+      const { result } = renderCompanyContext([acmeAsMember]);
+
+      await waitFor(() => expect(result.current.hasPermissionByTag(['chat', 'agents'])).toBe(true));
+      expect(result.current.hasPermissionByTag(['chat', 'companies'])).toBe(false);
+      expect(result.current.hasPermissionByRoute([AGENT_ROUTE_PERMISSIONS.create, AGENT_ROUTE_PERMISSIONS.remove])).toBe(true);
+      expect(result.current.hasPermissionByRoute([AGENT_ROUTE_PERMISSIONS.create, AGENT_ROUTE_PERMISSIONS.update])).toBe(false);
     });
 
     it('flattens the provider permissions that come keyed by provider', async () => {
@@ -180,25 +190,10 @@ describe('CompanyProvider', () => {
       expect(result.current.hasProviderPermission('ga4_account_create')).toBe(false);
     });
 
-    it('survives a malformed permission instead of blanking the app', async () => {
-      givenMembership({
-        membership_role: 'member',
-        permissions: [
-          null,
-          { name: 'sem method nem path' },
-          buildRoutePermission({ method: 'POST', path: '/v1/agents/' }),
-        ] as never,
-      });
-      const { result } = renderCompanyContext([acmeAsMember]);
-
-      await waitFor(() => expect(result.current.memberPermissions).toHaveLength(1));
-      expect(result.current.hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.create)).toBe(true);
-    });
-
     it('answers from the embedded role while the authoritative membership loads', async () => {
       givenMembership({
         membership_role: 'member',
-        permissions: [buildRoutePermission({ method: 'POST', path: '/v1/agents/', tag: 'agents' })],
+        route_permissions: [buildRoutePermission({ method: 'POST', path: '/v1/agents/', tag: 'agents' })],
       });
       const { result } = renderCompanyContext([acmeAsMember]);
 
@@ -214,7 +209,7 @@ describe('CompanyProvider', () => {
       expect(result.current.currentMembership).toBeNull();
       expect(result.current.hasPermissionByTag('agents')).toBe(false);
       expect(result.current.hasProviderPermission('ga4_property_create')).toBe(false);
-      expect(result.current.hasAnyAgentsPermission).toBe(false);
+      expect(result.current.hasPermissionByTag(['chat', 'agents'])).toBe(false);
     });
   });
 

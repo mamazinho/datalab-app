@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CompanyContext } from "./contexts";
 import { setCompanyId } from "../../services/datalab-api/axios";
 import { currentMembershipQuery, meQuery } from "../../queries";
-import { COMPANY_ROUTE_PERMISSIONS, isAgentsRoutePermission, matchesRoutePermission, toRoutePermission, type IRoutePermissionRef } from "../../utils/route-permissions";
+import { matchesRoutePermission, type IRoutePermissionRef } from "../../utils/route-permissions";
 import { isUuid7, type UUID7 } from "../../types/ids";
 import type { ProviderPermissionKey } from "../../types/integrations";
 import type { IProviderPermission, IUserCompany, IUserMembership, IRoutePermission } from "../../services/datalab-api/usersResource";
@@ -47,12 +47,8 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
     [currentMembershipData, currentCompany],
   );
 
-  // Accepts the old grant shape too: a bad entry here would blank the whole provider
-  const memberPermissions = useMemo<IRoutePermission[]>(
-    () =>
-      (currentMembershipData?.permissions ?? [])
-        .map(toRoutePermission)
-        .filter((permission): permission is IRoutePermission => permission !== null),
+  const memberRoutePermissions = useMemo<IRoutePermission[]>(
+    () => currentMembershipData?.route_permissions ?? [],
     [currentMembershipData],
   );
 
@@ -82,45 +78,27 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
     localStorage.removeItem(SELECTED_COMPANY_KEY);
   }, []);
 
+  const isOwner = currentMembership?.membership_role === 'owner';
+
+  // A list is granted when any of its entries is
   const hasPermissionByTag = useCallback(
-    (tag: string): boolean => {
-      if (!currentMembership) return false;
-      if (currentMembership.membership_role === 'owner') return true;
-      return memberPermissions.some((p) => p.tag === tag);
+    (tag: string | string[]): boolean => {
+      const tags = [tag].flat();
+      return isOwner || memberRoutePermissions.some((p) => p.tag !== null && tags.includes(p.tag));
     },
-    [currentMembership, memberPermissions],
+    [isOwner, memberRoutePermissions],
   );
 
   const hasPermissionByRoute = useCallback(
-    (ref: IRoutePermissionRef): boolean => {
-      if (!currentMembership) return false;
-      if (currentMembership.membership_role === 'owner') return true;
-      return memberPermissions.some((p) => matchesRoutePermission(p, ref));
-    },
-    [currentMembership, memberPermissions],
+    (ref: IRoutePermissionRef | IRoutePermissionRef[]): boolean =>
+      isOwner || [ref].flat().some((r) => memberRoutePermissions.some((p) => matchesRoutePermission(p, r))),
+    [isOwner, memberRoutePermissions],
   );
 
   // UI convenience only: the core-api enforces this rule
   const hasProviderPermission = useCallback(
-    (key: ProviderPermissionKey): boolean => {
-      if (!currentMembership) return false;
-      if (currentMembership.membership_role === 'owner') return true;
-      return providerPermissions.some((p) => p.key === key);
-    },
-    [currentMembership, providerPermissions],
-  );
-
-  const hasAnyAgentsPermission = useMemo(() => {
-    if (!currentMembership) return false;
-    if (currentMembership.membership_role === 'owner') return true;
-    return memberPermissions.some((p) => isAgentsRoutePermission(p));
-  }, [currentMembership, memberPermissions]);
-
-  const hasAnyCompanyPermission = useMemo(
-    () =>
-      hasPermissionByRoute(COMPANY_ROUTE_PERMISSIONS.update) ||
-      hasPermissionByRoute(COMPANY_ROUTE_PERMISSIONS.remove),
-    [hasPermissionByRoute],
+    (key: ProviderPermissionKey): boolean => isOwner || providerPermissions.some((p) => p.key === key),
+    [isOwner, providerPermissions],
   );
 
   const contextValue = useMemo(
@@ -131,16 +109,15 @@ export const CompanyProvider = ({ children, companies }: ICompanyProviderProps) 
       clearSelectedCompany,
       currentMembership,
       isMembershipLoading,
-      memberPermissions,
+      isOwner,
+      memberRoutePermissions,
       providerPermissions,
       companyProviderAssets,
       hasPermissionByTag,
       hasPermissionByRoute,
       hasProviderPermission,
-      hasAnyAgentsPermission,
-      hasAnyCompanyPermission,
     }),
-    [currentCompany, setCurrentCompany, selectCompanyById, clearSelectedCompany, currentMembership, isMembershipLoading, memberPermissions, providerPermissions, companyProviderAssets, hasPermissionByTag, hasPermissionByRoute, hasProviderPermission, hasAnyAgentsPermission, hasAnyCompanyPermission],
+    [currentCompany, setCurrentCompany, selectCompanyById, clearSelectedCompany, currentMembership, isMembershipLoading, isOwner, memberRoutePermissions, providerPermissions, companyProviderAssets, hasPermissionByTag, hasPermissionByRoute, hasProviderPermission],
   );
 
   return (

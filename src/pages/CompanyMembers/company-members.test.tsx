@@ -3,7 +3,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, screen, userEvent, waitFor } from '../../test/test-utils';
 import { api } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
-import { buildCompany, buildCurrentMembership, buildInvite, buildMember, uuid } from '../../test/factories';
+import {
+  buildCompany,
+  buildCurrentMembership,
+  buildInvite,
+  buildMember,
+  buildRoutePermission,
+  uuid,
+} from '../../test/factories';
 import { CompanyMembers } from './company-members';
 
 const company = buildCompany({ name: 'Acme' });
@@ -143,7 +150,15 @@ describe('<CompanyMembers />', () => {
       const user = userEvent.setup();
       server.use(
         http.get(api('memberships/current/'), () =>
-          HttpResponse.json(buildCurrentMembership({ membership_role: 'member' })),
+          HttpResponse.json(
+            buildCurrentMembership({
+              membership_role: 'member',
+              route_permissions: [
+                buildRoutePermission({ method: 'GET', path: '/v1/memberships/members/' }),
+                buildRoutePermission({ method: 'DELETE', path: '/v1/memberships/members/{membership_id}/' }),
+              ],
+            }),
+          ),
         ),
         http.get(api('memberships/members/'), () => HttpResponse.json([buildMember()])),
       );
@@ -246,7 +261,7 @@ describe('<CompanyMembers />', () => {
       await waitFor(() =>
         expect(body).toEqual({
           emails: ['um@acme.com', 'dois@acme.com'],
-          permissions: [],
+          route_permissions: [],
           provider_permissions: [],
         }),
       );
@@ -322,6 +337,153 @@ describe('<CompanyMembers />', () => {
       await user.keyboard('{Escape}');
 
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    });
+  });
+
+  describe('as a member', () => {
+    const asMember = { ...company, membership: { ...company.membership, membership_role: 'member' as const } };
+
+    const renderAsMemberWith = (paths: [method: string, path: string][]) => {
+      server.use(
+        http.get(api('memberships/current/'), () =>
+          HttpResponse.json(
+            buildCurrentMembership({
+              membership_role: 'member',
+              route_permissions: paths.map(([method, path]) => buildRoutePermission({ method, path, tag: 'memberships' })),
+            }),
+          ),
+        ),
+        http.get(api('memberships/members/'), () => HttpResponse.json([buildMember()])),
+      );
+      renderWithProviders(<CompanyMembers />, { companies: [asMember] });
+    };
+
+    it('hides invite and member actions from someone who can only list', async () => {
+      renderAsMemberWith([['GET', '/v1/memberships/members/']]);
+
+      expect(await screen.findByText('Bruno Lima')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '+ Convidar membros' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Abrir menu de ações' })).not.toBeInTheDocument();
+    });
+
+    it('offers only the actions whose routes were granted', async () => {
+      const user = userEvent.setup();
+      renderAsMemberWith([
+        ['GET', '/v1/memberships/members/'],
+        ['PUT', '/v1/memberships/invites/'],
+        ['DELETE', '/v1/memberships/members/{membership_id}/'],
+      ]);
+
+      expect(await screen.findByRole('button', { name: '+ Convidar membros' })).toBeInTheDocument();
+      await openRowMenu(user);
+      expect(await screen.findByRole('menuitem', { name: 'Remover membro' })).toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'Editar permissões' })).not.toBeInTheDocument();
+    });
+
+    it('offers editing permissions only together with the reads the modal makes', async () => {
+      const user = userEvent.setup();
+      renderAsMemberWith([
+        ['GET', '/v1/memberships/members/'],
+        ['PUT', '/v1/memberships/members/{membership_id}/permissions/'],
+        ['DELETE', '/v1/memberships/members/{membership_id}/'],
+      ]);
+
+      await openRowMenu(user);
+
+      expect(await screen.findByRole('menuitem', { name: 'Remover membro' })).toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'Editar permissões' })).not.toBeInTheDocument();
+    });
+
+    it('offers editing permissions when the member can also read the current grants', async () => {
+      const user = userEvent.setup();
+      renderAsMemberWith([
+        ['GET', '/v1/memberships/members/'],
+        ['PUT', '/v1/memberships/members/{membership_id}/permissions/'],
+        ['GET', '/v1/memberships/members/{membership_id}/route-permissions/'],
+        ['GET', '/v1/memberships/members/{membership_id}/provider-permissions/'],
+      ]);
+
+      await openRowMenu(user);
+
+      expect(await screen.findByRole('menuitem', { name: 'Editar permissões' })).toBeInTheDocument();
+    });
+
+    it('shows only the tabs whose list the member can read', async () => {
+      renderAsMemberWith([['GET', '/v1/memberships/invites/']]);
+
+      expect(await screen.findByText('Nenhum convite enviado ainda.')).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'Convites' })).toBeInTheDocument();
+      expect(screen.queryByRole('tab', { name: 'Membros' })).not.toBeInTheDocument();
+    });
+
+    it('hides the invites tab from someone who can only list members', async () => {
+      renderAsMemberWith([['GET', '/v1/memberships/members/']]);
+
+      expect(await screen.findByText('Bruno Lima')).toBeInTheDocument();
+      expect(screen.queryByRole('tab', { name: 'Convites' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('member permissions modal', () => {
+    const listChats = buildRoutePermission({ id: uuid(10), method: 'GET', path: '/v1/chats/', tag: 'chat', description: 'Listagem de chats' });
+    const createChat = buildRoutePermission({ id: uuid(11), method: 'POST', path: '/v1/chats/', tag: 'chat', description: 'Criação de chat' });
+
+    const openPermissions = async (user: ReturnType<typeof userEvent.setup>) => {
+      server.use(
+        http.get(api('memberships/members/'), () => HttpResponse.json([buildMember({ id: uuid(5) })])),
+        http.get(api('memberships/route-permissions/'), () => HttpResponse.json([listChats, createChat])),
+        http.get(api(`memberships/members/${uuid(5)}/route-permissions/`), () =>
+          HttpResponse.json([{ id: uuid(20), membership_id: uuid(5), route_permission_id: listChats.id, route_permission: listChats }]),
+        ),
+        http.get(api(`memberships/members/${uuid(5)}/provider-permissions/`), () => HttpResponse.json([])),
+      );
+      renderMembers();
+      await openRowMenu(user);
+      await user.click(await screen.findByRole('menuitem', { name: 'Editar permissões' }));
+      return screen.findByRole('dialog');
+    };
+
+    it('starts from what the member already has', async () => {
+      const user = userEvent.setup();
+      await openPermissions(user);
+
+      expect(await screen.findByRole('checkbox', { name: /Listagem de chats/ })).toBeChecked();
+      expect(screen.getByRole('checkbox', { name: /Criação de chat/ })).not.toBeChecked();
+    });
+
+    it('saves the whole selection in one request and closes', async () => {
+      const user = userEvent.setup();
+      let body: unknown;
+      server.use(
+        http.put(api(`memberships/members/${uuid(5)}/permissions/`), async ({ request }) => {
+          body = await request.json();
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+      await openPermissions(user);
+
+      await user.click(await screen.findByRole('checkbox', { name: /Criação de chat/ }));
+      await user.click(screen.getByRole('button', { name: 'Salvar permissões' }));
+
+      expect(await screen.findByText('Permissões salvas com sucesso!')).toBeInTheDocument();
+      expect(body).toEqual({ route_permissions: [listChats.id, createChat.id], provider_permissions: [] });
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    });
+
+    it('keeps the modal open with the backend message when saving fails', async () => {
+      const user = userEvent.setup();
+      server.use(
+        http.put(api(`memberships/members/${uuid(5)}/permissions/`), () =>
+          HttpResponse.json({ detail: 'Route permission not found' }, { status: 404 }),
+        ),
+      );
+      await openPermissions(user);
+
+      await screen.findByRole('checkbox', { name: /Listagem de chats/ });
+      await user.click(screen.getByRole('button', { name: 'Salvar permissões' }));
+
+      expect(await screen.findByText(/Erro ao salvar permissões: Route permission not found/)).toBeInTheDocument();
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
   });
 });

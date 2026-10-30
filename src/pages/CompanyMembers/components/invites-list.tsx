@@ -3,6 +3,8 @@ import { useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../components/UI/Tables/ActionTable';
+import { PermissionGate } from '../../../components/Tools/permission-gate';
+import { MEMBERSHIP_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
 import { DatalabAPI } from '../../../services/datalab-api';
 import { invitesQuery } from '../../../queries';
 import type { IUserInvite } from '../../../services/datalab-api/usersResource';
@@ -66,14 +68,16 @@ export const InvitesList = ({ invites }: IInvitesListProps) => {
           </td>
           <td>{new Date(invite.created_at).toLocaleDateString('pt-BR')}</td>
           <td>
-            <TableActions>
-              <TableAction
-                disabled={removingId === invite.id}
-                onClick={() => void handleRemove(invite)}
-              >
-                {removingId === invite.id ? 'Excluindo...' : 'Excluir convite'}
-              </TableAction>
-            </TableActions>
+            <PermissionGate route={MEMBERSHIP_ROUTE_PERMISSIONS.removeInvite}>
+              <TableActions>
+                <TableAction
+                  disabled={removingId === invite.id}
+                  onClick={() => void handleRemove(invite)}
+                >
+                  {removingId === invite.id ? 'Excluindo...' : 'Excluir convite'}
+                </TableAction>
+              </TableActions>
+            </PermissionGate>
           </td>
         </TableRow>
       ))}

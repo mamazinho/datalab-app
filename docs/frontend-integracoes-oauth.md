@@ -574,7 +574,7 @@ Três coisas que evitam bug:
 
 > `/current/` responde "o que **eu** posso"; ele não traz as linhas de concessão (com id) porque
 > um owner não tem nenhuma. Para **editar** o que outra pessoa pode, use
-> `/members/{id}/permissions/` e `/members/{id}/provider-permissions/`, que devolvem as concessões
+> `/members/{id}/route-permissions/` e `/members/{id}/provider-permissions/`, que devolvem as concessões
 > com o id necessário para revogar.
 
 ### 6.1 Checagem pontual
@@ -610,10 +610,10 @@ Mesmo modelo das route permissions que a tela de membros já usa, só que para o
 | Permissão de rota | Permissão de provider |
 |---|---|
 | `GET /v1/memberships/route-permissions/` | `GET /v1/memberships/provider-permissions/` |
-| `GET /v1/memberships/members/{id}/permissions/` | `GET /v1/memberships/members/{id}/provider-permissions/` |
-| `POST .../permissions/{route_permission_id}/` | `POST .../provider-permissions/{provider_permission_id}/` |
-| `DELETE .../permissions/{route_permission_id}/` | `DELETE .../provider-permissions/{provider_permission_id}/` |
-| `current.permissions[]` | `current.provider_permissions{}` |
+| `GET /v1/memberships/members/{id}/route-permissions/` | `GET /v1/memberships/members/{id}/provider-permissions/` |
+| `current.route_permissions[]` | `current.provider_permissions{}` |
+
+Para mudar as permissões de um membro, `PUT /v1/memberships/members/{id}/permissions/` com `{ "route_permissions": [...], "provider_permissions": [...] }`: as duas listas são o estado final e a API concede e revoga a diferença numa transação. Owner recebe 400.
 
 Catálogo (`GET /v1/memberships/provider-permissions/`):
 
@@ -624,7 +624,12 @@ Catálogo (`GET /v1/memberships/provider-permissions/`):
    "created_at": "...", "updated_at": "..." }]
 ```
 
-Keys atuais: `ga4_account_create`, `ga4_property_create` (ambas `provider: "google"`).
+Keys atuais, na ordem do catálogo:
+
+- `provider: "google"`: `ga4_account_create`, `ga4_property_create`, `google_ads_campaign_create`, `google_ads_ad_group_create`, `google_ads_ad_create`, `google_ads_campaign_update`, `google_ads_budget_update`
+- `provider: "meta"`: `meta_campaign_create`, `meta_ad_set_create`, `meta_ad_create`, `meta_campaign_update`, `meta_budget_update`
+
+Cada key é cobrada por uma tool de escrita da core-api (`bundle.assert_can`). Key nova precisa entrar nos dois lados, senão ninguém consegue concedê-la e a tool recusa até o owner.
 
 ### 6.3 Convite já carrega permissões de provider
 
@@ -674,8 +679,8 @@ Reaproveite o componente; muda só a chave do payload e o endpoint do catálogo.
 Novas variáveis de ambiente (só duas):
 
 ```env
-META_CLIENT_ID=...
-META_CLIENT_SECRET=...
+META_APP_ID=...
+META_APP_SECRET=...
 ```
 
 Opcionais (já têm default): `META_GRAPH_API_VERSION` (`v21.0`), `META_LOGIN_SCOPES`, `META_ADS_SCOPES`,

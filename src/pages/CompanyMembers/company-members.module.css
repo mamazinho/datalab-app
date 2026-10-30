@@ -57,30 +57,9 @@
   color: var(--color-text-secondary);
 }
 
-.permissionSections {
-  display: flex;
-  flex-direction: column;
-  gap: 1.4rem;
-}
 
-.permissionSection {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
 
-.permissionSectionTitle {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--color-text);
-}
 
-.permissionSectionHint {
-  margin: 0 0 0.3rem;
-  font-size: 0.78rem;
-  color: var(--color-text-secondary);
-}
 
 .ownerNotice {
   margin: 0;
@@ -104,16 +83,6 @@
   margin-bottom: 0.5rem;
 }
 
-.permissionGroupLabel {
-  margin: 0 0 0.3rem;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-text-secondary);
-  padding: 0.4rem 0 0.2rem;
-  border-bottom: 1px solid var(--color-border);
-}
 
 .permissionGroupDetails {
   &[open] > summary { border-bottom: 1px solid var(--color-border); }

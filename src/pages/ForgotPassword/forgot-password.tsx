@@ -1,6 +1,6 @@
 import designSystemStyles from '../../styles/design-system.module.css';
 import styles from './forgot-password.module.css';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import React, { useActionState } from 'react';
 import { TimedButton } from '../../components/UI/Buttons/timed-button';
 import { forgotPasswordAction } from './actions';
@@ -8,6 +8,7 @@ import { INITIAL_ACTION_STATE } from '../../types/actions';
 import { useActionFeedback } from '../../hooks/use-action-feedback';
 
 export const ForgotPassword: React.FC = () => {
+    const [searchParams] = useSearchParams();
     const [forgotPasswordState, forgotPasswordFormAction, isForgotPasswordPending] = useActionState(forgotPasswordAction, INITIAL_ACTION_STATE);
 
     useActionFeedback(forgotPasswordState, {
@@ -35,6 +36,7 @@ export const ForgotPassword: React.FC = () => {
                                     id="inputEmail"
                                     name="email"
                                     placeholder="seu@email.com"
+                                    defaultValue={searchParams.get('email') ?? ''}
                                     required
                                     autoFocus
                                     autoComplete="email"

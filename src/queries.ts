@@ -82,10 +82,10 @@ export const routePermissionsQuery = queryOptions({
   queryFn: () => DatalabAPI.MembershipsResource.listRoutePermissions(),
 });
 
-export const memberPermissionsQuery = (memberId: UUID7) =>
+export const memberRoutePermissionsQuery = (memberId: UUID7) =>
   queryOptions({
-    queryKey: ['member-permissions', memberId],
-    queryFn: () => DatalabAPI.MembershipsResource.listMemberPermissions(memberId),
+    queryKey: ['member-route-permissions', memberId],
+    queryFn: () => DatalabAPI.MembershipsResource.listMemberRoutePermissions(memberId),
   });
 
 export const providerPermissionsQuery = queryOptions({

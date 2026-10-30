@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Collapsible } from '../../../../components/UI/Collapsible';
 import { Modal } from '../../../../components/UI/Modal/modal';
 import { QueryBoundary } from '../../../../components/Tools/query-boundary';
-import { useCompanyContext } from '../../../../contexts/company';
+import { PermissionGate } from '../../../../components/Tools/permission-gate';
 import { useActionFeedback } from '../../../../hooks/use-action-feedback';
 import { useAgents } from '../../../../hooks/use-agents';
 import { mcpServersQuery } from '../../../../queries';
@@ -26,7 +26,6 @@ interface IMcpServerFormProps {
 const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
   const isEditing = mcpServer !== null;
   const { data: agents } = useAgents();
-  const { hasPermissionByRoute } = useCompanyContext();
   const queryClient = useQueryClient();
   const boundAction = useMemo(() => createSaveMcpServerAction(mcpServer), [mcpServer]);
   const [formState, formAction, isPending] = useActionState(boundAction, INITIAL_ACTION_STATE);
@@ -173,7 +172,7 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
             </div>
           </Collapsible>
 
-          {hasPermissionByRoute(MCP_SERVER_ROUTE_PERMISSIONS.test) && (
+          <PermissionGate route={MCP_SERVER_ROUTE_PERMISSIONS.test}>
             <button className={mcpServersStyles.mcpTestButton}
               type="button"
               disabled={connectionTest.isPending}
@@ -181,7 +180,7 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
             >
               {connectionTest.isPending ? 'Testando...' : 'Testar conexão'}
             </button>
-          )}
+          </PermissionGate>
           {connectionTest.error && <p className={modal.error} role="alert">{connectionTest.error.message}</p>}
           {connectionTest.data && (
             <p className={mcpServersStyles.mcpTestSuccess} role="status">Conexão OK — tools: {toolNames || 'nenhuma'}</p>

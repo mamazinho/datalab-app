@@ -13,12 +13,9 @@ import {
   uuid,
 } from '../test/factories';
 import type { IRoutePermission, IUserCompany } from '../services/datalab-api/usersResource';
-import { MCP_SERVER_ROUTE_PERMISSIONS } from '../utils/route-permissions';
+import { COMPANY_ROUTE_PERMISSIONS, MCP_SERVER_ROUTE_PERMISSIONS } from '../utils/route-permissions';
 import {
-  AgentsRoute,
-  CompanyManagementRoute,
   IaIndexRedirect,
-  IaRoute,
   RoutePermissionRoute,
   OnboardingRoute,
   PermissionRoute,
@@ -41,7 +38,7 @@ const givenSession = (companies: IUserCompany[] = [company]) => {
 const givenMemberPermissions = (permissions: IRoutePermission[]) => {
   server.use(
     http.get(api('memberships/current/'), () =>
-      HttpResponse.json(buildCurrentMembership({ membership_role: 'member', permissions })),
+      HttpResponse.json(buildCurrentMembership({ membership_role: 'member', route_permissions: permissions })),
     ),
   );
 };
@@ -55,6 +52,7 @@ const renderRoutes = (routes: ReactElement, options: { route: string; companies?
       <Route path="/" element={<h1>Home</h1>} />
       <Route path="/ia/conversas" element={<h1>Conversas</h1>} />
       <Route path="/ia/agentes" element={<h1>Agentes</h1>} />
+      <Route path="/ia/consumo" element={<h1>Consumo</h1>} />
       <Route path="/ia/conversas/:chatId/mensagens" element={<h1>Mensagens</h1>} />
     </Routes>,
     { route: options.route, companies: options.companies ?? [company] },
@@ -206,41 +204,18 @@ describe('permission guards', () => {
     expect(await screen.findByRole('heading', { name: 'Protegida' })).toBeInTheDocument();
   });
 
-  it('opens the IA section for someone who only has agents permission', async () => {
-    givenMemberPermissions([buildRoutePermission({ tag: 'agents', path: '/v1/agents/' })]);
-    renderRoutes(guardedRoute(<IaRoute />), { route: '/protegida', companies: [asMember] });
+  it('lets a member through when any tag of a list is granted', async () => {
+    givenMemberPermissions([buildRoutePermission({ tag: 'agents', method: 'GET', path: '/v1/agents/mcp-servers/' })]);
+    renderRoutes(guardedRoute(<PermissionRoute tag={['chat', 'agents']} />), { route: '/protegida', companies: [asMember] });
 
     expect(await screen.findByRole('heading', { name: 'Protegida' })).toBeInTheDocument();
   });
 
-  it('opens the IA section for someone who only has chat permission', async () => {
-    givenMemberPermissions([buildRoutePermission({ tag: 'chat', path: '/v1/chats/' })]);
-    renderRoutes(guardedRoute(<IaRoute />), { route: '/protegida', companies: [asMember] });
-
-    expect(await screen.findByRole('heading', { name: 'Protegida' })).toBeInTheDocument();
-  });
-
-  it('closes the IA section for someone with neither', async () => {
+  it('keeps a member out when no tag of a list is granted', async () => {
     givenMemberPermissions([buildRoutePermission({ tag: 'companies', path: '/v1/companies/' })]);
-    renderRoutes(guardedRoute(<IaRoute />), { route: '/protegida', companies: [asMember] });
+    renderRoutes(guardedRoute(<PermissionRoute tag={['chat', 'agents']} />), { route: '/protegida', companies: [asMember] });
 
     expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument();
-  });
-
-  it('guards the agents tab by any agents permission', async () => {
-    givenMemberPermissions([buildRoutePermission({ tag: 'chat', path: '/v1/chats/' })]);
-    renderRoutes(guardedRoute(<AgentsRoute />), { route: '/protegida', companies: [asMember] });
-
-    expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument();
-  });
-
-  it('opens the IA section for someone who can only list MCP servers', async () => {
-    givenMemberPermissions([
-      buildRoutePermission({ tag: null, method: 'GET', path: '/v1/agents/mcp-servers/' }),
-    ]);
-    renderRoutes(guardedRoute(<IaRoute />), { route: '/protegida', companies: [asMember] });
-
-    expect(await screen.findByRole('heading', { name: 'Protegida' })).toBeInTheDocument();
   });
 
   it('lets in a member who has the route permission', async () => {
@@ -265,11 +240,11 @@ describe('permission guards', () => {
     expect(await screen.findByRole('heading', { name: 'Home' })).toBeInTheDocument();
   });
 
-  it('guards the company tab by edit or delete permission', async () => {
+  it('lets a member through when any route of a list is granted', async () => {
     givenMemberPermissions([
-      buildRoutePermission({ tag: 'companies', method: 'DELETE', path: '/v1/companies/{id}/' }),
+      buildRoutePermission({ tag: 'companies', method: 'DELETE', path: '/v1/companies/{target_company_id}/' }),
     ]);
-    renderRoutes(guardedRoute(<CompanyManagementRoute />), {
+    renderRoutes(guardedRoute(<RoutePermissionRoute permission={Object.values(COMPANY_ROUTE_PERMISSIONS)} />), {
       route: '/protegida',
       companies: [asMember],
     });
@@ -293,6 +268,16 @@ describe('redirects', () => {
     });
 
     expect(await screen.findByRole('heading', { name: 'Agentes' })).toBeInTheDocument();
+  });
+
+  it('lands the IA index on usage when the member can only see the usage report', async () => {
+    givenMemberPermissions([buildRoutePermission({ tag: 'chat', method: 'GET', path: '/v1/chats/usage/' })]);
+    renderRoutes(<Route path="/ia" element={<IaIndexRedirect />} />, {
+      route: '/ia',
+      companies: [asMember],
+    });
+
+    expect(await screen.findByRole('heading', { name: 'Consumo' })).toBeInTheDocument();
   });
 
   it('keeps the chat id when redirecting the legacy messages deep link', async () => {

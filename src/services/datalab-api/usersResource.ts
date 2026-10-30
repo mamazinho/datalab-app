@@ -47,7 +47,7 @@ export interface IRoutePermission {
   updated_at: string;
 }
 
-export interface IMembershipPermission {
+export interface IMembershipRoutePermission {
   id: UUID7;
   membership_id: UUID7;
   route_permission_id: UUID7;
@@ -77,8 +77,8 @@ export interface IMembershipProviderPermission {
   provider_permission: IProviderPermission;
 }
 
-// RetrieveMembershipInvitePermission mirror
-export interface IInvitePermission {
+// RetrieveMembershipInviteRoutePermission mirror
+export interface IInviteRoutePermission {
   id: UUID7;
   invite_id: UUID7;
   route_permission_id: UUID7;
@@ -106,7 +106,7 @@ export interface IUserInvite {
   updated_at: string;
   company?: IUserCompany | null;
   invited_by?: { id: UUID7; name: string; email: string } | null;
-  permissions: IInvitePermission[];
+  route_permissions: IInviteRoutePermission[];
   provider_permissions: IInviteProviderPermission[];
 }
 

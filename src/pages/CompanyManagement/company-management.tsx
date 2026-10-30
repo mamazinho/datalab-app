@@ -2,18 +2,16 @@ import styles from './company-management.module.css';
 import { useState } from 'react';
 import { useCompanyContext } from '../../contexts/company';
 import { CompanyFormModal } from '../../components/UI/CompanyFormModal';
+import { PermissionGate } from '../../components/Tools/permission-gate';
 import { COMPANY_ROUTE_PERMISSIONS } from '../../utils/route-permissions';
 import { DeleteCompanyModal } from './components/delete-company-modal';
 
 export const CompanyManagement = () => {
-  const { currentCompany, clearSelectedCompany, hasPermissionByRoute } = useCompanyContext();
+  const { currentCompany, clearSelectedCompany } = useCompanyContext();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   if (!currentCompany) return null;
-
-  const canEdit = hasPermissionByRoute(COMPANY_ROUTE_PERMISSIONS.update);
-  const canDelete = hasPermissionByRoute(COMPANY_ROUTE_PERMISSIONS.remove);
 
   return (
     <div className={styles.companyPageContainer}>
@@ -34,16 +32,16 @@ export const CompanyManagement = () => {
         </div>
 
         <div className={styles.companyActions}>
-          {canEdit && (
+          <PermissionGate route={COMPANY_ROUTE_PERMISSIONS.update}>
             <button className={styles.companyActionButton} onClick={() => setIsEditOpen(true)}>
               Editar nome
             </button>
-          )}
-          {canDelete && (
+          </PermissionGate>
+          <PermissionGate route={COMPANY_ROUTE_PERMISSIONS.remove}>
             <button className={styles.companyDeleteButton} onClick={() => setIsDeleteOpen(true)}>
               Deletar
             </button>
-          )}
+          </PermissionGate>
         </div>
       </div>
 

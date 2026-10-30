@@ -24,7 +24,7 @@ const givenChats = (chats: IRetrieveChat[]) => {
 const givenMemberPermissions = (permissions: IRoutePermission[]) => {
   server.use(
     http.get(api('memberships/current/'), () =>
-      HttpResponse.json(buildCurrentMembership({ membership_role: 'member', permissions })),
+      HttpResponse.json(buildCurrentMembership({ membership_role: 'member', route_permissions: permissions })),
     ),
   );
 };

@@ -1,6 +1,11 @@
 import { DatalabAPI } from '../../services/datalab-api';
 import { createFormAction } from '../../utils/create-form-action';
-import { inviteMembersSchema } from './schemas';
+import { inviteMembersSchema, updateMemberPermissionsSchema } from './schemas';
+
+const selectedPermissions = (formData: FormData) => ({
+  route_permissions: formData.getAll('route_permissions'),
+  provider_permissions: formData.getAll('provider_permissions'),
+});
 
 // data is the number of invites sent, for the singular or plural toast
 export const inviteMembersAction = createFormAction(
@@ -22,11 +27,17 @@ export const inviteMembersAction = createFormAction(
         emails.push(emailDraft);
       }
 
-      return {
-        emails,
-        permissions: formData.getAll('permissions'),
-        provider_permissions: formData.getAll('provider_permissions'),
-      };
+      return { emails, ...selectedPermissions(formData) };
     },
+  },
+);
+
+export const updateMemberPermissionsAction = createFormAction(
+  updateMemberPermissionsSchema,
+  ({ membershipId, ...selection }) =>
+    DatalabAPI.MembershipsResource.updateMemberPermissions(membershipId, selection),
+  {
+    errorPrefix: 'Erro ao salvar permissões: ',
+    mapFormData: (formData) => ({ membershipId: formData.get('membershipId'), ...selectedPermissions(formData) }),
   },
 );

@@ -8,12 +8,14 @@ interface IConfirmAccountFormProps extends React.FormHTMLAttributes<HTMLFormElem
     isPending: boolean;
     email: string;
     userId: UUID7 | null;
+    defaultCode?: string;
     onResendCode: () => Promise<void>;
 }
 export const ConfirmAccountForm: React.FC<IConfirmAccountFormProps> = ({
     isPending,
     email,
     userId,
+    defaultCode = '',
     onResendCode,
     ...props
 }) => {
@@ -36,6 +38,7 @@ export const ConfirmAccountForm: React.FC<IConfirmAccountFormProps> = ({
                             id="inputCode"
                             name="code"
                             placeholder="000000"
+                            defaultValue={defaultCode}
                             required
                             autoFocus
                             maxLength={6}

@@ -17,7 +17,7 @@ const asMember: IUserCompany = {
 const givenMemberPermissions = (permissions: IRoutePermission[]) => {
   server.use(
     http.get(api('memberships/current/'), () =>
-      HttpResponse.json(buildCurrentMembership({ membership_role: 'member', permissions })),
+      HttpResponse.json(buildCurrentMembership({ membership_role: 'member', route_permissions: permissions })),
     ),
   );
 };
@@ -64,7 +64,7 @@ describe('<IaLayout />', () => {
   });
 
   it('hides the agents tab from a member who only has chat', async () => {
-    givenMemberPermissions([buildRoutePermission({ tag: 'chat', path: '/v1/chats/' })]);
+    givenMemberPermissions([buildRoutePermission({ tag: 'chat', method: 'GET', path: '/v1/chats/' })]);
     renderLayout([asMember]);
 
     expect(await screen.findByRole('link', { name: 'Conversas' })).toBeInTheDocument();
@@ -105,6 +105,7 @@ describe('<IaLayout />', () => {
     renderLayout([asMember]);
 
     expect(await screen.findByRole('link', { name: 'Consumo' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Conversas' })).not.toBeInTheDocument();
   });
 
   it('hides the usage tab from a member who can only chat', async () => {

@@ -36,10 +36,10 @@ export const chatsQuery = queryOptions({
 });
 
 // Queries parametrizadas viram função — uma entrada de cache por argumento
-export const memberPermissionsQuery = (memberId: UUID) =>
+export const memberRoutePermissionsQuery = (memberId: UUID) =>
   queryOptions({
-    queryKey: ['member-permissions', memberId],
-    queryFn: () => DatalabAPI.MembershipsResource.listMemberPermissions(memberId),
+    queryKey: ['member-route-permissions', memberId],
+    queryFn: () => DatalabAPI.MembershipsResource.listMemberRoutePermissions(memberId),
   });
 ```
 
@@ -62,7 +62,7 @@ const ChatsListSection = () => {
 
 Por que isso compensa a partir de um certo número de queries: a **key vira um valor exportado** (`chatsQuery.queryKey`) em vez de uma string repetida em N lugares — invalidar errado (`['chat']` vs `['chats']`) passa a ser erro de compilação, não bug silencioso em produção. `mutationFn`/`invalidateQueries` em qualquer arquivo usam `algumaQuery.queryKey`, nunca o array literal.
 
-- **`queryKey`** — o "endereço" do dado no cache. Pode ter parâmetros: `['member-permissions', memberId]` é uma entrada **por membro**.
+- **`queryKey`** — o "endereço" do dado no cache. Pode ter parâmetros: `['member-route-permissions', memberId]` é uma entrada **por membro**.
 - **`queryFn`** — como buscar quando necessário. No nosso caso, sempre uma chamada do `DatalabAPI`.
 
 Usamos a variante **`useSuspenseQuery`**: em vez de devolver `isLoading`/`error` para tratarmos à mão, ela **suspende** o componente enquanto busca e **lança** o erro para o boundary mais próximo. Por isso todo uso vem embrulhado no nosso `QueryBoundary`:
@@ -138,6 +138,7 @@ A mudança de mentalidade é o ponto mais importante da lib: **a mutação não 
 | Excluir/toggles de agente (`agents-table.tsx`) | `['agents']` |
 | Enviar convites (`invite-member-modal.tsx`) | `['invites']` |
 | Remover convite (`invites-list.tsx`) | `['invites']` |
+| Salvar permissões de membro (`member-permissions-modal.tsx`) | `['member-route-permissions', id]` e `['member-provider-permissions', id]` |
 | Remover membro (`members-list.tsx`) | `['members']` |
 | Aceitar/recusar convite (`use-invite-actions.ts`) | `['me']` |
 | Criar empresa (`onboarding-welcome.tsx`) | `['me']` |
@@ -151,15 +152,13 @@ Repare no efeito em cascata do `['me']`: header (badge de convites), dropdown de
 
 ### `setQueryData` — escrita cirúrgica, sem request
 
-Quando a resposta da mutação já diz exatamente o que mudou, dá para editar o cache direto em vez de refetchar. Caso real — toggles de permissão de membro:
+Quando a resposta da mutação já diz exatamente o que mudou, dá para editar o cache direto em vez de refetchar:
 
 ```tsx
-// src/pages/CompanyMembers/components/member-permissions-modal.tsx
-const created = await DatalabAPI.MembershipsResource.grantPermission(memberId, routeId);
-queryClient.setQueryData<IMembershipPermission[]>(queryKey, (old = []) => [...old, created]);
+queryClient.setQueryData<IAgent[]>(agentsQuery.queryKey, (old = []) => [...old, created]);
 ```
 
-Ali o **cache é a fonte de verdade da UI**: os switches derivam de `memberPermissions` (a query), e cada toggle atualiza a entrada — sem estado local duplicado e sem um GET extra por clique.
+Hoje nenhuma tela usa: as permissões de membro, que usavam com um toggle por clique, passaram a salvar a seleção inteira de uma vez e só invalidam as duas queries do membro.
 
 ### `ensureQueryData` — "leia do cache, ou busque"
 
@@ -233,7 +232,7 @@ A equivalência é 1-para-1: `mutationFn` ↔ a action (com zod), `isPending` �
 | `['members']` | `company-members.tsx` | Membros da empresa | — |
 | `['invites']` | `company-members.tsx` | Convites enviados | — |
 | `['route-permissions']` | 2 modais de CompanyMembers | Catálogo de permissões de rota | Compartilhada (dedup entre os modais) |
-| `['member-permissions', memberId]` | `member-permissions-modal.tsx` | Permissões de um membro | Atualizada via `setQueryData` nos toggles |
+| `['member-route-permissions', memberId]` | `member-permissions-modal.tsx` | Permissões de rota de um membro | Atualizada via `setQueryData` nos toggles |
 
 Config global (`src/App.tsx`): `retry: 1`, `staleTime: 30_000`. No **logout**, `queryClient.clear()` apaga o cache inteiro — dados do usuário anterior nunca vazam para a próxima sessão.
 
@@ -257,7 +256,7 @@ Config global (`src/App.tsx`): `retry: 1`, `staleTime: 30_000`. No **logout**, `
 
 **Erros comuns:**
 
-- *Esquecer o parâmetro na key* — `queryKey: ['member-permissions']` com `queryFn` usando `memberId`: dois membros compartilhariam o mesmo cache. Tudo que a queryFn usa entra na key.
+- *Esquecer o parâmetro na key* — `queryKey: ['member-route-permissions']` com `queryFn` usando `memberId`: dois membros compartilhariam o mesmo cache. Tudo que a queryFn usa entra na key.
 - *Invalidar a key errada* — invalidação é por prefixo: `invalidateQueries({ queryKey: ['chat-messages'] })` invalida **todas** as conversas; `['chat-messages', chatId]` só uma.
 - *Usar query para estado de cliente* — modal aberto, aba ativa, seleção: isso continua sendo `useState`/context.
 

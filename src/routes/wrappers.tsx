@@ -3,7 +3,7 @@ import { useAuthContext } from "../contexts/auth";
 import { useCompanyContext } from "../contexts/company";
 import { PrivateLayout } from "../components/UI/Layout/private-layout/layout";
 import { LoadingPiece } from "../components/Feedback/Loadings/loading";
-import type { IRoutePermissionRef } from "../utils/route-permissions";
+import { CHAT_ROUTE_PERMISSIONS, type IRoutePermissionRef } from "../utils/route-permissions";
 import { AuthGate } from "./auth-gate";
 
 // Denies only after /memberships/current answers: permissions are empty on the first render
@@ -67,47 +67,27 @@ export const OnboardingRoute = () => {
     );
 };
 
-interface IPermissionRouteProps {
-    tag: string;
-}
-
-export const PermissionRoute = ({ tag }: IPermissionRouteProps) => {
+export const PermissionRoute = ({ tag }: { tag: string | string[] }) => {
     const { hasPermissionByTag, isMembershipLoading } = useCompanyContext();
 
     return guard(hasPermissionByTag(tag), isMembershipLoading);
 };
 
-export const IaRoute = () => {
-    const { hasPermissionByTag, hasAnyAgentsPermission, isMembershipLoading } = useCompanyContext();
-
-    return guard(hasPermissionByTag('chat') || hasAnyAgentsPermission, isMembershipLoading);
-};
-
-export const AgentsRoute = () => {
-    const { hasAnyAgentsPermission, isMembershipLoading } = useCompanyContext();
-
-    return guard(hasAnyAgentsPermission, isMembershipLoading);
-};
-
-export const RoutePermissionRoute = ({ permission }: { permission: IRoutePermissionRef }) => {
+export const RoutePermissionRoute = ({ permission }: { permission: IRoutePermissionRef | IRoutePermissionRef[] }) => {
     const { hasPermissionByRoute, isMembershipLoading } = useCompanyContext();
 
     return guard(hasPermissionByRoute(permission), isMembershipLoading);
 };
 
-export const CompanyManagementRoute = () => {
-    const { hasAnyCompanyPermission, isMembershipLoading } = useCompanyContext();
-
-    return guard(hasAnyCompanyPermission, isMembershipLoading);
-};
-
 export const IaIndexRedirect = () => {
-    const { hasPermissionByTag, isMembershipLoading } = useCompanyContext();
+    const { hasPermissionByRoute, hasPermissionByTag, isMembershipLoading } = useCompanyContext();
 
     // Picking a tab before permissions arrive would send every member to agents
     if (isMembershipLoading) return <LoadingPiece />;
+    if (hasPermissionByRoute(CHAT_ROUTE_PERMISSIONS.list)) return <Navigate to="/ia/conversas" replace />;
+    if (hasPermissionByTag('agents')) return <Navigate to="/ia/agentes" replace />;
 
-    return <Navigate to={hasPermissionByTag('chat') ? '/ia/conversas' : '/ia/agentes'} replace />;
+    return <Navigate to="/ia/consumo" replace />;
 };
 
 // <Navigate> does not interpolate params, so the legacy messages link needs its own component

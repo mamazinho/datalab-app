@@ -3,10 +3,8 @@ import type { IRoutePermission } from '../services/datalab-api/usersResource';
 import {
   AGENT_ROUTE_PERMISSIONS,
   MCP_SERVER_ROUTE_PERMISSIONS,
-  isAgentsRoutePermission,
   matchesRoutePermission,
   normalizeRoutePath,
-  toRoutePermission,
 } from './route-permissions';
 
 const buildPermission = (overrides: Partial<IRoutePermission> = {}): IRoutePermission => ({
@@ -41,13 +39,7 @@ describe('normalizeRoutePath', () => {
 });
 
 describe('matchesRoutePermission', () => {
-  it('matches by name when the backend sent one', () => {
-    const permission = buildPermission({ name: 'create_agent', method: 'GET', path: '/outra/' });
-
-    expect(matchesRoutePermission(permission, { name: 'create_agent', method: 'POST', path: 'agents/' })).toBe(true);
-  });
-
-  it('matches by method plus normalized path when there is no name', () => {
+  it('matches by method plus normalized path', () => {
     expect(matchesRoutePermission(buildPermission(), AGENT_ROUTE_PERMISSIONS.create)).toBe(true);
   });
 
@@ -85,46 +77,5 @@ describe('matchesRoutePermission', () => {
 
     expect(matchesRoutePermission(listMcpServers, MCP_SERVER_ROUTE_PERMISSIONS.list)).toBe(true);
     expect(matchesRoutePermission(listMcpServers, MCP_SERVER_ROUTE_PERMISSIONS.create)).toBe(false);
-  });
-});
-
-describe('toRoutePermission', () => {
-  it('accepts the flattened permission', () => {
-    const permission = buildPermission();
-
-    expect(toRoutePermission(permission)).toBe(permission);
-  });
-
-  it('accepts the permission nested under route_permission', () => {
-    const permission = buildPermission();
-
-    expect(toRoutePermission({ id: 'x', route_permission: permission })).toBe(permission);
-  });
-
-  it.each([
-    ['null', null],
-    ['string', 'agents'],
-    ['object without method/path', { name: 'create_agent' }],
-    ['invalid route_permission', { route_permission: null }],
-  ])('discards invalid entry: %s', (_case, entry) => {
-    expect(toRoutePermission(entry)).toBeNull();
-  });
-});
-
-describe('isAgentsRoutePermission', () => {
-  it('recognizes it by tag', () => {
-    expect(isAgentsRoutePermission(buildPermission({ tag: 'agents', path: '/v1/outra/' }))).toBe(true);
-  });
-
-  it('recognizes it by path when the tag is empty', () => {
-    expect(isAgentsRoutePermission(buildPermission({ tag: null, path: '/v1/agents/{agent_id}/' }))).toBe(true);
-  });
-
-  it('counts the MCP server routes as agents routes', () => {
-    expect(isAgentsRoutePermission(buildPermission({ tag: null, path: '/v1/agents/mcp-servers/' }))).toBe(true);
-  });
-
-  it('rejects a route from another resource', () => {
-    expect(isAgentsRoutePermission(buildPermission({ tag: 'companies', path: '/v1/companies/' }))).toBe(false);
   });
 });

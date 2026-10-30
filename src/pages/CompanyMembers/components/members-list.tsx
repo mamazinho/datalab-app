@@ -3,11 +3,12 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../components/UI/Tables/ActionTable';
-import { useCompanyContext, useCompanyPermissions } from '../../../contexts/company';
+import { useCompanyContext } from '../../../contexts/company';
 import { DatalabAPI } from '../../../services/datalab-api';
 import { currentMembershipQuery, meQuery, membersQuery } from '../../../queries';
 import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
 import type { UUID7 } from '../../../types/ids';
+import { MEMBERSHIP_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
 import { MemberPermissionsModal } from './member-permissions-modal';
 
 interface IMembersListProps {
@@ -18,8 +19,14 @@ const nameOf = (member: ICompanyMembership) => member.user?.name ?? 'este membro
 
 export const MembersList = ({ members }: IMembersListProps) => {
   const queryClient = useQueryClient();
-  const { currentCompany } = useCompanyContext();
-  const { isOwner } = useCompanyPermissions();
+  const { currentCompany, isOwner, hasPermissionByRoute } = useCompanyContext();
+  // The modal reads the member's current grants before saving the new ones
+  const canEditPermissions = [
+    MEMBERSHIP_ROUTE_PERMISSIONS.updatePermissions,
+    MEMBERSHIP_ROUTE_PERMISSIONS.listMemberRoutePermissions,
+    MEMBERSHIP_ROUTE_PERMISSIONS.listMemberProviderPermissions,
+  ].every((route) => hasPermissionByRoute(route));
+  const canRemove = hasPermissionByRoute(MEMBERSHIP_ROUTE_PERMISSIONS.remove);
   const [selectedMember, setSelectedMember] = useState<ICompanyMembership | null>(null);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
   const [busyId, setBusyId] = useState<UUID7 | null>(null);
@@ -89,19 +96,23 @@ export const MembersList = ({ members }: IMembersListProps) => {
               </span>
             </td>
             <td>
-              {member.membership_role !== 'owner' && (
+              {member.membership_role !== 'owner' && (canEditPermissions || canRemove) && (
                 <TableActions>
-                  <TableAction onClick={() => { setSelectedMember(member); setIsPermissionsOpen(true); }}>
-                    Editar permissões
-                  </TableAction>
+                  {canEditPermissions && (
+                    <TableAction onClick={() => { setSelectedMember(member); setIsPermissionsOpen(true); }}>
+                      Editar permissões
+                    </TableAction>
+                  )}
                   {isOwner && member.status === 'active' && (
                     <TableAction disabled={busyId === member.id} onClick={() => void transferOwnership(member)}>
                       Transferir posse
                     </TableAction>
                   )}
-                  <TableAction disabled={busyId === member.id} onClick={() => void removeMember(member)}>
-                    Remover membro
-                  </TableAction>
+                  {canRemove && (
+                    <TableAction disabled={busyId === member.id} onClick={() => void removeMember(member)}>
+                      Remover membro
+                    </TableAction>
+                  )}
                 </TableActions>
               )}
             </td>

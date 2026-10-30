@@ -29,7 +29,7 @@ const givenAgents = (agents: IRetrieveAgentWithState[]) => {
 const givenPlainMember = () => {
   server.use(
     http.get(api('memberships/current/'), () =>
-      HttpResponse.json(buildCurrentMembership({ membership_role: 'member', permissions: [] })),
+      HttpResponse.json(buildCurrentMembership({ membership_role: 'member', route_permissions: [] })),
     ),
   );
 };
@@ -40,7 +40,7 @@ const givenMemberWithAgentUpdate = () => {
       HttpResponse.json(
         buildCurrentMembership({
           membership_role: 'member',
-          permissions: [buildRoutePermission({ method: 'PATCH', path: '/v1/agents/{agent_id}/' })],
+          route_permissions: [buildRoutePermission({ method: 'PATCH', path: '/v1/agents/{agent_id}/' })],
         }),
       ),
     ),
