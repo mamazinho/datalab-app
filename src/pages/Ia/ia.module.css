@@ -20,14 +20,14 @@
 
 .pageTitle {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: calc(1.4rem * var(--font-scale));
   font-weight: 800;
   color: var(--color-text);
 }
 
 .pageSubtitle {
   margin: 0.3rem 0 0;
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--font-scale));
   color: var(--color-text-secondary);
 }
 
@@ -40,9 +40,8 @@
   border: 0;
   background: var(--color-primary);
   color: var(--color-primary-text);
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--font-scale));
   font-weight: 700;
-  font-family: var(--font-main);
   cursor: pointer;
   transition: opacity 0.18s ease;
 
@@ -54,6 +53,6 @@
   margin: 0;
   padding: 2rem;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--font-scale));
   color: var(--color-text-secondary);
 }

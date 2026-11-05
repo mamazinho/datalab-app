@@ -25,23 +25,22 @@
 }
 
 .usageTotalLabel {
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
   color: var(--color-text-secondary);
 }
 
 .usageTotalValue {
   margin: 0.3rem 0 0;
-  font-size: 1.6rem;
+  font-size: calc(1.6rem * var(--font-scale));
   font-weight: 800;
   color: var(--color-text);
 }
 
 .usageSectionTitle {
   margin: 0 0 0.75rem;
-  font-size: 1rem;
+  font-size: calc(1rem * var(--font-scale));
   font-weight: 700;
   color: var(--color-text);
 }

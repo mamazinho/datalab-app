@@ -11,7 +11,8 @@ import { COMPANY_ROUTE_PERMISSIONS } from "../../../../utils/route-permissions";
 import { RouteTabs, type IRouteTabItem } from "../../Tabs";
 import { CompanyDropdown } from "../../CompanyDropdown/company-dropdown";
 import { InvitesMenu } from "../../InvitesMenu/invites-menu";
-import logo from '../../../../assets/logo.png';
+import { useClickOutside } from "../../../../hooks/use-click-outside";
+import logo from '../../../../assets/datalab_main_logo.png';
 
 export const Header = () => {
 
@@ -44,6 +45,8 @@ export const Header = () => {
         [me],
     );
 
+    useClickOutside(menuRef, () => setIsMenuOpen(false), isMenuOpen);
+
     useEffect(() => {
         setIsMenuOpen(false);
     }, [location.pathname]);
@@ -56,36 +59,39 @@ export const Header = () => {
                     <span className={styles.brandText}>DataLab</span>
                 </Link>
                 <RouteTabs items={menuPages} variant="nav" label="Menu principal" />
-                <div className={styles.rightActions} ref={menuRef}>
+                <div className={styles.rightActions}>
                     <CompanyDropdown />
-                    <button className={styles.profileButton}
-                        title="Abrir menu de perfil"
-                        onClick={() => setIsMenuOpen((prev) => !prev)}
-                        style={{ marginLeft: '0.75rem' }}
-                    >
-                        <Avatar className={styles.profileAvatar}
-                            src={me?.avatar_url}
-                            name={me?.name ?? ''}
-                            seed="initial"
-                            alt={`Foto de perfil de ${me?.name}`}
-                        />
-                        {pendingInviteCount > 0 && (
-                            <span className={styles.profileAvatarBadge}>{pendingInviteCount > 9 ? '9+' : pendingInviteCount}</span>
-                        )}
-                    </button>
+                    <div className={styles.profileWrapper} ref={menuRef}>
+                        <button className={styles.profileButton}
+                            title="Abrir menu de perfil"
+                            onClick={() => setIsMenuOpen((prev) => !prev)}
+                            aria-haspopup="menu"
+                            aria-expanded={isMenuOpen}
+                        >
+                            <Avatar className={styles.profileAvatar}
+                                src={me?.avatar_url}
+                                name={me?.name ?? ''}
+                                seed="initial"
+                                alt={`Foto de perfil de ${me?.name}`}
+                            />
+                            {pendingInviteCount > 0 && (
+                                <span className={styles.profileAvatarBadge}>{pendingInviteCount > 9 ? '9+' : pendingInviteCount}</span>
+                            )}
+                        </button>
 
-                    {isMenuOpen && (
-                        <div className={styles.profileMenu}>
-                            <div className={styles.profileMenuHeader}>
-                                <p className={styles.profileName}>{me?.name || 'Usuário'}</p>
-                                <p className={styles.profileEmail}>{me?.email || 'sem-email@datalab.app'}</p>
+                        {isMenuOpen && (
+                            <div className={styles.profileMenu}>
+                                <div className={styles.profileMenuHeader}>
+                                    <p className={styles.profileName}>{me?.name || 'Usuário'}</p>
+                                    <p className={styles.profileEmail}>{me?.email || 'sem-email@datalab.app'}</p>
+                                </div>
+
+                                <Link className={styles.profileMenuLink} to="/perfil/editar">Editar perfil</Link>
+                                <InvitesMenu />
+                                <button className={styles.profileMenuItem} onClick={logout}>Sair</button>
                             </div>
-
-                            <Link className={styles.profileMenuLink} to="/perfil/editar">Editar perfil</Link>
-                            <InvitesMenu />
-                            <button className={styles.profileMenuItem} onClick={logout}>Sair</button>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </nav>

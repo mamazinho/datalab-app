@@ -42,7 +42,7 @@
 
 .title {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: calc(1.1rem * var(--font-scale));
   color: var(--color-text);
 }
 

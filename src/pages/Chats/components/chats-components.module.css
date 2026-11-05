@@ -31,7 +31,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0.5rem;
-  font-size: 0.8rem;
+  font-size: calc(0.8rem * var(--font-scale));
   color: var(--color-text-secondary);
 }
 
@@ -46,7 +46,7 @@
   width: auto;
   padding: 0.4rem 0.8rem;
   border-radius: 0.6rem;
-  font-size: 0.8rem;
+  font-size: calc(0.8rem * var(--font-scale));
 }
 
 .chatItemCard {
@@ -67,7 +67,7 @@
 
 .chatTitle {
   margin: 0;
-  font-size: 1rem;
+  font-size: calc(1rem * var(--font-scale));
   color: var(--color-text);
 }
 

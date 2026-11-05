@@ -14,14 +14,14 @@
 
 .membersPageTitle {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: calc(1.4rem * var(--font-scale));
   font-weight: 800;
   color: var(--color-text);
 }
 
 .membersPageSubtitle {
   margin: 0.3rem 0 0;
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--font-scale));
   color: var(--color-text-secondary);
 }
 
@@ -34,9 +34,8 @@
   border: 0;
   background: var(--color-primary);
   color: var(--color-primary-text);
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--font-scale));
   font-weight: 700;
-  font-family: var(--font-main);
   cursor: pointer;
   transition: opacity 0.18s ease;
 
@@ -44,7 +43,7 @@
 }
 
 .membersTableCellSecondary {
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   color: var(--color-text-secondary);
   display: block;
 }
@@ -53,7 +52,7 @@
   margin: 0;
   padding: 2rem;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--font-scale));
   color: var(--color-text-secondary);
 }
 
@@ -65,7 +64,7 @@
   margin: 0;
   padding: 0.9rem 1rem;
   border-radius: 0.75rem;
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--font-scale));
   background: var(--color-input-background);
   border: 1px solid var(--color-border);
   color: var(--color-text-secondary);
@@ -92,10 +91,9 @@
   display: flex;
   align-items: center;
   margin: 0 0 0.3rem;
-  font-size: 0.72rem;
+  font-size: calc(0.72rem * var(--font-scale));
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--color-text-secondary);
   padding: 0.4rem 0 0.2rem;
   border-bottom: 1px solid var(--color-border);
@@ -106,7 +104,7 @@
 
   &::before {
     content: '▶';
-    font-size: 0.6rem;
+    font-size: calc(0.6rem * var(--font-scale));
     color: var(--color-primary);
     margin-right: 0.4rem;
     transition: transform 0.18s ease;
@@ -139,13 +137,13 @@
 }
 
 .permissionToggleName {
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--font-scale));
   font-weight: 600;
   color: var(--color-text);
 }
 
 .permissionToggleDesc {
-  font-size: 0.75rem;
+  font-size: calc(0.75rem * var(--font-scale));
   color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -172,7 +170,7 @@
   border-radius: 999px;
   background: var(--color-primary);
   color: var(--color-primary-text);
-  font-size: 0.8rem;
+  font-size: calc(0.8rem * var(--font-scale));
   font-weight: 600;
 }
 
@@ -187,7 +185,7 @@
   padding: 0;
   line-height: 1;
   opacity: 0.75;
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--font-scale));
 
   &:hover { opacity: 1; }
 }
@@ -197,15 +195,15 @@
   outline: none;
   background: transparent;
   color: var(--color-text);
-  font-size: 0.9rem;
-  font-family: var(--font-main);
+  font-size: calc(0.9rem * var(--font-scale));
   min-width: 10rem;
   flex: 1;
   padding: 0.1rem 0.2rem;
 }
 
 .permissionToggleMethod {
-  font-size: 0.7rem;
+  font-family: var(--font-code);
+  font-size: calc(0.7rem * var(--font-scale));
   font-weight: 700;
   padding: 0.1rem 0.35rem;
   border-radius: 0.3rem;
@@ -213,11 +211,10 @@
   color: var(--color-text-secondary);
   border: 1px solid var(--color-border);
   flex-shrink: 0;
-  font-family: monospace;
 }
 
 .inviteStatusBadge {
-  font-size: 0.83rem;
+  font-size: calc(0.83rem * var(--font-scale));
   font-weight: 600;
   color: #888;
 
@@ -238,7 +235,7 @@
   display: inline-block;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: calc(0.75rem * var(--font-scale));
   font-weight: 700;
   background: var(--color-input-background);
   color: var(--color-text-secondary);

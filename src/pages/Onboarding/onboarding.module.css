@@ -17,14 +17,14 @@
 
 .onboardingTitle {
   margin: 0 0 0.4rem;
-  font-size: 1.55rem;
+  font-size: calc(1.55rem * var(--font-scale));
   font-weight: 800;
   color: var(--color-text);
 }
 
 .onboardingSubtitle {
   margin: 0 0 2rem;
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--font-scale));
   color: var(--color-text-secondary);
   line-height: 1.5;
 }
@@ -54,7 +54,7 @@
 }
 
 .onboardingLabel {
-  font-size: 0.88rem;
+  font-size: calc(0.88rem * var(--font-scale));
   font-weight: 600;
   color: var(--color-text);
 }
@@ -65,8 +65,7 @@
   border: 1px solid var(--color-border);
   background: var(--color-input-background);
   color: var(--color-text);
-  font-size: 0.95rem;
-  font-family: var(--font-main);
+  font-size: calc(0.95rem * var(--font-scale));
   transition: border-color 0.18s ease;
   width: 100%;
 
@@ -82,9 +81,8 @@
   border: 0;
   background: var(--color-primary);
   color: var(--color-primary-text);
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--font-scale));
   font-weight: 700;
-  font-family: var(--font-main);
   cursor: pointer;
   transition: opacity 0.18s ease;
 
@@ -95,7 +93,7 @@
 
 .onboardingError {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--font-scale));
   color: var(--color-error);
 }
 
@@ -127,7 +125,7 @@
 }
 
 .inviteCompanyName {
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--font-scale));
   font-weight: 700;
   color: var(--color-text);
   white-space: nowrap;
@@ -136,7 +134,7 @@
 }
 
 .inviteBy {
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   color: var(--color-text-secondary);
 }
 
@@ -152,9 +150,8 @@
   border: 0;
   background: var(--color-success);
   color: #fff;
-  font-size: 0.82rem;
+  font-size: calc(0.82rem * var(--font-scale));
   font-weight: 700;
-  font-family: var(--font-main);
   cursor: pointer;
   transition: opacity 0.18s ease;
 
@@ -174,9 +171,8 @@
   border: 1px solid var(--color-border);
   background: transparent;
   color: var(--color-text-secondary);
-  font-size: 0.82rem;
+  font-size: calc(0.82rem * var(--font-scale));
   font-weight: 700;
-  font-family: var(--font-main);
   cursor: pointer;
   transition: background-color 0.18s ease, color 0.18s ease;
 
@@ -205,7 +201,7 @@
     transform: translate(-50%, -50%);
     background: var(--color-surface);
     padding: 0 0.75rem;
-    font-size: 0.8rem;
+    font-size: calc(0.8rem * var(--font-scale));
     color: var(--color-text-secondary);
   }
 }
@@ -229,7 +225,6 @@
   border: 1px solid var(--color-border);
   background: var(--color-input-background);
   color: var(--color-text);
-  font-family: var(--font-main);
   cursor: pointer;
   text-align: left;
   transition: border-color 0.18s ease, background-color 0.18s ease;
@@ -241,7 +236,7 @@
 }
 
 .companyPickerName {
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--font-scale));
   font-weight: 700;
   flex: 1;
   min-width: 0;
@@ -251,7 +246,7 @@
 }
 
 .companyPickerRole {
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   color: var(--color-text-secondary);
   flex-shrink: 0;
   text-transform: capitalize;

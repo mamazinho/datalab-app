@@ -21,7 +21,7 @@
 }
 
 .agentName {
-  font-size: 0.88rem;
+  font-size: calc(0.88rem * var(--font-scale));
   font-weight: 600;
   color: var(--color-text);
   white-space: nowrap;
@@ -30,26 +30,26 @@
 }
 
 .agentKey {
-  font-size: 0.74rem;
+  font-family: var(--font-code);
+  font-size: calc(0.74rem * var(--font-scale));
   color: var(--color-text-secondary);
-  font-family: monospace;
 }
 
 .agentDescription {
   max-width: 22rem;
-  font-size: 0.84rem;
+  font-size: calc(0.84rem * var(--font-scale));
   line-height: 1.4;
   color: var(--color-text-secondary);
 }
 
 .agentModel {
-  font-size: 0.8rem;
+  font-family: var(--font-code);
+  font-size: calc(0.8rem * var(--font-scale));
   color: var(--color-text);
-  font-family: monospace;
 }
 
 .agentOwner {
-  font-size: 0.84rem;
+  font-size: calc(0.84rem * var(--font-scale));
   color: var(--color-text);
 }
 
@@ -57,7 +57,7 @@
   display: inline-block;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: calc(0.72rem * var(--font-scale));
   font-weight: 700;
   white-space: nowrap;
 

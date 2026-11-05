@@ -6,14 +6,14 @@
 
 .messagesTitle {
   margin: 0 0 0.35rem;
-  font-size: clamp(1.45rem, 2.5vw, 2rem);
+  font-size: calc(clamp(1.45rem, 2.5vw, 2rem) * var(--font-scale));
   color: var(--color-text);
 }
 
 .messagesSubtitle {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 0.92rem;
+  font-size: calc(0.92rem * var(--font-scale));
 }
 
 .messagesBody {
@@ -83,19 +83,19 @@
 
 .emptyEmoji {
   margin: 0 0 0.75rem;
-  font-size: 2rem;
+  font-size: calc(2rem * var(--font-scale));
 }
 
 .emptyTitle {
   margin: 0;
-  font-size: 1rem;
+  font-size: calc(1rem * var(--font-scale));
   font-weight: 700;
   color: var(--color-text);
 }
 
 .emptyText {
   margin: 0.35rem 0 0;
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--font-scale));
 }
 
 .authorAvatar {
@@ -113,7 +113,7 @@
 
 .authorName {
   margin: 0 0.4rem 0.25rem;
-  font-size: 0.72rem;
+  font-size: calc(0.72rem * var(--font-scale));
   font-weight: 600;
   color: var(--color-text-secondary);
 }
@@ -162,7 +162,7 @@
 
 .mainContent {
   composes: markdownStyles;
-  font-size: 0.88rem;
+  font-size: calc(0.88rem * var(--font-scale));
   line-height: 1.45;
 }
 
@@ -188,7 +188,7 @@
   gap: 0.45rem;
   cursor: pointer;
   padding: 0.55rem 0.75rem;
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   font-weight: 700;
   color: var(--color-text-secondary);
 
@@ -213,16 +213,15 @@
 
 .threadItemMeta {
   margin-bottom: 0.3rem;
-  font-size: 0.64rem;
+  font-size: calc(0.64rem * var(--font-scale));
   font-weight: 700;
   color: var(--color-text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.02em;
 }
 
 .threadItemContent {
   composes: markdownStyles;
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   line-height: 1.35;
   color: var(--color-text);
 }
@@ -238,16 +237,15 @@
 
 .clarificationLabel {
   margin-bottom: 0.4rem;
-  font-size: 0.64rem;
+  font-size: calc(0.64rem * var(--font-scale));
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--color-primary);
 }
 
 .clarificationQuestion {
   composes: markdownStyles;
-  font-size: 0.88rem;
+  font-size: calc(0.88rem * var(--font-scale));
   line-height: 1.45;
   color: var(--color-text);
 }
@@ -261,7 +259,7 @@
 
 .clarificationAnswered {
   margin-top: 0.6rem;
-  font-size: 0.76rem;
+  font-size: calc(0.76rem * var(--font-scale));
   color: var(--color-text-secondary);
 }
 
@@ -282,7 +280,7 @@
   background: transparent;
   color: inherit;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--font-scale));
   line-height: 1;
   padding: 0;
   opacity: 0.6;
@@ -309,7 +307,7 @@
   border: 1px solid var(--color-border);
   background: var(--color-input-background);
   color: var(--color-text);
-  font-size: 1rem;
+  font-size: calc(1rem * var(--font-scale));
   padding: 0 0.85rem;
   cursor: pointer;
   transition: border-color 0.15s ease;
@@ -337,7 +335,7 @@
 
 .attachmentError {
   margin: 0 0 0.5rem;
-  font-size: 0.74rem;
+  font-size: calc(0.74rem * var(--font-scale));
   color: var(--color-error);
 }
 
@@ -356,7 +354,7 @@
 }
 
 .fileCardIcon {
-  font-size: 1.5rem;
+  font-size: calc(1.5rem * var(--font-scale));
   line-height: 1;
 }
 
@@ -366,7 +364,7 @@
 }
 
 .fileCardName {
-  font-size: 0.86rem;
+  font-size: calc(0.86rem * var(--font-scale));
   font-weight: 700;
   color: var(--color-text);
   overflow: hidden;
@@ -376,7 +374,7 @@
 
 .fileCardMeta {
   margin-top: 0.15rem;
-  font-size: 0.72rem;
+  font-size: calc(0.72rem * var(--font-scale));
   color: var(--color-text-secondary);
 }
 
@@ -385,7 +383,7 @@
   border: 0;
   border-radius: 0.7rem;
   padding: 0.5rem 0.9rem;
-  font-size: 0.8rem;
+  font-size: calc(0.8rem * var(--font-scale));
   font-weight: 700;
   color: var(--color-primary-text);
   background: var(--color-primary);
@@ -415,7 +413,7 @@
   border: 1px solid var(--color-error);
   background: color-mix(in srgb, var(--color-error) 10%, var(--color-surface));
   color: var(--color-error);
-  font-size: 0.82rem;
+  font-size: calc(0.82rem * var(--font-scale));
   padding: 0.6rem 0.8rem;
 }
 
@@ -558,7 +556,7 @@
 .messageTime {
   display: block;
   margin-top: 0.3rem;
-  font-size: 0.65rem;
+  font-size: calc(0.65rem * var(--font-scale));
   opacity: 0.65;
   text-align: left;
 
@@ -573,7 +571,7 @@
   background: var(--color-input-background);
   color: var(--color-text);
   font-weight: 500;
-  font-size: 0.8rem;
+  font-size: calc(0.8rem * var(--font-scale));
   padding: 0.4rem 0.85rem;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -605,7 +603,7 @@
   gap: 0.35rem;
   max-width: 100%;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: calc(0.72rem * var(--font-scale));
   padding: 0.25rem 0.6rem;
   border: 1px solid #29295a;
   background: #0f0f22;

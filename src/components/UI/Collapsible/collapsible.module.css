@@ -13,9 +13,8 @@
   border: 0;
   background: transparent;
   color: var(--color-text-secondary);
-  font-size: 0.8rem;
+  font-size: calc(0.8rem * var(--font-scale));
   font-weight: 600;
-  font-family: var(--font-main);
   cursor: pointer;
   transition: color 0.18s ease;
 

@@ -16,7 +16,7 @@
 .loginRegisterLink {
   color: var(--color-primary);
   font-weight: 700;
-  font-size: 0.92rem;
+  font-size: calc(0.92rem * var(--font-scale));
   transition: color 0.18s ease;
 
   &:hover {
@@ -27,7 +27,7 @@
 .loginForgotLink {
   color: var(--color-text-secondary);
   font-weight: 600;
-  font-size: 0.84rem;
+  font-size: calc(0.84rem * var(--font-scale));
   transition: color 0.18s ease;
 
   &:hover {

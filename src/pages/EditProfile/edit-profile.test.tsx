@@ -68,6 +68,27 @@ describe('<EditProfile />', () => {
     });
   });
 
+  it('previews the chosen theme before saving', async () => {
+    const user = userEvent.setup({ delay: null });
+    givenLoggedUser({ config: { theme: 'light' } });
+    renderWithProviders(<EditProfile />);
+
+    await user.selectOptions(await screen.findByLabelText('Tema'), 'dark');
+
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+  });
+
+  it('restores the saved theme when leaving without saving', async () => {
+    const user = userEvent.setup({ delay: null });
+    givenLoggedUser({ config: { theme: 'light' } });
+    const { rerender } = renderWithProviders(<EditProfile />);
+
+    await user.selectOptions(await screen.findByLabelText('Tema'), 'dark');
+    rerender(<p>Outra página</p>);
+
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light');
+  });
+
   it('omits the password when the fields are left empty', async () => {
     const user = userEvent.setup({ delay: null });
     givenLoggedUser();

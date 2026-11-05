@@ -9,11 +9,21 @@ html, body {
   padding: 0;
   overflow-x: hidden;
   font-family: var(--font-main);
+  letter-spacing: var(--letter-spacing-main);
   line-height: 1.5;
   background: var(--color-background);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-size: calc(1rem * var(--font-scale));
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  letter-spacing: inherit;
 }
 
 #root {

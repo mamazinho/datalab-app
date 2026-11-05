@@ -17,27 +17,27 @@
 
 .notFoundCode {
   display: block;
-  font-size: 3.5rem;
+  font-size: calc(3.5rem * var(--font-scale));
   font-weight: 800;
   line-height: 1;
-  letter-spacing: -0.03em;
   color: var(--color-primary);
 }
 
 .notFoundTitle {
   margin: 0.75rem 0 0;
-  font-size: 1.15rem;
+  font-size: calc(1.15rem * var(--font-scale));
   font-weight: 700;
   color: var(--color-text);
 }
 
 .notFoundText {
   margin: 0.5rem 0 0;
-  font-size: 0.88rem;
+  font-size: calc(0.88rem * var(--font-scale));
   color: var(--color-text-secondary);
 }
 
 .notFoundPath {
+  font-family: var(--font-code);
   display: inline-block;
   margin-top: 0.6rem;
   padding: 0.15rem 0.45rem;
@@ -45,8 +45,7 @@
   border-radius: 0.4rem;
   background: var(--color-input-background);
   border: 1px solid var(--color-border);
-  font-family: monospace;
-  font-size: 0.75rem;
+  font-size: calc(0.75rem * var(--font-scale));
   color: var(--color-text-secondary);
   overflow-wrap: anywhere;
 }
@@ -66,7 +65,7 @@
 
 .notFoundLink {
   display: inline-block;
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--font-scale));
   font-weight: 600;
   color: var(--color-text-secondary);
   transition: color 0.18s ease;

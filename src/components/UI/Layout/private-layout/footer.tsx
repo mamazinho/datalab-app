@@ -1,5 +1,5 @@
 import styles from './layout.module.css';
-import logo from '../../../../assets/logo.png';
+import logo from '../../../../assets/datalab_main_logo.png';
 
 export const Footer = () => {
 

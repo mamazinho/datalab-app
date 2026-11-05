@@ -12,8 +12,12 @@
   --color-input-background: #FFFDF3;
   --color-overlay: rgba(0, 0, 31, 0.45);
   --color-shadow: rgba(0, 0, 31, 0.14);
-  --font-main: 'Fira Sans', sans-serif;
+  --font-main: 'Bebas Neue', sans-serif;
+  --font-code: monospace;
+  --font-scale: 1.1;
+  --letter-spacing-main: 0.08em;
 }
+/* --font-main: 'Fira Sans', sans-serif; */
 
 [data-theme='dark'] {
   --color-background: #00001F;

@@ -2,7 +2,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  font-size: 0.87rem;
+  font-size: calc(0.87rem * var(--font-scale));
   font-weight: 600;
   color: var(--color-text);
   cursor: pointer;

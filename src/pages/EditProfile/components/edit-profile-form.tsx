@@ -1,6 +1,7 @@
 import designSystemStyles from '../../../styles/design-system.module.css';
 import styles from './edit-profile-form.module.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useTheme } from '../../../contexts/theme';
 import { ProfileAvatarUploader } from './profile-avatar-uploader';
 import { useAvatarUpload } from './use-avatar-upload';
 import type { IUserConfig, IUserResponse } from '../../../services/datalab-api/usersResource';
@@ -26,7 +27,15 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [theme, setTheme] = useState<IUserConfig['theme']>(user?.config?.theme || 'system');
+  const { previewThemePreference } = useTheme();
   const firstName = user.name.trim().split(' ')[0] || 'Usuário';
+
+  useEffect(() => () => previewThemePreference(null), [previewThemePreference]);
+
+  const handleThemeChange = (newTheme: IUserConfig['theme']) => {
+    setTheme(newTheme);
+    previewThemePreference(newTheme);
+  };
 
   // The React 19 action already captured the FormData; this only clears the controlled password fields
   const handleSubmit = () => {
@@ -82,7 +91,7 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
             id="inputTheme"
             name="theme"
             value={theme}
-            onChange={(event) => setTheme(event.target.value as IUserConfig['theme'])}
+            onChange={(event) => handleThemeChange(event.target.value as IUserConfig['theme'])}
           >
             {THEME_OPTIONS.map((option) => (
               <option className={styles.styledOption} key={option.value} value={option.value}>

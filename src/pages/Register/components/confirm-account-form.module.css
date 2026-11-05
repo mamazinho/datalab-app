@@ -1,8 +1,7 @@
 .codeInput {
   composes: input from '../../../styles/design-system.module.css';
     text-align: center;
-    letter-spacing: 0.35rem;
-    font-size: 1.05rem;
+    font-size: calc(1.05rem * var(--font-scale));
 }
 
 .actions {

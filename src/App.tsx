@@ -40,21 +40,12 @@ const queryClient = new QueryClient({
 
 const ThemeBootstrap = () => {
     const { data: me } = useMe();
-    const { setThemeMode } = useTheme();
+    const { setThemePreference } = useTheme();
+    const userTheme = me?.config?.theme;
 
     useEffect(() => {
-        const userTheme = String(me?.config?.theme || '').trim().toLowerCase();
-
-        if (userTheme === 'dark' || userTheme === 'light') {
-            setThemeMode(userTheme);
-            return;
-        }
-
-        if (userTheme === 'system') {
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            setThemeMode(prefersDark ? 'dark' : 'light');
-        }
-    }, [me, setThemeMode]);
+        if (userTheme) setThemePreference(userTheme);
+    }, [userTheme, setThemePreference]);
 
     return null;
 };

@@ -2,7 +2,6 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-family: var(--font-main);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 1rem;
@@ -11,10 +10,9 @@
     padding: 0.7rem 1.2rem;
     background: var(--color-input-background);
     border-bottom: 1px solid var(--color-border);
-    font-size: 0.78rem;
+    font-size: calc(0.78rem * var(--font-scale));
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
     color: var(--color-text-secondary);
     text-align: left;
     white-space: nowrap;
@@ -35,7 +33,7 @@
 
   & tbody td {
     padding: 0.85rem 1.2rem;
-    font-size: 0.88rem;
+    font-size: calc(0.88rem * var(--font-scale));
     color: var(--color-text);
     border-bottom: 1px solid var(--color-border);
     white-space: nowrap;
@@ -65,10 +63,9 @@
   border: 0;
   background: transparent;
   color: var(--color-text-secondary);
-  font-size: 1.25rem;
+  font-size: calc(1.25rem * var(--font-scale));
   line-height: 1;
   cursor: pointer;
-  font-family: var(--font-main);
   transition: background-color 0.18s ease, color 0.18s ease;
 
   &:hover {
@@ -101,9 +98,8 @@
   border: 0;
   background: transparent;
   color: var(--color-text);
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--font-scale));
   font-weight: 500;
-  font-family: var(--font-main);
   text-align: left;
   cursor: pointer;
   transition: background-color 0.15s ease;

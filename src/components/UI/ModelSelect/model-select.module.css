@@ -56,16 +56,15 @@
 
 .modelProviderLabel {
   padding: 0.5rem 0.85rem 0.25rem;
-  font-size: 0.7rem;
+  font-size: calc(0.7rem * var(--font-scale));
   font-weight: 700;
-  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--color-text-secondary);
 }
 
 .modelSelectHint {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   color: var(--color-text-secondary);
 }
 
@@ -74,9 +73,8 @@
   width: 100%;
   border: 0;
   text-align: left;
-  font-family: var(--font-main);
   padding: 0.55rem 0.85rem 0.55rem 1.25rem;
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--font-scale));
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: background 0.1s ease;
