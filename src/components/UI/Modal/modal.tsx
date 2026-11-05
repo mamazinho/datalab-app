@@ -1,5 +1,5 @@
 import styles from './modal.module.css';
-import React, { useEffect } from 'react';
+import React, { useEffect, useId } from 'react';
 import { createPortal } from 'react-dom';
 
 interface IModalProps {
@@ -10,6 +10,8 @@ interface IModalProps {
 }
 
 export const Modal: React.FC<IModalProps> = ({ isOpen, onClose, title, children }) => {
+    const titleId = useId();
+
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onClose();
@@ -34,10 +36,11 @@ export const Modal: React.FC<IModalProps> = ({ isOpen, onClose, title, children 
             <div className={styles.dialog} 
                 role="dialog"
                 aria-modal="true"
+                aria-labelledby={title ? titleId : undefined}
             >
                 {title && (
                     <div className={styles.header}>
-                        <h3 className={styles.title}>{title}</h3>
+                        <h3 className={styles.title} id={titleId}>{title}</h3>
                         <button className={styles.closeButton} 
                             onClick={onClose}
                             aria-label="Fechar modal"

@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { AuthProvider } from '../contexts/auth';
 import { CompanyProvider } from '../contexts/company';
+import { ConfirmProvider } from '../contexts/confirm';
 import { CustomThemeProvider } from '../contexts/theme';
 import type { IUserCompany } from '../services/datalab-api/usersResource';
 
@@ -36,10 +37,12 @@ export function renderWithProviders(
       <CustomThemeProvider>
         <AuthProvider>
           <CompanyProvider companies={companies}>
-            <MemoryRouter initialEntries={[route]}>
-              {children}
-              <ToastContainer autoClose={false} />
-            </MemoryRouter>
+            <ConfirmProvider>
+              <MemoryRouter initialEntries={[route]}>
+                {children}
+                <ToastContainer autoClose={false} />
+              </MemoryRouter>
+            </ConfirmProvider>
           </CompanyProvider>
         </AuthProvider>
       </CustomThemeProvider>

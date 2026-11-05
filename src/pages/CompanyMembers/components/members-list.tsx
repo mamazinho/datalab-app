@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../components/UI/Tables/ActionTable';
 import { useCompanyContext } from '../../../contexts/company';
+import { useConfirm, type IConfirmOptions } from '../../../contexts/confirm';
 import { DatalabAPI } from '../../../services/datalab-api';
 import { currentMembershipQuery, meQuery, membersQuery } from '../../../queries';
 import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
@@ -19,6 +20,7 @@ const nameOf = (member: ICompanyMembership) => member.user?.name ?? 'este membro
 
 export const MembersList = ({ members }: IMembersListProps) => {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const { currentCompany, isOwner, hasPermissionByRoute } = useCompanyContext();
   // The modal reads the member's current grants before saving the new ones
   const canEditPermissions = [
@@ -33,11 +35,11 @@ export const MembersList = ({ members }: IMembersListProps) => {
 
   const runMemberAction = async (
     member: ICompanyMembership,
-    confirmation: string,
+    confirmation: IConfirmOptions,
     action: () => Promise<unknown>,
     successMessage: string,
   ) => {
-    if (!window.confirm(confirmation)) return;
+    if (!(await confirm(confirmation))) return;
     setBusyId(member.id);
     try {
       await action();
@@ -53,7 +55,7 @@ export const MembersList = ({ members }: IMembersListProps) => {
   const removeMember = (member: ICompanyMembership) =>
     runMemberAction(
       member,
-      `Remover ${nameOf(member)} da empresa?`,
+      { title: 'Remover membro', message: `Remover ${nameOf(member)} da empresa?`, confirmLabel: 'Remover' },
       () => DatalabAPI.MembershipsResource.removeMember(member.id),
       'Membro removido.',
     );
@@ -61,7 +63,11 @@ export const MembersList = ({ members }: IMembersListProps) => {
   const transferOwnership = (member: ICompanyMembership) =>
     runMemberAction(
       member,
-      `Transferir a posse da empresa para ${nameOf(member)}? Você continua na empresa como membro, com todas as permissões.`,
+      {
+        title: 'Transferir posse',
+        message: `Transferir a posse da empresa para ${nameOf(member)}? Você continua na empresa como membro, com todas as permissões.`,
+        confirmLabel: 'Transferir',
+      },
       async () => {
         await DatalabAPI.MembershipsResource.transferOwnership(member.id);
         void queryClient.invalidateQueries({ queryKey: meQuery.queryKey });

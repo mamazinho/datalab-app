@@ -247,7 +247,6 @@ describe('<McpServers />', () => {
 
   it('removes a server once confirmed', async () => {
     const user = userEvent.setup();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     givenSavedServer({ id: uuid(30) });
     const removed = vi.fn();
     server.use(
@@ -260,6 +259,9 @@ describe('<McpServers />', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Abrir menu de ações' }));
     await user.click(screen.getByRole('menuitem', { name: 'Remover' }));
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'Remover servidor MCP' })).getByRole('button', { name: 'Remover' }),
+    );
 
     expect(await screen.findByText('Servidor MCP removido.')).toBeInTheDocument();
     expect(removed).toHaveBeenCalledOnce();

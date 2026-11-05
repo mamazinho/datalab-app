@@ -10,6 +10,7 @@ import { DatalabAPI } from '../../../../services/datalab-api';
 import type { IRetrieveAgentWithState } from '../../../../services/datalab-api/agentsResource';
 import type { UUID7 } from '../../../../types/ids';
 import { useCompanyContext } from '../../../../contexts/company';
+import { useConfirm } from '../../../../contexts/confirm';
 import { AGENT_ROUTE_PERMISSIONS } from '../../../../utils/route-permissions';
 import { agentsQuery } from '../../../../queries';
 
@@ -32,6 +33,7 @@ const renderStatusBadge = (agent: IRetrieveAgentWithState) =>
 export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
   const { currentCompany, hasPermissionByRoute } = useCompanyContext();
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [removingId, setRemovingId] = useState<UUID7 | null>(null);
   const [togglingId, setTogglingId] = useState<UUID7 | null>(null);
 
@@ -45,7 +47,12 @@ export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
   const canToggleCompany = hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.companyState);
 
   const handleDelete = useCallback(async (agent: IRetrieveAgentWithState) => {
-    if (!window.confirm(`Excluir o agente "${agent.name}"? Essa ação não pode ser desfeita.`)) return;
+    const confirmed = await confirm({
+      title: 'Excluir agente',
+      message: `Excluir o agente "${agent.name}"? Essa ação não pode ser desfeita.`,
+      confirmLabel: 'Excluir',
+    });
+    if (!confirmed) return;
     setRemovingId(agent.id);
     try {
       await DatalabAPI.AgentsResource.deleteSpecialist(agent.id);
@@ -56,7 +63,7 @@ export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
     } finally {
       setRemovingId(null);
     }
-  }, [invalidateAgents]);
+  }, [confirm, invalidateAgents]);
 
   const handleCompanyToggle = useCallback(async (agent: IRetrieveAgentWithState) => {
     const enable = agent.disabled_by_company;

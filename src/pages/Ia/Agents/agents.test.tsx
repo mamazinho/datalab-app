@@ -1,6 +1,6 @@
 import { HttpResponse, http } from 'msw';
-import { describe, expect, it, vi } from 'vitest';
-import { renderWithProviders, screen, userEvent, waitFor } from '../../../test/test-utils';
+import { describe, expect, it } from 'vitest';
+import { renderWithProviders, screen, userEvent, waitFor, within } from '../../../test/test-utils';
 import { api } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
 import {
@@ -321,9 +321,11 @@ describe('<Agents />', () => {
   });
 
   describe('deleting', () => {
-    it('asks for confirmation before removing', async () => {
+    const answerConfirmation = (user: User, answer: 'Excluir' | 'Cancelar') =>
+      user.click(within(screen.getByRole('dialog', { name: 'Excluir agente' })).getByRole('button', { name: answer }));
+
+    it('keeps the agent when the deletion is cancelled', async () => {
       const user = userEvent.setup();
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
       let called = false;
       givenAgents([buildAgent({ id: uuid(10) })]);
       server.use(
@@ -336,13 +338,13 @@ describe('<Agents />', () => {
       await openRowMenu(user);
 
       await user.click(screen.getByRole('menuitem', { name: 'Excluir' }));
+      await answerConfirmation(user, 'Cancelar');
 
       await waitFor(() => expect(called).toBe(false));
     });
 
     it('removes the agent once confirmed', async () => {
       const user = userEvent.setup();
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
       let deleted = false;
       givenAgents([buildAgent({ id: uuid(10) })]);
       server.use(
@@ -355,6 +357,7 @@ describe('<Agents />', () => {
       await openRowMenu(user);
 
       await user.click(screen.getByRole('menuitem', { name: 'Excluir' }));
+      await answerConfirmation(user, 'Excluir');
 
       expect(await screen.findByText('Agente excluído.')).toBeInTheDocument();
       expect(deleted).toBe(true);
@@ -362,7 +365,6 @@ describe('<Agents />', () => {
 
     it('reports the backend refusal', async () => {
       const user = userEvent.setup();
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
       givenAgents([buildAgent({ id: uuid(10) })]);
       server.use(
         http.delete(api(`agents/${uuid(10)}/`), () =>
@@ -373,6 +375,7 @@ describe('<Agents />', () => {
       await openRowMenu(user);
 
       await user.click(screen.getByRole('menuitem', { name: 'Excluir' }));
+      await answerConfirmation(user, 'Excluir');
 
       expect(await screen.findByText('Agente em uso por um chat.')).toBeInTheDocument();
     });

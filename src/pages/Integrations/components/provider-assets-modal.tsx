@@ -6,6 +6,7 @@ import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import { QueryErrorResetBoundary, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { Modal } from '../../../components/UI/Modal/modal';
 import { LoadingPiece } from '../../../components/Feedback/Loadings/loading';
+import { useConfirm } from '../../../contexts/confirm';
 import {
   availableProviderAssetsQuery,
   companyProviderAssetsQuery,
@@ -63,6 +64,7 @@ interface IProviderAssetsContentProps {
 
 const ProviderAssetsContent = ({ companyId, integration, onClose }: IProviderAssetsContentProps) => {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
 
   const [{ data: available }, { data: saved }] = useSuspenseQueries({
     queries: [
@@ -126,19 +128,25 @@ const ProviderAssetsContent = ({ companyId, integration, onClose }: IProviderAss
     [available, saved, selected, integration.key],
   );
 
+  // The submit waits for the dialog, so it is held here and sent again once confirmed
   const handleSubmitClick = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
+    async (event: React.MouseEvent<HTMLButtonElement>) => {
       if (removedCount === 0) return;
 
-      const confirmed = window.confirm(
-        `Você está removendo ${removedCount} ativo(s) de ${integration.label}. ` +
+      event.preventDefault();
+      const form = event.currentTarget.form;
+      const confirmed = await confirm({
+        title: 'Remover ativos',
+        message:
+          `Você está removendo ${removedCount} ativo(s) de ${integration.label}. ` +
           'O agente perde o acesso a eles imediatamente e ninguém desta empresa ' +
-          'conseguirá operá-los até que sejam liberados de novo. Continuar?',
-      );
+          'conseguirá operá-los até que sejam liberados de novo.',
+        confirmLabel: 'Remover',
+      });
 
-      if (!confirmed) event.preventDefault();
+      if (confirmed) form?.requestSubmit();
     },
-    [removedCount, integration.label],
+    [confirm, removedCount, integration.label],
   );
 
   if (available.assets.length === 0) {

@@ -10,6 +10,7 @@ import { ToastContainer } from 'react-toastify';
 import { CustomThemeProvider, useTheme } from "./contexts/theme";
 import { useMe } from "./hooks/use-me";
 import { CompanyProvider } from "./contexts/company";
+import { ConfirmProvider } from "./contexts/confirm";
 import { shouldRetryQuery, QUERY_RETRY_DELAY_MS } from "./utils/query-retry";
 import type { ReactNode } from "react";
 
@@ -69,7 +70,9 @@ export function App() {
                             FallbackComponent={ServerErrorComponent}
                             onError={(error, info) => logfire.reportError("React error boundary caught", error, { component_stack: info.componentStack })}
                         >
-                            <RouterProvider router={routes} />
+                            <ConfirmProvider>
+                                <RouterProvider router={routes} />
+                            </ConfirmProvider>
                         </ErrorBoundary>
                     </CompanyBootstrap>
                 </AuthProvider>

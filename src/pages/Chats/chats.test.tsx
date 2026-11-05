@@ -1,5 +1,5 @@
 import { HttpResponse, http } from 'msw';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 import { renderWithProviders, screen, userEvent, waitFor, within } from '../../test/test-utils';
 import { api } from '../../test/msw/handlers';
@@ -230,9 +230,8 @@ describe('<Chats />', () => {
       expect(body).toEqual({ archived: false });
     });
 
-    it('asks for confirmation before deleting', async () => {
+    it('keeps the conversation when the deletion is cancelled', async () => {
       const user = userEvent.setup();
-      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
       let deleted = false;
       givenChats([buildChat({ id: uuid(20) })]);
       server.use(
@@ -244,14 +243,17 @@ describe('<Chats />', () => {
       renderChats();
 
       await user.click(await screen.findByRole('button', { name: 'Excluir' }));
+      const dialog = screen.getByRole('dialog', { name: 'Excluir conversa' });
+      expect(dialog).toHaveTextContent('Essa ação não pode ser desfeita.');
 
-      expect(confirm).toHaveBeenCalled();
+      await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       expect(deleted).toBe(false);
     });
 
     it('deletes a conversation once confirmed and reloads the list', async () => {
       const user = userEvent.setup();
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
       let chats = [buildChat({ id: uuid(20) })];
       server.use(
         http.get(api('chats/'), () => HttpResponse.json(chats)),
@@ -263,6 +265,7 @@ describe('<Chats />', () => {
       renderChats();
 
       await user.click(await screen.findByRole('button', { name: 'Excluir' }));
+      await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Excluir' }));
 
       expect(await screen.findByText('Conversa excluída.')).toBeInTheDocument();
       expect(await screen.findByText('Nenhum chat encontrado.')).toBeInTheDocument();

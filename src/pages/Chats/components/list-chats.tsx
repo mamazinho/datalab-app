@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { ChatMember } from '../../../components/UI/ChatMember';
 import { useCompanyContext } from '../../../contexts/company';
+import { useConfirm } from '../../../contexts/confirm';
 import { chatListsQueryKey } from '../../../queries';
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { IRetrieveChat } from '../../../services/datalab-api/chatsResource';
@@ -15,6 +16,7 @@ import { CHAT_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
 export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
     const { currentMembership, isOwner, hasPermissionByRoute } = useCompanyContext();
     const queryClient = useQueryClient();
+    const confirm = useConfirm();
     const [busyChatId, setBusyChatId] = useState<UUID7 | null>(null);
 
     const canArchive = hasPermissionByRoute(CHAT_ROUTE_PERMISSIONS.update);
@@ -40,9 +42,13 @@ export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
             chat.archived ? 'Conversa desarquivada.' : 'Conversa arquivada.',
         );
 
-    const deleteChat = (chat: IRetrieveChat) => {
-        if (!window.confirm('Excluir esta conversa? Essa ação não pode ser desfeita.')) return;
-        void runChatAction(chat, () => DatalabAPI.ChatsResource.deleteChat(chat.id), 'Conversa excluída.');
+    const deleteChat = async (chat: IRetrieveChat) => {
+        const confirmed = await confirm({
+            title: 'Excluir conversa',
+            message: 'Essa ação não pode ser desfeita.',
+            confirmLabel: 'Excluir',
+        });
+        if (confirmed) void runChatAction(chat, () => DatalabAPI.ChatsResource.deleteChat(chat.id), 'Conversa excluída.');
     };
 
     if (!chats.length) return <div className={styles.emptyChatList}>Nenhum chat encontrado.</div>;
@@ -74,7 +80,7 @@ export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
                                     </button>
                                 )}
                                 {canDeleteChat && (
-                                    <button className={styles.chatItemActionButton} disabled={isBusy} onClick={() => deleteChat(chat)}>
+                                    <button className={styles.chatItemActionButton} disabled={isBusy} onClick={() => void deleteChat(chat)}>
                                         Excluir
                                     </button>
                                 )}

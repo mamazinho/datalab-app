@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { QueryBoundary } from '../../components/Tools/query-boundary';
 import { useCompanyContext } from '../../contexts/company';
+import { useConfirm } from '../../contexts/confirm';
 import { useIntegrations } from '../../hooks/use-integrations';
 import { integrationsQuery } from '../../queries';
 import { DatalabAPI } from '../../services/datalab-api';
@@ -20,6 +21,7 @@ const ASSETS_PARAM = 'ativos';
 
 const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const { data: integrations } = useIntegrations();
   const { companyProviderAssets, isOwner } = useCompanyContext();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -74,11 +76,14 @@ const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
         .map((i) => i.label)
         .join(', ');
 
-      const confirmed = window.confirm(
-        `Desconectar sua conta ${providerLabel} remove TODAS as integrações dela` +
+      const confirmed = await confirm({
+        title: `Desconectar ${providerLabel}`,
+        message:
+          `Desconectar sua conta ${providerLabel} remove TODAS as integrações dela` +
           `${affected ? ` (${affected})` : ''}. Os ativos liberados para a empresa continuam salvos, ` +
-          'mas ninguém consegue operá-los pela sua conta até você reconectar. Continuar?',
-      );
+          'mas ninguém consegue operá-los pela sua conta até você reconectar.',
+        confirmLabel: 'Desconectar',
+      });
       if (!confirmed) return;
 
       setDisconnectingKey(integration.key);
@@ -92,7 +97,7 @@ const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
         setDisconnectingKey(null);
       }
     },
-    [connectable, queryClient],
+    [confirm, connectable, queryClient],
   );
 
   if (connectable.length === 0) {

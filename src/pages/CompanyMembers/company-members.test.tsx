@@ -1,6 +1,6 @@
 import { HttpResponse, http } from 'msw';
-import { describe, expect, it, vi } from 'vitest';
-import { renderWithProviders, screen, userEvent, waitFor } from '../../test/test-utils';
+import { describe, expect, it } from 'vitest';
+import { renderWithProviders, screen, userEvent, waitFor, within } from '../../test/test-utils';
 import { api } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import {
@@ -24,6 +24,9 @@ const openInvitesTab = async (user: ReturnType<typeof userEvent.setup>) => {
 const openRowMenu = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(await screen.findByRole('button', { name: 'Abrir menu de ações' }));
 };
+
+const answerConfirmation = (user: ReturnType<typeof userEvent.setup>, title: string, answer: string) =>
+  user.click(within(screen.getByRole('dialog', { name: title })).getByRole('button', { name: answer }));
 
 describe('<CompanyMembers />', () => {
   it('shows the active company in the header', async () => {
@@ -70,7 +73,6 @@ describe('<CompanyMembers />', () => {
 
     it('removes a member after the confirmation', async () => {
       const user = userEvent.setup();
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
       let removedId: string | undefined;
       server.use(
         http.get(api('memberships/members/'), () => HttpResponse.json([buildMember({ id: uuid(5) })])),
@@ -83,6 +85,7 @@ describe('<CompanyMembers />', () => {
 
       await openRowMenu(user);
       await user.click(screen.getByRole('menuitem', { name: 'Remover membro' }));
+      await answerConfirmation(user, 'Remover membro', 'Remover');
 
       expect(await screen.findByText('Membro removido.')).toBeInTheDocument();
       expect(removedId).toBe(uuid(5));
@@ -90,7 +93,6 @@ describe('<CompanyMembers />', () => {
 
     it('keeps the member when the confirmation is dismissed', async () => {
       const user = userEvent.setup();
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
       let called = false;
       server.use(
         http.get(api('memberships/members/'), () => HttpResponse.json([buildMember()])),
@@ -103,13 +105,14 @@ describe('<CompanyMembers />', () => {
 
       await openRowMenu(user);
       await user.click(screen.getByRole('menuitem', { name: 'Remover membro' }));
+      await answerConfirmation(user, 'Remover membro', 'Cancelar');
 
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       await waitFor(() => expect(called).toBe(false));
     });
 
     it('reports the backend message when the removal fails', async () => {
       const user = userEvent.setup();
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
       server.use(
         http.get(api('memberships/members/'), () => HttpResponse.json([buildMember()])),
         http.delete(api('memberships/members/:membershipId'), () =>
@@ -120,6 +123,7 @@ describe('<CompanyMembers />', () => {
 
       await openRowMenu(user);
       await user.click(screen.getByRole('menuitem', { name: 'Remover membro' }));
+      await answerConfirmation(user, 'Remover membro', 'Remover');
 
       expect(await screen.findByText('Membro possui pendências.')).toBeInTheDocument();
     });
@@ -128,7 +132,6 @@ describe('<CompanyMembers />', () => {
   describe('ownership transfer', () => {
     it('lets the owner hand the company over to an active member', async () => {
       const user = userEvent.setup();
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
       let body: unknown;
       server.use(
         http.get(api('memberships/members/'), () => HttpResponse.json([buildMember({ id: uuid(5) })])),
@@ -141,6 +144,7 @@ describe('<CompanyMembers />', () => {
 
       await openRowMenu(user);
       await user.click(await screen.findByRole('menuitem', { name: 'Transferir posse' }));
+      await answerConfirmation(user, 'Transferir posse', 'Transferir');
 
       expect(await screen.findByText('Bruno Lima agora é o owner da empresa.')).toBeInTheDocument();
       expect(body).toEqual({ new_owner_membership_id: uuid(5) });
@@ -214,7 +218,6 @@ describe('<CompanyMembers />', () => {
 
     it('deletes an invite after the confirmation', async () => {
       const user = userEvent.setup();
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
       let deletedId: string | undefined;
       server.use(
         http.get(api('memberships/invites/'), () => HttpResponse.json([buildInvite({ id: uuid(7) })])),
@@ -229,6 +232,7 @@ describe('<CompanyMembers />', () => {
 
       await openRowMenu(user);
       await user.click(screen.getByRole('menuitem', { name: 'Excluir convite' }));
+      await answerConfirmation(user, 'Remover convite', 'Remover');
 
       expect(await screen.findByText('Convite removido.')).toBeInTheDocument();
       expect(deletedId).toBe(uuid(7));

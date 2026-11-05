@@ -22,12 +22,11 @@ interface IPhoneFieldProps {
   defaultCountry?: CountryIso2;
 }
 
-const normalizePhoneValue = (value?: string) => {
-  if (!value) return '';
-
+// The library keeps the dial code in an empty field ("+55"), which is not a phone yet
+const normalizePhoneValue = (value: string, dialCode: string) => {
   const digitsOnly = value.replace(/\D/g, '');
 
-  if (!digitsOnly) return '';
+  if (!digitsOnly || digitsOnly === dialCode) return '';
 
   return `+${digitsOnly}`;
 };
@@ -92,7 +91,7 @@ export const PhoneField = ({
         disabled={disabled}
         onChange={(phone, { country }) => {
           setCountryIso2(country.iso2);
-          onValueChange(normalizePhoneValue(phone));
+          onValueChange(normalizePhoneValue(phone, country.dialCode));
         }}
         inputProps={{ id, autoComplete, required }}
       />

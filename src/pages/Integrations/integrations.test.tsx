@@ -1,6 +1,6 @@
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
-import { renderWithProviders, screen, userEvent, waitFor } from '../../test/test-utils';
+import { renderWithProviders, screen, userEvent, waitFor, within } from '../../test/test-utils';
 import { api } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import { buildCompany, buildCurrentMembership, uuid } from '../../test/factories';
@@ -72,8 +72,6 @@ const givenCompanyAssets = (assets: ICompanyProviderAsset[], role: 'owner' | 'me
 
 const renderIntegrations = (companies: IUserCompany[] = [company], route = '/integracoes') =>
   renderWithProviders(<Integrations />, { companies, route });
-
-const acceptConfirm = () => vi.spyOn(window, 'confirm').mockReturnValue(true);
 
 describe('<Integrations />', () => {
   it('renders nothing while no company is selected', () => {
@@ -245,13 +243,15 @@ describe('<Integrations />', () => {
   });
 
   describe('disconnecting', () => {
-    const openDisconnect = async (user: User) => {
+    const disconnectConfirming = async (user: User) => {
       await user.click(await screen.findByRole('button', { name: 'Desconectar' }));
+      await user.click(
+        within(screen.getByRole('dialog', { name: 'Desconectar Google' })).getByRole('button', { name: 'Desconectar' }),
+      );
     };
 
     it('warns that the whole provider goes away before disconnecting', async () => {
       const user = userEvent.setup();
-      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
       let called = false;
       givenIntegrations([
         buildIntegration({ key: 'google_analytics', label: 'Google Analytics', connected: true }),
@@ -267,14 +267,15 @@ describe('<Integrations />', () => {
 
       const [firstCard] = await screen.findAllByRole('button', { name: 'Desconectar' });
       await user.click(firstCard);
+      const dialog = screen.getByRole('dialog', { name: 'Desconectar Google' });
+      expect(dialog).toHaveTextContent('Google Analytics, Google Ads');
+      await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
 
-      expect(confirm.mock.calls[0][0]).toContain('Google Analytics, Google Ads');
       await waitFor(() => expect(called).toBe(false));
     });
 
     it('disconnects the provider once confirmed', async () => {
       const user = userEvent.setup();
-      acceptConfirm();
       let called = false;
       givenIntegrations([buildIntegration({ connected: true })]);
       server.use(
@@ -285,7 +286,7 @@ describe('<Integrations />', () => {
       );
       renderIntegrations();
 
-      await openDisconnect(user);
+      await disconnectConfirming(user);
 
       expect(await screen.findByText('Conta Google desconectada.')).toBeInTheDocument();
       expect(called).toBe(true);
@@ -293,21 +294,19 @@ describe('<Integrations />', () => {
 
     it('treats an already removed connection as success', async () => {
       const user = userEvent.setup();
-      acceptConfirm();
       givenIntegrations([buildIntegration({ connected: true })]);
       server.use(
         http.delete(api('auth/google/connection/'), () => new HttpResponse(null, { status: 404 })),
       );
       renderIntegrations();
 
-      await openDisconnect(user);
+      await disconnectConfirming(user);
 
       expect(await screen.findByText('Conta Google desconectada.')).toBeInTheDocument();
     });
 
     it('reports any other failure', async () => {
       const user = userEvent.setup();
-      acceptConfirm();
       givenIntegrations([buildIntegration({ connected: true })]);
       server.use(
         http.delete(api('auth/google/connection/'), () =>
@@ -316,9 +315,54 @@ describe('<Integrations />', () => {
       );
       renderIntegrations();
 
-      await openDisconnect(user);
+      await disconnectConfirming(user);
 
       expect(await screen.findByText('Provider fora do ar.')).toBeInTheDocument();
+    });
+  });
+
+  describe('removing assets', () => {
+    it('asks before removing an asset and only removes it once confirmed', async () => {
+      const user = userEvent.setup();
+      const asset = buildAsset();
+      let removed = false;
+      givenIntegrations([buildIntegration({ connected: true })]);
+      givenCompanyAssets([asset]);
+      server.use(
+        http.get(api(`companies/${uuid(1)}/provider-assets/available/`), () =>
+          HttpResponse.json({
+            provider: 'google',
+            integration: 'google_analytics',
+            assets: [asset],
+            allowed_external_ids: [asset.external_id],
+          }),
+        ),
+        http.get(api(`companies/${uuid(1)}/provider-assets/`), () => HttpResponse.json([asset])),
+        http.delete(api(`companies/${uuid(1)}/provider-assets/${asset.id}/`), () => {
+          removed = true;
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+      renderIntegrations();
+
+      await user.click(await screen.findByRole('button', { name: 'Gerenciar permissões' }));
+      await user.click(await screen.findByRole('checkbox', { name: /Site institucional/ }));
+      await user.click(screen.getByRole('button', { name: 'Salvar seleção' }));
+
+      expect(screen.getByRole('dialog', { name: 'Remover ativos' })).toHaveTextContent('removendo 1 ativo(s)');
+      await user.keyboard('{Escape}');
+
+      expect(screen.queryByRole('dialog', { name: 'Remover ativos' })).not.toBeInTheDocument();
+      expect(screen.getByRole('dialog', { name: 'Ativos — Google Analytics' })).toBeInTheDocument();
+      expect(removed).toBe(false);
+
+      await user.click(screen.getByRole('button', { name: 'Salvar seleção' }));
+      await user.click(
+        within(screen.getByRole('dialog', { name: 'Remover ativos' })).getByRole('button', { name: 'Remover' }),
+      );
+
+      expect(await screen.findByText('Ativos atualizados: 0 liberado(s), 1 removido(s).')).toBeInTheDocument();
+      expect(removed).toBe(true);
     });
   });
 });

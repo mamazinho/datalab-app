@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../../components/UI/Tables/ActionTable';
 import { PermissionGate } from '../../../../components/Tools/permission-gate';
+import { useConfirm } from '../../../../contexts/confirm';
 import { mcpServersQuery } from '../../../../queries';
 import { DatalabAPI } from '../../../../services/datalab-api';
 import type { IRetrieveMcpServer } from '../../../../services/datalab-api/mcpServersResource';
@@ -19,10 +20,16 @@ interface IMcpServersTableProps {
 
 export const McpServersTable = ({ mcpServers, onEdit }: IMcpServersTableProps) => {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [removingId, setRemovingId] = useState<UUID7 | null>(null);
 
   const handleRemove = async (mcpServer: IRetrieveMcpServer) => {
-    if (!window.confirm(`Remover o servidor MCP "${mcpServer.name}"?`)) return;
+    const confirmed = await confirm({
+      title: 'Remover servidor MCP',
+      message: `Remover o servidor MCP "${mcpServer.name}"?`,
+      confirmLabel: 'Remover',
+    });
+    if (!confirmed) return;
     setRemovingId(mcpServer.id);
     try {
       await DatalabAPI.McpServersResource.deleteMcpServer(mcpServer.id);

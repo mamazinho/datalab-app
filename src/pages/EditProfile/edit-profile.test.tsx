@@ -68,6 +68,30 @@ describe('<EditProfile />', () => {
     });
   });
 
+  it('sends no phone when the user never filled it', async () => {
+    const user = userEvent.setup({ delay: null });
+    givenLoggedUser({ phone_number: null });
+    const captured = captureUpdate();
+    renderWithProviders(<EditProfile />);
+
+    await screen.findByLabelText('Nome');
+    await save(user);
+
+    await waitFor(() => expect(captured.body).toMatchObject({ phone_number: null }));
+  });
+
+  it('removes the phone when the user clears it', async () => {
+    const user = userEvent.setup({ delay: null });
+    givenLoggedUser({ phone_number: '+5541999999999' });
+    const captured = captureUpdate();
+    renderWithProviders(<EditProfile />);
+
+    await user.clear(await screen.findByLabelText('Telefone'));
+    await save(user);
+
+    await waitFor(() => expect(captured.body).toMatchObject({ phone_number: null }));
+  });
+
   it('previews the chosen theme before saving', async () => {
     const user = userEvent.setup({ delay: null });
     givenLoggedUser({ config: { theme: 'light' } });

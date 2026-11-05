@@ -8,7 +8,7 @@ export const updateProfileAction = createFormAction(
   ({ name, phone_number, avatar_url, theme, password }) =>
     DatalabAPI.UsersResource.updateMe({
       name,
-      phone_number,
+      phone_number: phone_number || null,
       avatar_url: avatar_url || null,
       config: theme ? { theme } : null,
       ...(password ? { password } : {}),

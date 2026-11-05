@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../components/UI/Tables/ActionTable';
 import { PermissionGate } from '../../../components/Tools/permission-gate';
+import { useConfirm } from '../../../contexts/confirm';
 import { MEMBERSHIP_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
 import { DatalabAPI } from '../../../services/datalab-api';
 import { invitesQuery } from '../../../queries';
@@ -22,11 +23,17 @@ interface IInvitesListProps {
 
 export const InvitesList = ({ invites }: IInvitesListProps) => {
   const queryClient = useQueryClient();
+  const confirm = useConfirm();
   const [removingId, setRemovingId] = useState<UUID7 | null>(null);
 
   const handleRemove = useCallback(
     async (invite: IUserInvite) => {
-      if (!window.confirm(`Remover convite para ${invite.email}?`)) return;
+      const confirmed = await confirm({
+        title: 'Remover convite',
+        message: `Remover convite para ${invite.email}?`,
+        confirmLabel: 'Remover',
+      });
+      if (!confirmed) return;
       setRemovingId(invite.id);
       try {
         await DatalabAPI.MembershipsResource.deleteInvite(invite.id);
@@ -38,7 +45,7 @@ export const InvitesList = ({ invites }: IInvitesListProps) => {
         setRemovingId(null);
       }
     },
-    [queryClient],
+    [confirm, queryClient],
   );
 
   if (invites.length === 0) {
