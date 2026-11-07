@@ -20,9 +20,9 @@ export const Header = () => {
     const { data: me } = useMe();
     const { hasPermissionByTag, hasPermissionByRoute } = useCompanyContext();
     const location = useLocation();
-    // Opened on one route: navigating closes it
+    // Opened on one history entry: any navigation closes it, even back to the same path
     const [menuOpenedAt, setMenuOpenedAt] = useState<string | null>(null);
-    const isMenuOpen = menuOpenedAt === location.pathname;
+    const isMenuOpen = menuOpenedAt === location.key;
     const menuRef = useRef<HTMLDivElement | null>(null);
 
     const canSeeIaSection = hasPermissionByTag(['chat', 'agents']);
@@ -59,7 +59,7 @@ export const Header = () => {
                     <div className={styles.profileWrapper} ref={menuRef}>
                         <button className={styles.profileButton}
                             title="Abrir menu de perfil"
-                            onClick={() => setMenuOpenedAt(isMenuOpen ? null : location.pathname)}
+                            onClick={() => setMenuOpenedAt(isMenuOpen ? null : location.key)}
                             aria-haspopup="menu"
                             aria-expanded={isMenuOpen}
                         >
