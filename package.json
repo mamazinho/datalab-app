@@ -15,6 +15,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@opentelemetry/sdk-trace-base": "^2.8.0",
+    "@opentelemetry/sdk-trace-web": "^2.8.0",
     "@pydantic/logfire-browser": "^0.18.10",
     "@tanstack/react-query": "^5.101.2",
     "axios": "^1.12.2",
