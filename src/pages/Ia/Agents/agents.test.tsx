@@ -398,7 +398,9 @@ describe('<Agents />', () => {
       await user.click(screen.getByRole('menuitem', { name: 'Excluir' }));
       await answerConfirmation(user, 'Excluir');
 
-      expect(await screen.findByTitle('Código para o suporte')).toHaveTextContent('4bf92f3577b34da6a3ce929d0e0e4736');
+      await user.click(await screen.findByText('Agente em uso por um chat.'));
+
+      expect(screen.getByText('4bf92f3577b34da6a3ce929d0e0e4736')).toBeInTheDocument();
     });
   });
 });

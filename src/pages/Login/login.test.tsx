@@ -86,8 +86,9 @@ describe('<Login />', () => {
     await fillCredentials(user);
     await submit(user);
 
-    expect(await screen.findByText(/Algo deu errado do nosso lado\./)).toBeInTheDocument();
-    expect(screen.getByTitle('Código para o suporte')).toHaveTextContent('4bf92f3577b34da6a3ce929d0e0e4736');
+    await user.click(await screen.findByText(/Algo deu errado do nosso lado\./));
+
+    expect(screen.getByText('4bf92f3577b34da6a3ce929d0e0e4736')).toBeInTheDocument();
   });
 
   it('reports a network failure without leaving the page', async () => {
