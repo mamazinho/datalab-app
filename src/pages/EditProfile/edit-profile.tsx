@@ -12,7 +12,7 @@ import { updateProfileAction } from './actions';
 export const EditProfile = () => {
   const { data: me } = useMe();
   const queryClient = useQueryClient();
-  const [formState, formAction, isPending] = useActionState(
+  const [formState, formAction] = useActionState(
     updateProfileAction,
     INITIAL_ACTION_STATE,
   );
@@ -22,6 +22,8 @@ export const EditProfile = () => {
       await queryClient.invalidateQueries({ queryKey: meQuery.queryKey });
       toast.success('Perfil atualizado com sucesso!');
     },
+    // The error shows inline in the form
+    onError: () => {},
   });
 
   if (!me?.id) {
@@ -39,7 +41,6 @@ export const EditProfile = () => {
         <EditProfileForm
           user={me}
           action={formAction}
-          isPending={isPending}
           error={formState.error}
         />
 

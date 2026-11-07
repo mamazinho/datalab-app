@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, use } from "react";
 import type { IProviderPermission, IUserCompany, IUserMembership, IRoutePermission } from "../../services/datalab-api/usersResource";
 import type { ICompanyProviderAsset } from "../../services/datalab-api/companiesResource";
 import type { IRoutePermissionRef } from "../../utils/route-permissions";
@@ -25,7 +25,7 @@ interface ICompanyContextProps {
 export const CompanyContext = createContext<ICompanyContextProps | null>(null);
 
 export const useCompanyContext = () => {
-  const context = useContext(CompanyContext);
+  const context = use(CompanyContext);
 
   if (!context) {
     throw new Error('useCompanyContext must be used within a CompanyProvider');

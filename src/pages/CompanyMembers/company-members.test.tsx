@@ -1,7 +1,7 @@
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders, screen, userEvent, waitFor, within } from '../../test/test-utils';
-import { api } from '../../test/msw/handlers';
+import { api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import {
   buildCompany,
@@ -116,7 +116,7 @@ describe('<CompanyMembers />', () => {
       server.use(
         http.get(api('memberships/members/'), () => HttpResponse.json([buildMember()])),
         http.delete(api('memberships/members/:membershipId'), () =>
-          HttpResponse.json({ detail: 'Membro possui pendências.' }, { status: 400 }),
+          apiErrorResponse(400, 'Membro possui pendências.'),
         ),
       );
       renderMembers();
@@ -478,7 +478,7 @@ describe('<CompanyMembers />', () => {
       const user = userEvent.setup();
       server.use(
         http.put(api(`memberships/members/${uuid(5)}/permissions/`), () =>
-          HttpResponse.json({ detail: 'Route permission not found' }, { status: 404 }),
+          apiErrorResponse(404, 'Route permission not found'),
         ),
       );
       await openPermissions(user);
@@ -486,7 +486,7 @@ describe('<CompanyMembers />', () => {
       await screen.findByRole('checkbox', { name: /Listagem de chats/ });
       await user.click(screen.getByRole('button', { name: 'Salvar permissões' }));
 
-      expect(await screen.findByText(/Erro ao salvar permissões: Route permission not found/)).toBeInTheDocument();
+      expect(await screen.findByText('Route permission not found')).toBeInTheDocument();
       expect(screen.getByRole('dialog')).toBeInTheDocument();
     });
   });

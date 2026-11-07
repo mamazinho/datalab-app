@@ -1,5 +1,6 @@
-import axios, { AxiosError, type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
+import axios, { type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
 import type { UUID7 } from "../../types/ids";
+import { ApiError } from "../../utils/api-error";
 
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_DATALAB_API_URL,
@@ -38,7 +39,7 @@ function endSession(): void {
   window.location.href = '/login';
 }
 
-const refreshableErrors = ['Token has expired', 'Invalid token'];
+const REFRESHABLE_ERRORS = ['InvalidAccessTokenFriendlyException'];
 
 let _isRefreshing = false;
 let _refreshQueue: Array<{ resolve: (token: string) => void; reject: (err: unknown) => void }> = [];
@@ -99,78 +100,42 @@ function registerRequestInterceptors(instance: AxiosInstance, interceptors: Requ
 registerRequestInterceptors(axiosPrivateInstance, [authInterceptor]);
 registerRequestInterceptors(axiosCompanyInstance, [authInterceptor, companyInterceptor]);
 
-const STATUS_MESSAGES: Partial<Record<number, string>> = {
-  429: 'Muitas requisições. Tente novamente em instantes.',
-};
-
-// FastAPI 422 sends detail as a list: [{ loc, msg: "Value error, ...", type }]
-function readDetail(detail: unknown): string {
-  if (typeof detail === 'string') return detail;
-
-  const firstMessage: unknown = Array.isArray(detail) ? detail[0]?.msg : undefined;
-  return typeof firstMessage === 'string' ? firstMessage.replace(/^Value error, /, '') : '';
-}
-
-function extractErrorMessage({ status, data }: AxiosResponse): string {
-  return STATUS_MESSAGES[status] ?? readDetail((data as Record<string, unknown> | undefined)?.detail);
-}
-
-function describeMissingResponse(error: AxiosError): void {
-  if (error.code === AxiosError.ECONNABORTED || error.code === AxiosError.ETIMEDOUT) {
-    error.message = 'O servidor demorou demais para responder. Tente novamente.';
-  } else if (error.request) {
-    error.message = 'Não foi possível conectar ao servidor. Verifique sua internet.';
-  }
-}
-
-const handlePublicAxiosError = (error: Error): Promise<never> => {
-  if (axios.isAxiosError(error)) {
-    if (error.response) {
-      const msg = extractErrorMessage(error.response);
-      if (msg) error.message = msg;
-    } else {
-      describeMissingResponse(error);
+// A streamed request (the chat) gets its error body as a stream too
+async function toApiError(error: unknown): Promise<ApiError> {
+  if (axios.isAxiosError(error) && error.response?.data instanceof ReadableStream) {
+    const body = await new Response(error.response.data).text();
+    try {
+      error.response.data = JSON.parse(body);
+    } catch {
+      error.response.data = body;
     }
-  } else {
-    error.message = 'Ocorreu um erro inesperado. Tente novamente mais tarde.';
   }
-  return Promise.reject(error);
-};
+  return ApiError.from(error);
+}
+
+const handlePublicAxiosError = async (error: unknown): Promise<never> => Promise.reject(await toApiError(error));
 
 function createAuthenticatedErrorHandler(instance: AxiosInstance) {
-  return async (error: Error): Promise<unknown> => {
-    if (!axios.isAxiosError(error)) return Promise.reject(error);
+  return async (error: unknown): Promise<unknown> => {
+    const apiError = await toApiError(error);
+    if (apiError.status !== 401 || !axios.isAxiosError(error)) return Promise.reject(apiError);
 
-    if (!error.response) {
-      describeMissingResponse(error);
-      return Promise.reject(error);
-    }
-
-    const message = extractErrorMessage(error.response);
-
-    if (error.response.status === 401) {
-      const config = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
-
-      if (config && !config._retry && refreshableErrors.some((msg) => message.includes(msg))) {
-        config._retry = true;
-        try {
-          const newToken = await refreshToken();
-          config.headers['Authorization'] = `Bearer ${newToken}`;
-          return instance(config);
-        } catch {
-          // refreshToken already ended the session
-          return Promise.reject(error);
-        }
+    const config = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+    if (config && !config._retry && REFRESHABLE_ERRORS.includes(apiError.error)) {
+      config._retry = true;
+      try {
+        const newToken = await refreshToken();
+        config.headers['Authorization'] = `Bearer ${newToken}`;
+        return instance(config);
+      } catch {
+        // refreshToken already ended the session
+        return Promise.reject(apiError);
       }
-
-      // Ending the session here keeps the app from falling into /onboarding without user data
-      endSession();
-      if (message) error.message = message;
-      return Promise.reject(error);
     }
 
-    if (message) error.message = message;
-    return Promise.reject(error);
+    // Ending the session here keeps the app from falling into /onboarding without user data
+    endSession();
+    return Promise.reject(apiError);
   };
 }
 

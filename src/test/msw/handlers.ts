@@ -1,11 +1,14 @@
 import { http, HttpResponse } from 'msw';
-import { buildAgent, buildChat, buildChatUsageReport, buildCompany, buildCurrentMembership, buildInvite, buildMcpServer, buildMember, buildMcpServerTestResult, buildModelProvider, buildUser, uuid } from '../factories';
+import { buildAgent, buildApiError, buildChat, buildChatUsageReport, buildCompany, buildCurrentMembership, buildInvite, buildMcpServer, buildMember, buildMcpServerTestResult, buildModelProvider, buildUser, uuid } from '../factories';
 
 const BASE_URL = import.meta.env.VITE_DATALAB_API_URL;
 
 export const api = (path: string): string => `${BASE_URL}/${path.replace(/^\//, '')}`;
 
 export const ACCESS_TOKEN = 'access-token-do-teste';
+
+export const apiErrorResponse = (status: number, friendlyMessage: string, error = 'HTTPErrorFriendlyException') =>
+  HttpResponse.json(buildApiError({ status, friendly_message: friendlyMessage, error }), { status });
 
 export const handlers = [
   http.post(api('auth/login/'), () =>

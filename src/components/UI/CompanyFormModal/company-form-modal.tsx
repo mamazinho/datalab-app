@@ -1,5 +1,5 @@
 import modal from '../../../styles/modal-form.module.css';
-import { useActionState, useMemo } from 'react';
+import { useActionState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { Modal } from '../Modal/modal';
@@ -8,6 +8,7 @@ import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { currentMembershipQuery, meQuery } from '../../../queries';
 import type { IUserCompany } from '../../../services/datalab-api/usersResource';
 import { createCompanyAction, createUpdateCompanyAction } from './actions';
+import { FormFieldset, SubmitButton } from '../Forms';
 
 interface ICompanyFormModalProps {
   isOpen: boolean;
@@ -19,11 +20,8 @@ interface ICompanyFormModalProps {
 export const CompanyFormModal = ({ isOpen, company, onClose }: ICompanyFormModalProps) => {
   const isEditing = company !== null;
   const queryClient = useQueryClient();
-  const boundAction = useMemo(
-    () => (company ? createUpdateCompanyAction(company.id) : createCompanyAction),
-    [company],
-  );
-  const [formState, formAction, isPending] = useActionState(boundAction, INITIAL_ACTION_STATE);
+  const boundAction = (company ? createUpdateCompanyAction(company.id) : createCompanyAction);
+  const [formState, formAction] = useActionState(boundAction, INITIAL_ACTION_STATE);
 
   useActionFeedback(formState, {
     onSuccess: () => {
@@ -43,7 +41,7 @@ export const CompanyFormModal = ({ isOpen, company, onClose }: ICompanyFormModal
       title={isEditing ? `Editar empresa: ${company.name}` : 'Criar empresa'}
     >
       <form className={modal.form} key={company?.id ?? 'new'} action={formAction}>
-        <fieldset className={modal.fieldset} disabled={isPending}>
+        <FormFieldset className={modal.fieldset}>
           <div className={modal.field}>
             <label className={modal.label} htmlFor="company-name">Nome *</label>
             <input className={modal.input}
@@ -62,10 +60,10 @@ export const CompanyFormModal = ({ isOpen, company, onClose }: ICompanyFormModal
             <p className={modal.error}>{formState.error}</p>
           )}
 
-          <button className={modal.submit} type="submit">
-            {isPending ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Criar empresa'}
-          </button>
-        </fieldset>
+          <SubmitButton className={modal.submit} pendingLabel="Salvando...">
+            {isEditing ? 'Salvar alterações' : 'Criar empresa'}
+          </SubmitButton>
+        </FormFieldset>
       </form>
     </Modal>
   );

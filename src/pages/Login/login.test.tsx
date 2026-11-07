@@ -2,8 +2,9 @@ import { HttpResponse, http } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 import { renderWithProviders, screen, userEvent, waitFor } from '../../test/test-utils';
-import { ACCESS_TOKEN, api } from '../../test/msw/handlers';
+import { ACCESS_TOKEN, api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
+import { buildApiError } from '../../test/factories';
 import { Login } from './login';
 
 const renderLogin = () =>
@@ -57,7 +58,7 @@ describe('<Login />', () => {
     const user = userEvent.setup();
     server.use(
       http.post(api('auth/login/'), () =>
-        HttpResponse.json({ detail: 'E-mail ou senha inválidos.' }, { status: 401 }),
+        apiErrorResponse(401, 'E-mail ou senha inválidos.'),
       ),
     );
     renderLogin();
@@ -68,6 +69,25 @@ describe('<Login />', () => {
     expect(await screen.findByText(/E-mail ou senha inválidos\./)).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Home' })).not.toBeInTheDocument();
     expect(localStorage.getItem('accessToken')).toBeNull();
+  });
+
+  it('shows the support code of the failed request discreetly in the toast', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post(api('auth/login/'), () =>
+        HttpResponse.json(buildApiError({ status: 500, friendly_message: 'Algo deu errado do nosso lado.' }), {
+          status: 500,
+          headers: { traceresponse: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01' },
+        }),
+      ),
+    );
+    renderLogin();
+
+    await fillCredentials(user);
+    await submit(user);
+
+    expect(await screen.findByText(/Algo deu errado do nosso lado\./)).toBeInTheDocument();
+    expect(screen.getByTitle('Código para o suporte')).toHaveTextContent('4bf92f3577b34da6a3ce929d0e0e4736');
   });
 
   it('reports a network failure without leaving the page', async () => {

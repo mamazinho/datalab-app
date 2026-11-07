@@ -1,46 +1,30 @@
 import styles from './chats-components.module.css';
 import designSystemStyles from '../../../styles/design-system.module.css';
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
-import { toast } from 'react-toastify';
-import { useQueryClient } from '@tanstack/react-query';
 import { ChatMember } from '../../../components/UI/ChatMember';
 import { useCompanyContext } from '../../../contexts/company';
 import { useConfirm } from '../../../contexts/confirm';
 import { chatListsQueryKey } from '../../../queries';
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { IRetrieveChat } from '../../../services/datalab-api/chatsResource';
-import type { UUID7 } from '../../../types/ids';
 import { CHAT_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
+import { useRowActions } from '../../../hooks/use-row-actions';
 
 export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
     const { currentMembership, isOwner, hasPermissionByRoute } = useCompanyContext();
-    const queryClient = useQueryClient();
     const confirm = useConfirm();
-    const [busyChatId, setBusyChatId] = useState<UUID7 | null>(null);
+    const { rows, busyId, run } = useRowActions(chatListsQueryKey, chats);
 
     const canArchive = hasPermissionByRoute(CHAT_ROUTE_PERMISSIONS.update);
     const canRemove = hasPermissionByRoute(CHAT_ROUTE_PERMISSIONS.remove);
 
-    const runChatAction = async (chat: IRetrieveChat, action: () => Promise<unknown>, successMessage: string) => {
-        setBusyChatId(chat.id);
-        try {
-            await action();
-            toast.success(successMessage);
-            void queryClient.invalidateQueries({ queryKey: chatListsQueryKey });
-        } catch (error: unknown) {
-            toast.error(error instanceof Error ? error.message : 'Erro ao atualizar a conversa.');
-        } finally {
-            setBusyChatId(null);
-        }
-    };
-
     const toggleArchived = (chat: IRetrieveChat) =>
-        runChatAction(
-            chat,
-            () => DatalabAPI.ChatsResource.archiveChat(chat.id, !chat.archived),
-            chat.archived ? 'Conversa desarquivada.' : 'Conversa arquivada.',
-        );
+        run({
+            id: chat.id,
+            request: () => DatalabAPI.ChatsResource.archiveChat(chat.id, !chat.archived),
+            successMessage: chat.archived ? 'Conversa desarquivada.' : 'Conversa arquivada.',
+            optimistic: { ...chat, archived: !chat.archived },
+        });
 
     const deleteChat = async (chat: IRetrieveChat) => {
         const confirmed = await confirm({
@@ -48,18 +32,20 @@ export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
             message: 'Essa ação não pode ser desfeita.',
             confirmLabel: 'Excluir',
         });
-        if (confirmed) void runChatAction(chat, () => DatalabAPI.ChatsResource.deleteChat(chat.id), 'Conversa excluída.');
+        if (confirmed) {
+            run({ id: chat.id, request: () => DatalabAPI.ChatsResource.deleteChat(chat.id), successMessage: 'Conversa excluída.', optimistic: null });
+        }
     };
 
-    if (!chats.length) return <div className={styles.emptyChatList}>Nenhum chat encontrado.</div>;
+    if (!rows.length) return <div className={styles.emptyChatList}>Nenhum chat encontrado.</div>;
 
     return (
         <ul className={styles.chatListWrapper}>
-            {chats.map(chat => {
+            {rows.map(chat => {
                 const isCreatorOrOwner = isOwner || chat.created_by_membership_id === currentMembership?.id;
                 const canArchiveChat = canArchive && isCreatorOrOwner;
                 const canDeleteChat = canRemove && isCreatorOrOwner;
-                const isBusy = busyChatId === chat.id;
+                const isBusy = busyId === chat.id;
 
                 return (
                     <li className={styles.chatItemCard} key={chat.id}>
@@ -75,7 +61,7 @@ export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
                         {(canArchiveChat || canDeleteChat) && (
                             <div className={styles.chatItemActions}>
                                 {canArchiveChat && (
-                                    <button className={styles.chatItemActionButton} disabled={isBusy} onClick={() => void toggleArchived(chat)}>
+                                    <button className={styles.chatItemActionButton} disabled={isBusy} onClick={() => toggleArchived(chat)}>
                                         {chat.archived ? 'Desarquivar' : 'Arquivar'}
                                     </button>
                                 )}

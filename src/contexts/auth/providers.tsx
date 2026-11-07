@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useEffectEvent, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "./contexts";
 import { setSessionExpiredHandler } from "../../services/datalab-api/axios";
@@ -11,33 +11,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return storedToken || undefined;
   });
 
-  const login = useCallback(async (loginResponse: ILoginUserResponse) => {
+  const login = async (loginResponse: ILoginUserResponse) => {
     setAccessToken(loginResponse.access_token);
     if (loginResponse.access_token) localStorage.setItem("accessToken", loginResponse.access_token);
-  }, []);
+  };
 
-  const logout = useCallback(() => {
+  const logout = () => {
     // The refresh token lives in an httpOnly cookie that only the backend can clear
     AuthResource.logout().catch(() => undefined);
     setAccessToken(undefined);
     localStorage.removeItem("accessToken");
     // The previous user's data must not leak into the next session
     queryClient.clear();
-  }, [queryClient]);
+  };
+
+  const endSession = useEffectEvent(logout);
 
   useEffect(() => {
-    setSessionExpiredHandler(logout);
+    setSessionExpiredHandler(() => endSession());
     return () => setSessionExpiredHandler(null);
-  }, [logout]);
+  }, []);
 
-  const contextValue = useMemo(
-    () => ({ accessToken, login, logout }),
-    [accessToken, login, logout],
-  );
+  const contextValue = { accessToken, login, logout };
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext value={contextValue}>
       {children}
-    </AuthContext.Provider>
+    </AuthContext>
   );
 }

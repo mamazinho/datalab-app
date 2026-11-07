@@ -1,11 +1,11 @@
 import styles from '../integrations.module.css';
-import { Suspense, useActionState, useCallback, useMemo, useState } from 'react';
-import axios from 'axios';
+import { Suspense, useActionState, useState } from 'react';
 import { toast } from 'react-toastify';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import { QueryErrorResetBoundary, useQueryClient, useSuspenseQueries } from '@tanstack/react-query';
 import { Modal } from '../../../components/UI/Modal/modal';
 import { LoadingPiece } from '../../../components/Feedback/Loadings/loading';
+import { ApiError } from '../../../utils/api-error';
 import { useConfirm } from '../../../contexts/confirm';
 import {
   availableProviderAssetsQuery,
@@ -23,6 +23,7 @@ import {
   type ISaveProviderAssetsResult,
 } from '../actions';
 import { AssetsSelector } from './assets-selector';
+import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 
 interface IProviderAssetsModalProps {
   isOpen: boolean;
@@ -31,25 +32,9 @@ interface IProviderAssetsModalProps {
   integration: IIntegrationStatus | null;
 }
 
-// A 502 must never read as "no assets": it means the provider or the core-api is down
-const assetsErrorMessage = (error: unknown): string => {
-  if (!axios.isAxiosError(error)) return 'Não foi possível carregar os ativos.';
-
-  switch (error.response?.status) {
-    case 403:
-      return 'Apenas o owner da empresa pode gerenciar os ativos.';
-    case 400:
-      return 'A conexão com o provedor não está válida ou não tem as permissões necessárias. Feche esta janela, clique em "Reconectar" e conceda todas as permissões pedidas.';
-    case 502:
-      return 'O serviço do provedor não respondeu agora. Isso costuma ser temporário — tente novamente.';
-    default:
-      return error.message || 'Não foi possível carregar os ativos.';
-  }
-};
-
 const AssetsErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => (
   <div className={styles.assetsFallback}>
-    <span>{assetsErrorMessage(error)}</span>
+    <span>{ApiError.from(error).friendly_message}</span>
     <button className={styles.integrationButton} type="button" onClick={resetErrorBoundary}>
       Tentar novamente
     </button>
@@ -78,20 +63,16 @@ const ProviderAssetsContent = ({ companyId, integration, onClose }: IProviderAss
     () => new Set(available.allowed_external_ids),
   );
 
-  const saveAction = useMemo(
-    () =>
-      createSaveProviderAssetsAction({
+  const saveAction = createSaveProviderAssetsAction({
         companyId,
         provider: available.provider,
         integration: integration.key,
         available: available.assets,
         saved,
         allowedExternalIds: available.allowed_external_ids,
-      }),
-    [companyId, integration.key, available, saved],
-  );
+      });
 
-  const [saveState, saveFormAction, isPending] = useActionState(saveAction, INITIAL_ACTION_STATE);
+  const [saveState, saveFormAction] = useActionState(saveAction, INITIAL_ACTION_STATE);
 
   useActionFeedback<ISaveProviderAssetsResult>(saveState, {
     onSuccess: (result) => {
@@ -116,38 +97,31 @@ const ProviderAssetsContent = ({ companyId, integration, onClose }: IProviderAss
     onError: () => {},
   });
 
-  const removedCount = useMemo(
-    () =>
-      diffProviderAssets({
+  const removedCount = diffProviderAssets({
         integration: integration.key,
         available: available.assets,
         saved,
         allowedExternalIds: available.allowed_external_ids,
         selected,
-      }).toRemove.length,
-    [available, saved, selected, integration.key],
-  );
+      }).toRemove.length;
 
   // The submit waits for the dialog, so it is held here and sent again once confirmed
-  const handleSubmitClick = useCallback(
-    async (event: React.MouseEvent<HTMLButtonElement>) => {
-      if (removedCount === 0) return;
+  const handleSubmitClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (removedCount === 0) return;
 
-      event.preventDefault();
-      const form = event.currentTarget.form;
-      const confirmed = await confirm({
-        title: 'Remover ativos',
-        message:
-          `Você está removendo ${removedCount} ativo(s) de ${integration.label}. ` +
-          'O agente perde o acesso a eles imediatamente e ninguém desta empresa ' +
-          'conseguirá operá-los até que sejam liberados de novo.',
-        confirmLabel: 'Remover',
-      });
+    event.preventDefault();
+    const form = event.currentTarget.form;
+    const confirmed = await confirm({
+      title: 'Remover ativos',
+      message:
+        `Você está removendo ${removedCount} ativo(s) de ${integration.label}. ` +
+        'O agente perde o acesso a eles imediatamente e ninguém desta empresa ' +
+        'conseguirá operá-los até que sejam liberados de novo.',
+      confirmLabel: 'Remover',
+    });
 
-      if (confirmed) form?.requestSubmit();
-    },
-    [confirm, removedCount, integration.label],
-  );
+    if (confirmed) form?.requestSubmit();
+  };
 
   if (available.assets.length === 0) {
     return (
@@ -164,7 +138,7 @@ const ProviderAssetsContent = ({ companyId, integration, onClose }: IProviderAss
         <input key={externalId} type="hidden" name="assets" value={externalId} />
       ))}
 
-      <fieldset className={styles.assetsFieldset} disabled={isPending}>
+      <FormFieldset className={styles.assetsFieldset}>
         <p className={styles.assetsIntro}>
           Marque o que pertence a esta empresa. O agente só enxerga e só opera o que estiver
           nesta lista — deixar tudo desmarcado significa acesso zero, não acesso total.
@@ -185,11 +159,11 @@ const ProviderAssetsContent = ({ companyId, integration, onClose }: IProviderAss
               ? `Esta empresa ainda não pode operar o ${integration.label}`
               : `${selected.size} ativo(s) selecionado(s)`}
           </span>
-          <button className={styles.assetsSubmit} type="submit" disabled={isPending} onClick={handleSubmitClick}>
-            {isPending ? 'Salvando...' : 'Salvar seleção'}
-          </button>
+          <SubmitButton className={styles.assetsSubmit} onClick={handleSubmitClick} pendingLabel="Salvando...">
+            Salvar seleção
+          </SubmitButton>
         </footer>
-      </fieldset>
+      </FormFieldset>
     </form>
   );
 };

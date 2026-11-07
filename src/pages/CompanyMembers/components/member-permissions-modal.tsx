@@ -11,6 +11,7 @@ import type { ICompanyMembership } from '../../../services/datalab-api/membershi
 import type { UUID7 } from '../../../types/ids';
 import { updateMemberPermissionsAction } from '../actions';
 import { ProviderPermissionsField, RoutePermissionsField } from './permission-fields';
+import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 
 interface IMemberPermissionsModalProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ const MemberPermissionsForm = ({ memberId, onSaved }: IMemberPermissionsFormProp
     () => new Set(memberProviderPermissions.map((granted) => granted.provider_permission_id)),
   );
 
-  const [saveState, saveFormAction, isPending] = useActionState(updateMemberPermissionsAction, INITIAL_ACTION_STATE);
+  const [saveState, saveFormAction] = useActionState(updateMemberPermissionsAction, INITIAL_ACTION_STATE);
 
   useActionFeedback(saveState, {
     successMessage: 'Permissões salvas com sucesso!',
@@ -52,7 +53,7 @@ const MemberPermissionsForm = ({ memberId, onSaved }: IMemberPermissionsFormProp
     <form className={modal.form} action={saveFormAction}>
       <input type="hidden" name="membershipId" value={memberId} />
 
-      <fieldset className={modal.fieldset} disabled={isPending}>
+      <FormFieldset className={modal.fieldset}>
         <QueryBoundary>
           <RoutePermissionsField selected={selectedRoutePermissions} onChange={setSelectedRoutePermissions} />
         </QueryBoundary>
@@ -63,10 +64,10 @@ const MemberPermissionsForm = ({ memberId, onSaved }: IMemberPermissionsFormProp
 
         {!saveState.success && saveState.error && <p className={modal.error}>{saveState.error}</p>}
 
-        <button className={modal.submit} type="submit" disabled={isPending}>
-          {isPending ? 'Salvando...' : 'Salvar permissões'}
-        </button>
-      </fieldset>
+        <SubmitButton className={modal.submit} pendingLabel="Salvando...">
+          Salvar permissões
+        </SubmitButton>
+      </FormFieldset>
     </form>
   );
 };

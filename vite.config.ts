@@ -6,7 +6,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
 	root: './',
   plugins: [
-    react(),
+    // The compiler memoizes components and hooks, so useMemo/useCallback are not needed
+    react({ babel: { plugins: ['babel-plugin-react-compiler'] } }),
   ],
   test: {
     environment: 'jsdom',

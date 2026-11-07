@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { IChatFileRef } from '../../../services/datalab-api/chatFilesResource';
 import type { IChatStreamEvent } from '../../../services/datalab-api/chatMessagesResource';
 import { useMe } from '../../../hooks/use-me';
 import { parseChatStream } from '../../../utils/process-stream';
+import { ApiError, clientError } from '../../../utils/api-error';
 import type { UUID7 } from '../../../types/ids';
 import {
   applyChatEvent,
@@ -13,7 +14,6 @@ import {
 } from '../../../utils/chat-timeline';
 
 type TimelineAction =
-  | { type: 'reset'; history: IChatStreamEvent[] }
   | { type: 'event'; event: IChatStreamEvent }
   | { type: 'reopen_clarification'; toolCallId: string };
 
@@ -21,8 +21,6 @@ const replay = (history: IChatStreamEvent[]) => history.reduce(applyChatEvent, [
 
 const timelineReducer = (items: TimelineItem[], action: TimelineAction): TimelineItem[] => {
   switch (action.type) {
-    case 'reset':
-      return replay(action.history);
     case 'event':
       return applyChatEvent(items, action.event);
     case 'reopen_clarification':
@@ -34,29 +32,20 @@ const STREAM_INTERRUPTED_MESSAGE = 'A conexão com o servidor caiu no meio da re
 
 const EMPTY_PROMPT_WITH_ATTACHMENTS = 'Analise o arquivo anexado.';
 
-const getErrorMessage = (error: unknown, fallback: string): string =>
-  error instanceof Error && error.message ? error.message : fallback;
-
 export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[]) => {
   const { data: me } = useMe();
   const [items, dispatch] = useReducer(timelineReducer, initialHistory, replay);
   const [isStreaming, setIsStreaming] = useState(false);
-  // Stream generation: switching chats or unmounting invalidates the loops still running
+  // Stream generation: unmounting (another chat, or a fresh history) invalidates the loops still running
   const generationRef = useRef(0);
-
-  useEffect(() => {
-    generationRef.current += 1;
-    setIsStreaming(false);
-    dispatch({ type: 'reset', history: initialHistory });
-  }, [chatId, initialHistory]);
 
   useEffect(() => () => {
     generationRef.current += 1;
   }, []);
 
-  const pendingClarification = useMemo(() => findPendingClarification(items), [items]);
+  const pendingClarification = findPendingClarification(items);
 
-  const submitPrompt = useCallback(async (
+  const submitPrompt = async (
     prompt: string,
     attachments: IChatFileRef[] = [],
     answerToToolCallId?: string,
@@ -79,7 +68,7 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
       if (answerToToolCallId) {
         dispatch({ type: 'reopen_clarification', toolCallId: answerToToolCallId });
       }
-      dispatch({ type: 'event', event: { type: 'error', content: getErrorMessage(requestError, 'Erro ao enviar a mensagem.') } });
+      dispatch({ type: 'event', event: { type: 'error', content: ApiError.from(requestError) } });
       setIsStreaming(false);
       return;
     }
@@ -91,7 +80,7 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
       }
     } catch {
       if (generationRef.current !== generation) return;
-      dispatch({ type: 'event', event: { type: 'error', content: STREAM_INTERRUPTED_MESSAGE } });
+      dispatch({ type: 'event', event: { type: 'error', content: clientError(STREAM_INTERRUPTED_MESSAGE) } });
     } finally {
       if (generationRef.current === generation) {
         // Closes the streaming bubble even if the backend ends without a done event
@@ -99,9 +88,9 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
         setIsStreaming(false);
       }
     }
-  }, [chatId, me]);
+  };
 
-  const sendPrompt = useCallback(async (prompt: string, attachments: IChatFileRef[] = []) => {
+  const sendPrompt = async (prompt: string, attachments: IChatFileRef[] = []) => {
     const trimmedPrompt = prompt.trim();
     if ((!trimmedPrompt && attachments.length === 0) || isStreaming) return;
 
@@ -111,12 +100,12 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
       attachments,
       pendingClarification?.toolCallId,
     );
-  }, [isStreaming, pendingClarification, submitPrompt]);
+  };
 
-  const answerClarification = useCallback(async (answer: string) => {
+  const answerClarification = async (answer: string) => {
     if (!pendingClarification || isStreaming) return;
     await submitPrompt(answer, [], pendingClarification.toolCallId);
-  }, [isStreaming, pendingClarification, submitPrompt]);
+  };
 
   return { items, isStreaming, pendingClarification, sendPrompt, answerClarification };
 };

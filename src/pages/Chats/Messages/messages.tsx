@@ -1,19 +1,19 @@
 import styles from './messages.module.css';
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
-import axios from 'axios';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { ChatConversation } from './components/chat-conversation';
 import { ServerErrorComponent } from '../../../components/Feedback/ErrorBoundaries/server-error';
 import { LoadingPiece } from '../../../components/Feedback/Loadings/loading';
 import { isUuid7, type UUID7 } from '../../../types/ids';
+import { ApiError } from '../../../utils/api-error';
 import { useChat } from '../../../hooks/use-chat';
 import { useChatMessages } from '../../../hooks/use-chat-messages';
 
 // A missing or inaccessible chat (404) goes back to the list; other errors show the retry screen
 const ChatErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => {
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
+    if (ApiError.from(error).status === 404) {
         return <Navigate to="/ia/conversas" replace />;
     }
     return <ServerErrorComponent error={error} resetErrorBoundary={resetErrorBoundary} />;
@@ -22,6 +22,9 @@ const ChatErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => {
 const ChatView = ({ chatId }: { chatId: UUID7 }) => {
     const { data: chat } = useChat(chatId);
     const { data: history } = useChatMessages(chatId);
+    // Another chat, or a history that changed on the refetch, starts the timeline over
+    const [shown, setShown] = useState({ history, version: 0 });
+    if (shown.history !== history) setShown({ history, version: shown.version + 1 });
 
     return (
         <>
@@ -31,7 +34,7 @@ const ChatView = ({ chatId }: { chatId: UUID7 }) => {
             </header>
 
             <div className={styles.messagesBody}>
-                <ChatConversation chatId={chatId} history={history} />
+                <ChatConversation key={shown.version} chatId={chatId} history={history} />
             </div>
         </>
     );

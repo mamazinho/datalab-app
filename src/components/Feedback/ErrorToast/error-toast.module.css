@@ -1,0 +1,13 @@
+.errorToast {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.traceId {
+  align-self: flex-end;
+  font-family: var(--font-code);
+  font-size: calc(0.62rem * var(--font-scale));
+  opacity: 0.6;
+  user-select: all;
+}

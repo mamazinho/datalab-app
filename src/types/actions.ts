@@ -2,6 +2,7 @@ export interface ActionState<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
+  traceId?: string;
   timestamp: number;
 }
 

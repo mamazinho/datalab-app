@@ -1,8 +1,12 @@
 import type { IChatFileRef } from '../services/datalab-api/chatFilesResource';
 import type { IChatStreamEvent } from '../services/datalab-api/chatMessagesResource';
 import type { IChatMember } from '../services/datalab-api/chatsResource';
+import type { IApiError } from '../types/errors';
 
 export type ThreadAuthor = 'supervisor' | 'specialist';
+
+const streamErrorMessage = (content: IApiError | undefined): string =>
+  content?.friendly_message ?? 'Erro desconhecido no processamento.';
 
 export interface IThreadEntry {
   author: ThreadAuthor;
@@ -167,7 +171,7 @@ export const applyChatEvent = (items: TimelineItem[], event: IChatStreamEvent): 
     case 'error':
       return [
         ...closeStreamingBubble(items),
-        { kind: 'stream_error', id: nextItemId('error'), content: event.content ?? 'Erro desconhecido no processamento.' },
+        { kind: 'stream_error', id: nextItemId('error'), content: streamErrorMessage(event.content) },
       ];
 
     case 'done':

@@ -3,16 +3,15 @@ import designSystemStyles from '../../../styles/design-system.module.css';
 import React from 'react';
 import { TimedButton } from '../../../components/UI/Buttons/timed-button';
 import type { UUID7 } from '../../../types/ids';
+import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 
 interface IConfirmAccountFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
-    isPending: boolean;
     email: string;
     userId: UUID7 | null;
     defaultCode?: string;
     onResendCode: () => Promise<void>;
 }
 export const ConfirmAccountForm: React.FC<IConfirmAccountFormProps> = ({
-    isPending,
     email,
     userId,
     defaultCode = '',
@@ -29,7 +28,7 @@ export const ConfirmAccountForm: React.FC<IConfirmAccountFormProps> = ({
                 </p>
             </header>
             <form className={designSystemStyles.authForm} {...props}>
-                <fieldset className={designSystemStyles.fieldsWrapper} disabled={isPending}>
+                <FormFieldset className={designSystemStyles.fieldsWrapper}>
                     <input type="hidden" name="userId" value={userId || ''} />
                     <div className={designSystemStyles.field}>
                         <label className={designSystemStyles.label} htmlFor="inputCode">Código de Confirmação</label>
@@ -47,9 +46,9 @@ export const ConfirmAccountForm: React.FC<IConfirmAccountFormProps> = ({
                     </div>
 
                     <div className={styles.actions}>
-                        <button className={designSystemStyles.primaryButton} type="submit">
-                            {isPending ? "Processando..." : "Confirmar Conta"}
-                        </button>
+                        <SubmitButton className={designSystemStyles.primaryButton} pendingLabel="Processando...">
+                            Confirmar Conta
+                        </SubmitButton>
 
                         <TimedButton
                             cooldown={120}
@@ -60,7 +59,7 @@ export const ConfirmAccountForm: React.FC<IConfirmAccountFormProps> = ({
                             appearance="secondary"
                         />
                     </div>
-                </fieldset>
+                </FormFieldset>
             </form>
         </>
     );

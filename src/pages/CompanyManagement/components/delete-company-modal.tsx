@@ -1,5 +1,5 @@
 import modal from '../../../styles/modal-form.module.css';
-import { useActionState, useMemo, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { Modal } from '../../../components/UI/Modal/modal';
@@ -8,6 +8,7 @@ import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { currentMembershipQuery, meQuery } from '../../../queries';
 import type { IUserCompany } from '../../../services/datalab-api/usersResource';
 import { createDeleteCompanyAction } from '../actions';
+import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 
 interface IDeleteCompanyModalProps {
   isOpen: boolean;
@@ -18,11 +19,8 @@ interface IDeleteCompanyModalProps {
 
 export const DeleteCompanyModal = ({ isOpen, company, onClose, onDeleted }: IDeleteCompanyModalProps) => {
   const queryClient = useQueryClient();
-  const boundAction = useMemo(
-    () => createDeleteCompanyAction(company?.id ?? ('' as never)),
-    [company],
-  );
-  const [formState, formAction, isPending] = useActionState(boundAction, INITIAL_ACTION_STATE);
+  const boundAction = createDeleteCompanyAction(company?.id ?? ('' as never));
+  const [formState, formAction] = useActionState(boundAction, INITIAL_ACTION_STATE);
   const [confirmText, setConfirmText] = useState('');
 
   useActionFeedback(formState, {
@@ -43,7 +41,7 @@ export const DeleteCompanyModal = ({ isOpen, company, onClose, onDeleted }: IDel
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Deletar empresa: ${company.name}`}>
       <form className={modal.form} key={company.id} action={formAction}>
-        <fieldset className={modal.fieldset} disabled={isPending}>
+        <FormFieldset className={modal.fieldset}>
           <p className={modal.hint}>
             Esta ação é irreversível. Para confirmar, digite <strong>{company.name}</strong> abaixo.
           </p>
@@ -65,10 +63,10 @@ export const DeleteCompanyModal = ({ isOpen, company, onClose, onDeleted }: IDel
             <p className={modal.error}>{formState.error}</p>
           )}
 
-          <button className={modal.deleteSubmit} type="submit" disabled={!canDelete || isPending}>
-            {isPending ? 'Deletando...' : 'Deletar empresa'}
-          </button>
-        </fieldset>
+          <SubmitButton className={modal.deleteSubmit} disabled={!canDelete} pendingLabel="Deletando...">
+            Deletar empresa
+          </SubmitButton>
+        </FormFieldset>
       </form>
     </Modal>
   );

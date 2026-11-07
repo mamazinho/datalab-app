@@ -7,6 +7,7 @@ import { DatalabAPI } from '../../services/datalab-api';
 import { StepsController, type StepsRef } from '../../components/UI/Steps/steps-controller';
 import { Step } from '../../components/UI/Steps/step';
 import { toast } from 'react-toastify';
+import { toastError, toastRequestError } from '../../components/Feedback/ErrorToast';
 import { RegisterForm } from './components/register-form';
 import { ConfirmAccountForm } from './components/confirm-account-form';
 import { confirmUserAction, registerUserAction } from './actions';
@@ -22,8 +23,8 @@ export const Register: React.FC = () => {
   const { handleSocialLogin } = useSocialLogin();
   const [pendingRegistration, setPendingRegistration] = useState(loadPendingRegistration);
 
-  const [registerState, registerFormAction, isRegisterPending] = useActionState(registerUserAction, INITIAL_ACTION_STATE);
-  const [confirmState, confirmFormAction, isConfirmPending] = useActionState(confirmUserAction, INITIAL_ACTION_STATE);
+  const [registerState, registerFormAction] = useActionState(registerUserAction, INITIAL_ACTION_STATE);
+  const [confirmState, confirmFormAction] = useActionState(confirmUserAction, INITIAL_ACTION_STATE);
 
   const emailFromLink = searchParams.get('email')?.toLowerCase();
   const resumesPendingRegistration =
@@ -51,7 +52,7 @@ export const Register: React.FC = () => {
 
   const handleResendCode = async () => {
     if (!pendingRegistration) {
-      toast.error("Usuário não encontrado para reenviar código.");
+      toastError("Usuário não encontrado para reenviar código.");
       return;
     }
 
@@ -59,8 +60,7 @@ export const Register: React.FC = () => {
       await DatalabAPI.UsersResource.resendConfirmationCode(pendingRegistration.id);
       toast.success(`Novo código enviado para ${pendingRegistration.email}`);
     } catch (error) {
-      console.error("Erro ao reenviar código:", error);
-      toast.error("Falha ao reenviar código de confirmação.");
+      toastRequestError(error);
     }
   };
 
@@ -72,7 +72,6 @@ export const Register: React.FC = () => {
                         <Step canGoForward={false}>
               <RegisterForm 
                 action={registerFormAction}
-                isPending={isRegisterPending}
                 onSocialLogin={handleSocialLogin}
               />
             </Step>
@@ -80,7 +79,6 @@ export const Register: React.FC = () => {
                         <Step canGoBack={true}>
               <ConfirmAccountForm 
                 action={confirmFormAction}
-                isPending={isConfirmPending}
                 userId={pendingRegistration?.id ?? null}
                 email={pendingRegistration?.email ?? ''}
                 defaultCode={codeFromLink}

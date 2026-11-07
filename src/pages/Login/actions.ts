@@ -7,6 +7,5 @@ export const loginAction = createFormAction(
   (credentials) => DatalabAPI.AuthResource.login(credentials),
   {
     invalidMessage: 'Parâmetros de login inválidos.',
-    errorPrefix: 'Falha no login: ',
   },
 );

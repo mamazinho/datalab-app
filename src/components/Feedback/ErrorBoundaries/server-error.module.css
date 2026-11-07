@@ -61,6 +61,14 @@
   padding: 0.12rem 0.35rem;
 }
 
+.traceId {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: calc(0.62rem * var(--font-scale));
+  opacity: 0.6;
+  user-select: all;
+}
+
 .retryButton {
   border-radius: 0.55rem;
   border: 1px solid var(--color-border);

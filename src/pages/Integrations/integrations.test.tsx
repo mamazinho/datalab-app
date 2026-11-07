@@ -1,7 +1,7 @@
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, screen, userEvent, waitFor, within } from '../../test/test-utils';
-import { api } from '../../test/msw/handlers';
+import { api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import { buildCompany, buildCurrentMembership, uuid } from '../../test/factories';
 import type { IIntegrationStatus } from '../../services/datalab-api/authResource';
@@ -231,7 +231,7 @@ describe('<Integrations />', () => {
       givenIntegrations([buildIntegration()]);
       server.use(
         http.get(api('auth/google/authorize/'), () =>
-          HttpResponse.json({ detail: 'Integração indisponível.' }, { status: 503 }),
+          apiErrorResponse(503, 'Integração indisponível.'),
         ),
       );
       renderIntegrations();
@@ -310,7 +310,7 @@ describe('<Integrations />', () => {
       givenIntegrations([buildIntegration({ connected: true })]);
       server.use(
         http.delete(api('auth/google/connection/'), () =>
-          HttpResponse.json({ detail: 'Provider fora do ar.' }, { status: 502 }),
+          apiErrorResponse(502, 'Provider fora do ar.'),
         ),
       );
       renderIntegrations();

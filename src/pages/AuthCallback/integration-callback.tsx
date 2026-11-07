@@ -19,7 +19,7 @@ export const IntegrationCallback = () => {
       status,
       provider: isProvider(provider) ? (provider as Provider) : null,
       integration: (integration as IntegrationKey | null) ?? null,
-      error: searchParams.get('error'),
+      friendlyMessage: searchParams.get('friendly_message'),
     };
 
     postAuthChannelMessage(message);

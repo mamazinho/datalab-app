@@ -1,7 +1,7 @@
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders, screen, userEvent, waitFor, within } from '../../test/test-utils';
-import { ACCESS_TOKEN, api } from '../../test/msw/handlers';
+import { ACCESS_TOKEN, api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import { buildCompany, buildUser, uuid } from '../../test/factories';
 import type { IUserResponse } from '../../services/datalab-api/usersResource';
@@ -158,7 +158,7 @@ describe('<EditProfile />', () => {
     givenLoggedUser();
     server.use(
       http.patch(api('users/me'), () =>
-        HttpResponse.json({ detail: 'Telefone já cadastrado.' }, { status: 400 }),
+        apiErrorResponse(400, 'Telefone já cadastrado.'),
       ),
     );
     renderWithProviders(<EditProfile />);
@@ -227,7 +227,7 @@ describe('<EditProfile />', () => {
       givenLoggedUser();
       server.use(
         http.delete(api('users/me'), () =>
-          HttpResponse.json({ detail: 'Transfira a posse antes de excluir sua conta: Acme.' }, { status: 409 }),
+          apiErrorResponse(409, 'Transfira a posse antes de excluir sua conta: Acme.'),
         ),
       );
       renderWithProviders(<EditProfile />);

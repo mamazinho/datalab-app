@@ -7,11 +7,11 @@ import { useAvatarUpload } from './use-avatar-upload';
 import type { IUserConfig, IUserResponse } from '../../../services/datalab-api/usersResource';
 import { PasswordInput } from '../../../components/UI/Inputs/Password/password-input';
 import { PhoneField } from '../../../components/UI/Inputs/Phone';
+import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 
 interface IEditProfileFormProps {
   user: IUserResponse;
   action: (formData: FormData) => void;
-  isPending: boolean;
   error?: string;
 }
 
@@ -21,7 +21,7 @@ const THEME_OPTIONS: { value: IUserConfig['theme']; label: string }[] = [
   { value: 'system', label: 'Sistema' },
 ];
 
-export const EditProfileForm = ({ user, action, isPending, error }: IEditProfileFormProps) => {
+export const EditProfileForm = ({ user, action, error }: IEditProfileFormProps) => {
   const { avatarUrl, isUploading: isUploadingAvatar, uploadError, handleFileSelected } = useAvatarUpload(user.avatar_url || '');
   const [phoneNumber, setPhoneNumber] = useState(user.phone_number || '');
   const [password, setPassword] = useState('');
@@ -50,14 +50,13 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
           avatarUrl={avatarUrl}
           firstName={firstName}
           isUploading={isUploadingAvatar}
-          isDisabled={isPending}
           onFileSelected={handleFileSelected}
         />
       </div>
 
       <input type="hidden" name="avatar_url" value={avatarUrl} readOnly />
 
-      <fieldset className={styles.styledFieldset} disabled={isPending || isUploadingAvatar}>
+      <FormFieldset className={styles.styledFieldset} disabled={isUploadingAvatar}>
 
         <h3 className={styles.sectionTitle}>Perfil</h3>
 
@@ -79,7 +78,7 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
             value={phoneNumber}
             onValueChange={setPhoneNumber}
             autoComplete="tel"
-            disabled={isPending || isUploadingAvatar}
+            disabled={isUploadingAvatar}
           />
         </div>
 
@@ -132,11 +131,11 @@ export const EditProfileForm = ({ user, action, isPending, error }: IEditProfile
         {(error || uploadError) && <p className={styles.formError}>{error || uploadError}</p>}
 
         <div className={styles.footer}>
-          <button className={styles.saveButton} type="submit" disabled={isPending || isUploadingAvatar}>
-            {isPending ? 'Salvando...' : 'Salvar alterações'}
-          </button>
+          <SubmitButton className={styles.saveButton} disabled={isUploadingAvatar} pendingLabel="Salvando...">
+            Salvar alterações
+          </SubmitButton>
         </div>
-      </fieldset>
+      </FormFieldset>
     </form>
   );
 };

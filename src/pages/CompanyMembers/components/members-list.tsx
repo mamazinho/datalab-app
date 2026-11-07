@@ -1,6 +1,5 @@
 import styles from '../company-members.module.css';
 import { useState } from 'react';
-import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../components/UI/Tables/ActionTable';
 import { useCompanyContext } from '../../../contexts/company';
@@ -8,9 +7,9 @@ import { useConfirm, type IConfirmOptions } from '../../../contexts/confirm';
 import { DatalabAPI } from '../../../services/datalab-api';
 import { currentMembershipQuery, meQuery, membersQuery } from '../../../queries';
 import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
-import type { UUID7 } from '../../../types/ids';
 import { MEMBERSHIP_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
 import { MemberPermissionsModal } from './member-permissions-modal';
+import { useRowActions } from '../../../hooks/use-row-actions';
 
 interface IMembersListProps {
   members: ICompanyMembership[];
@@ -31,25 +30,16 @@ export const MembersList = ({ members }: IMembersListProps) => {
   const canRemove = hasPermissionByRoute(MEMBERSHIP_ROUTE_PERMISSIONS.remove);
   const [selectedMember, setSelectedMember] = useState<ICompanyMembership | null>(null);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
-  const [busyId, setBusyId] = useState<UUID7 | null>(null);
+  const { rows, busyId, run } = useRowActions(membersQuery.queryKey, members);
 
   const runMemberAction = async (
     member: ICompanyMembership,
     confirmation: IConfirmOptions,
-    action: () => Promise<unknown>,
+    request: () => Promise<unknown>,
     successMessage: string,
+    optimistic?: ICompanyMembership | null,
   ) => {
-    if (!(await confirm(confirmation))) return;
-    setBusyId(member.id);
-    try {
-      await action();
-      toast.success(successMessage);
-      void queryClient.invalidateQueries({ queryKey: membersQuery.queryKey });
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Erro ao atualizar o membro.');
-    } finally {
-      setBusyId(null);
-    }
+    if (await confirm(confirmation)) run({ id: member.id, request, successMessage, optimistic });
   };
 
   const removeMember = (member: ICompanyMembership) =>
@@ -58,6 +48,7 @@ export const MembersList = ({ members }: IMembersListProps) => {
       { title: 'Remover membro', message: `Remover ${nameOf(member)} da empresa?`, confirmLabel: 'Remover' },
       () => DatalabAPI.MembershipsResource.removeMember(member.id),
       'Membro removido.',
+      null,
     );
 
   const transferOwnership = (member: ICompanyMembership) =>
@@ -76,7 +67,7 @@ export const MembersList = ({ members }: IMembersListProps) => {
       `${nameOf(member)} agora é o owner da empresa.`,
     );
 
-  if (members.length === 0) {
+  if (rows.length === 0) {
     return <p className={styles.membersEmpty}>Nenhum membro encontrado.</p>;
   }
 
@@ -89,7 +80,7 @@ export const MembersList = ({ members }: IMembersListProps) => {
           <th>Papel</th>
         </TableHeaders>
 
-        {members.map((member) => (
+        {rows.map((member) => (
           <TableRow key={member.id}>
             <td>{member.user?.name ?? '—'}</td>
             <td>

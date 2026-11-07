@@ -1,6 +1,7 @@
 import { axiosCompanyInstance } from "./axios";
 import type { IChatFileRef } from "./chatFilesResource";
 import type { IChatMember } from "./chatsResource";
+import type { IApiError } from "../../types/errors";
 import type { UUID7 } from "../../types/ids";
 
 export type IChatStreamEvent =
@@ -11,7 +12,7 @@ export type IChatStreamEvent =
   | { type: 'agent_event'; thread_id: string; author: 'supervisor' | 'specialist'; agent_key: string | null; content: string }
   | { type: 'clarification'; question: string; options?: string[]; tool_call_id: string }
   | { type: 'file'; content?: string; files?: IChatFileRef[]; created_at?: string }
-  | { type: 'error'; content?: string }
+  | { type: 'error'; content?: IApiError }
   | { type: 'done' };
 
 export interface IUserPrompt {

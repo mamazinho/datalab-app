@@ -1,5 +1,6 @@
 import { AxiosError, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { buildApiError } from '../../test/factories';
 import { axiosInstance, axiosCompanyInstance, axiosPrivateInstance, setSessionExpiredHandler } from './axios';
 
 const NEW_TOKEN = 'token-novo';
@@ -12,9 +13,13 @@ const okResponse = (config: InternalAxiosRequestConfig, data: unknown): AxiosRes
   config,
 });
 
-const unauthorized = (config: InternalAxiosRequestConfig, detail: string): AxiosError =>
+const unauthorized = (
+  config: InternalAxiosRequestConfig,
+  error: string,
+  friendlyMessage = 'Sua sessão expirou. Entre novamente.',
+): AxiosError =>
   new AxiosError('Request failed with status code 401', 'ERR_BAD_REQUEST', config, undefined, {
-    data: { detail },
+    data: buildApiError({ status: 401, error, friendly_message: friendlyMessage }),
     status: 401,
     statusText: 'Unauthorized',
     headers: {},
@@ -24,12 +29,12 @@ const unauthorized = (config: InternalAxiosRequestConfig, detail: string): Axios
 const authorizationOf = (config: InternalAxiosRequestConfig): string =>
   String(config.headers.get('Authorization') ?? '');
 
-const buildPrivateAdapter = (detail = 'Token has expired') =>
+const buildPrivateAdapter = (error = 'InvalidAccessTokenFriendlyException', friendlyMessage?: string) =>
   vi.fn<AxiosAdapter>(async (config) => {
     if (authorizationOf(config) === `Bearer ${NEW_TOKEN}`) {
       return okResponse(config, { ok: true });
     }
-    throw unauthorized(config, detail);
+    throw unauthorized(config, error, friendlyMessage);
   });
 
 const buildRefreshAdapter = () =>
@@ -107,7 +112,7 @@ describe('silent refresh on 401', () => {
 
   it('never retries the same request more than once', async () => {
     const privateAdapter = vi.fn<AxiosAdapter>(async (config) => {
-      throw unauthorized(config, 'Token has expired');
+      throw unauthorized(config, 'InvalidAccessTokenFriendlyException');
     });
     axiosPrivateInstance.defaults.adapter = privateAdapter;
     axiosInstance.defaults.adapter = buildRefreshAdapter();
@@ -123,7 +128,7 @@ describe('silent refresh on 401', () => {
     setSessionExpiredHandler(onSessionExpired);
     axiosPrivateInstance.defaults.adapter = buildPrivateAdapter();
     axiosInstance.defaults.adapter = vi.fn<AxiosAdapter>(async (config) => {
-      throw unauthorized(config, 'Invalid token');
+      throw unauthorized(config, 'SessionExpiredFriendlyException');
     });
 
     await expect(axiosPrivateInstance.get('me/')).rejects.toThrow();
@@ -135,10 +140,10 @@ describe('silent refresh on 401', () => {
     const onSessionExpired = vi.fn();
     setSessionExpiredHandler(onSessionExpired);
     const refreshAdapter = buildRefreshAdapter();
-    axiosPrivateInstance.defaults.adapter = buildPrivateAdapter('Not authenticated');
+    axiosPrivateInstance.defaults.adapter = buildPrivateAdapter('InactiveUserFriendlyException', 'Esta conta não está ativa.');
     axiosInstance.defaults.adapter = refreshAdapter;
 
-    await expect(axiosPrivateInstance.get('me/')).rejects.toThrow('Not authenticated');
+    await expect(axiosPrivateInstance.get('me/')).rejects.toMatchObject({ friendly_message: 'Esta conta não está ativa.' });
 
     expect(refreshAdapter).not.toHaveBeenCalled();
     expect(onSessionExpired).toHaveBeenCalledOnce();
@@ -146,10 +151,10 @@ describe('silent refresh on 401', () => {
 });
 
 describe('public instance error handling', () => {
-  it('uses the backend detail as the error message', async () => {
+  it('uses the friendly message of the backend as the error message', async () => {
     axiosInstance.defaults.adapter = vi.fn<AxiosAdapter>(async (config) => {
       throw new AxiosError('Request failed', 'ERR_BAD_REQUEST', config, undefined, {
-        data: { detail: 'E-mail ou senha inválidos.' },
+        data: buildApiError({ friendly_message: 'E-mail ou senha inválidos.' }),
         status: 400,
         statusText: 'Bad Request',
         headers: {},
@@ -157,7 +162,7 @@ describe('public instance error handling', () => {
       });
     });
 
-    await expect(axiosInstance.post('auth/login/')).rejects.toThrow('E-mail ou senha inválidos.');
+    await expect(axiosInstance.post('auth/login/')).rejects.toMatchObject({ friendly_message: 'E-mail ou senha inválidos.' });
   });
 
   it('translates a network failure into a readable message', async () => {
@@ -165,7 +170,7 @@ describe('public instance error handling', () => {
       throw new AxiosError('Network Error', 'ERR_NETWORK', config, {});
     });
 
-    await expect(axiosInstance.get('health/')).rejects.toThrow(/Verifique sua internet/);
+    await expect(axiosInstance.get('health/')).rejects.toMatchObject({ friendly_message: expect.stringMatching(/Verifique sua internet/) });
   });
 
   it('tells a timeout apart from a network failure', async () => {
@@ -173,7 +178,7 @@ describe('public instance error handling', () => {
       throw new AxiosError('timeout of 30000ms exceeded', 'ECONNABORTED', config, {});
     });
 
-    await expect(axiosInstance.get('health/')).rejects.toThrow(/demorou demais para responder/);
+    await expect(axiosInstance.get('health/')).rejects.toMatchObject({ friendly_message: expect.stringMatching(/demorou demais para responder/) });
   });
 });
 
@@ -183,7 +188,7 @@ describe('authenticated instance error handling', () => {
       throw new AxiosError('timeout of 30000ms exceeded', 'ECONNABORTED', config, {});
     });
 
-    await expect(axiosPrivateInstance.get('me/')).rejects.toThrow(/demorou demais para responder/);
+    await expect(axiosPrivateInstance.get('me/')).rejects.toMatchObject({ friendly_message: expect.stringMatching(/demorou demais para responder/) });
   });
 
   it('translates a network failure into a readable message', async () => {
@@ -191,7 +196,7 @@ describe('authenticated instance error handling', () => {
       throw new AxiosError('Network Error', 'ERR_NETWORK', config, {});
     });
 
-    await expect(axiosPrivateInstance.get('me/')).rejects.toThrow(/Verifique sua internet/);
+    await expect(axiosPrivateInstance.get('me/')).rejects.toMatchObject({ friendly_message: expect.stringMatching(/Verifique sua internet/) });
   });
 });
 
@@ -210,28 +215,30 @@ describe.each([
   ['public', axiosInstance],
   ['authenticated', axiosPrivateInstance],
 ])('%s instance error message', (_, instance) => {
-  it('uses the first message of a FastAPI validation error', async () => {
-    instance.defaults.adapter = failWith(422, {
-      detail: [
-        { loc: ['body', 'url'], msg: 'Value error, URL inválida', type: 'value_error' },
-        { loc: ['body', 'name'], msg: 'Field required', type: 'missing' },
-      ],
-    });
-
-    await expect(instance.post('agents/mcp-servers/')).rejects.toThrow(/^URL inválida$/);
-  });
-
-  it('explains a rate limit in plain words', async () => {
-    instance.defaults.adapter = failWith(429, { detail: 'Too Many Requests' });
-
-    await expect(instance.get('agents/')).rejects.toThrow(
-      /^Muitas requisições\. Tente novamente em instantes\.$/,
+  it('shows the friendly message even on a server error', async () => {
+    instance.defaults.adapter = failWith(
+      500,
+      buildApiError({ status: 500, error: 'InternalServerErrorFriendlyException', friendly_message: 'Algo deu errado.' }),
     );
+
+    await expect(instance.get('agents/')).rejects.toMatchObject({ friendly_message: expect.stringMatching(/^Algo deu errado\.$/) });
   });
 
-  it('keeps the default message when the body has nothing readable', async () => {
+  it('prefers the friendly message of the backend over the generic rate limit text', async () => {
+    instance.defaults.adapter = failWith(429, buildApiError({ status: 429, friendly_message: 'Peça um novo código.' }));
+
+    await expect(instance.get('agents/')).rejects.toMatchObject({ friendly_message: expect.stringMatching(/^Peça um novo código\.$/) });
+  });
+
+  it('explains a rate limit that comes from outside the API in plain words', async () => {
+    instance.defaults.adapter = failWith(429, '<html>Too Many Requests</html>');
+
+    await expect(instance.get('agents/')).rejects.toMatchObject({ friendly_message: expect.stringMatching(/^Muitas requisições\. Tente novamente em instantes\.$/) });
+  });
+
+  it('explains a body outside the contract in plain words', async () => {
     instance.defaults.adapter = failWith(502, '<html>Bad Gateway</html>');
 
-    await expect(instance.get('agents/')).rejects.toThrow(/^Request failed with status code 502$/);
+    await expect(instance.get('agents/')).rejects.toMatchObject({ friendly_message: expect.stringMatching(/^Ocorreu um erro inesperado\. Tente novamente mais tarde\.$/) });
   });
 });

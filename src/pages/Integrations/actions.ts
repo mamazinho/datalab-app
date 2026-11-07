@@ -97,6 +97,5 @@ export const createSaveProviderAssetsAction = ({
     {
       // One "assets" input per checked asset; Object.fromEntries would keep only the last one
       mapFormData: (formData) => ({ external_ids: formData.getAll('assets') }),
-      errorPrefix: 'Falha ao salvar os ativos: ',
     },
   );

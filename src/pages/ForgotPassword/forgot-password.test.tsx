@@ -1,7 +1,7 @@
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders, screen, userEvent, waitFor } from '../../test/test-utils';
-import { api } from '../../test/msw/handlers';
+import { api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import { ForgotPassword } from './forgot-password';
 
@@ -44,7 +44,7 @@ describe('<ForgotPassword />', () => {
     const user = userEvent.setup();
     server.use(
       http.post(api('users/forgot-password'), () =>
-        HttpResponse.json({ detail: 'Usuário não encontrado.' }, { status: 404 }),
+        apiErrorResponse(404, 'Usuário não encontrado.'),
       ),
     );
     renderWithProviders(<ForgotPassword />);

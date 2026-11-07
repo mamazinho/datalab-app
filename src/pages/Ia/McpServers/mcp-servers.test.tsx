@@ -1,7 +1,7 @@
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, screen, userEvent, waitFor, within } from '../../../test/test-utils';
-import { api } from '../../../test/msw/handlers';
+import { api, apiErrorResponse } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
 import {
   buildAgent,
@@ -157,7 +157,7 @@ describe('<McpServers />', () => {
       server.use(
         http.get(api('agents/'), () => HttpResponse.json([crmAgent])),
         http.post(api('agents/mcp-servers/'), () =>
-          HttpResponse.json({ detail: 'Já existe um MCP com esse nome.' }, { status: 409 }),
+          apiErrorResponse(409, 'Já existe um MCP com esse nome.'),
         ),
       );
       renderWithProviders(<McpServers />, { companies: [owner] });
@@ -166,7 +166,7 @@ describe('<McpServers />', () => {
       await user.click(screen.getByRole('button', { name: 'Adicionar servidor' }));
 
       expect(
-        await screen.findByText('Falha ao salvar o servidor MCP: Já existe um MCP com esse nome.'),
+        await screen.findByText('Já existe um MCP com esse nome.'),
       ).toBeInTheDocument();
     });
   });

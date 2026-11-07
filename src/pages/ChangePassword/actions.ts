@@ -13,6 +13,5 @@ export const changePasswordAction = createFormAction(
   },
   {
     invalidMessage: 'Parâmetros inválidos.',
-    errorMessage: 'Erro ao alterar senha. O link pode ter expirado.',
   },
 );

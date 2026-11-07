@@ -1,12 +1,9 @@
 import type { z } from 'zod';
 import type { ActionState } from '../types/actions';
+import { ApiError } from './api-error';
 
 interface ICreateFormActionOptions {
   invalidMessage?: string;
-  // Prepended to the thrown error message
-  errorPrefix?: string;
-  // Replaces the thrown error message
-  errorMessage?: string;
   mapFormData?: (formData: FormData) => unknown;
 }
 
@@ -17,8 +14,6 @@ export function createFormAction<TSchema extends z.ZodType, TData>(
 ) {
   const {
     invalidMessage = 'Dados inválidos.',
-    errorPrefix = '',
-    errorMessage,
     mapFormData = (formData: FormData) => Object.fromEntries(formData),
   } = options;
 
@@ -44,10 +39,11 @@ export function createFormAction<TSchema extends z.ZodType, TData>(
         timestamp: Date.now(),
       };
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      const { friendly_message, traceId } = ApiError.from(error);
       return {
         success: false,
-        error: errorMessage ?? `${errorPrefix}${message}`,
+        error: friendly_message,
+        traceId,
         timestamp: Date.now(),
       };
     }

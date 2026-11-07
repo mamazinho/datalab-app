@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, use } from 'react';
 
 export type ThemeMode = 'light' | 'dark';
 export type ThemePreference = ThemeMode | 'system';
@@ -12,7 +12,7 @@ export interface ThemeContextType {
 export const ThemeContext = createContext<ThemeContextType | null>(null);
 
 export const useTheme = () => {
-  const context = useContext(ThemeContext);
+  const context = use(ThemeContext);
 
   if (!context) {
     throw new Error('useTheme must be used within a CustomThemeProvider');

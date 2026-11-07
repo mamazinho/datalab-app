@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ApiError } from '../../../utils/api-error';
 
 const uploadImageToTemporaryHost = async (file: File): Promise<string> => {
   const uploadFormData = new FormData();
@@ -40,8 +41,7 @@ export const useAvatarUpload = (initialUrl: string) => {
       const uploadedImageUrl = await uploadImageToTemporaryHost(file);
       setAvatarUrl(uploadedImageUrl);
     } catch (uploadErr: unknown) {
-      const message = uploadErr instanceof Error ? uploadErr.message : String(uploadErr);
-      setUploadError(`Erro no upload da foto: ${message}`);
+      setUploadError(ApiError.from(uploadErr).friendly_message);
     } finally {
       setIsUploading(false);
     }

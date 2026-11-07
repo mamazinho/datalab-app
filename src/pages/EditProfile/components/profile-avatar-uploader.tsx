@@ -1,12 +1,12 @@
 import styles from './edit-profile-form.module.css';
 import { Avatar } from '../../../components/UI/Avatar';
 import { useRef, type ChangeEvent } from 'react';
+import { useFormStatus } from 'react-dom';
 
 interface IProfileAvatarUploaderProps {
   avatarUrl: string;
   firstName: string;
   isUploading: boolean;
-  isDisabled: boolean;
   onFileSelected: (file: File) => Promise<void>;
 }
 
@@ -14,13 +14,14 @@ export const ProfileAvatarUploader = ({
   avatarUrl,
   firstName,
   isUploading,
-  isDisabled,
   onFileSelected,
 }: IProfileAvatarUploaderProps) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { pending } = useFormStatus();
+  const isDisabled = pending || isUploading;
 
   const handleOpenFilePicker = () => {
-    if (isDisabled || isUploading) return;
+    if (isDisabled) return;
     fileInputRef.current?.click();
   };
 
@@ -34,7 +35,7 @@ export const ProfileAvatarUploader = ({
 
   return (
     <>
-      <button className={styles.avatarButton} type="button" onClick={handleOpenFilePicker} disabled={isDisabled || isUploading}>
+      <button className={styles.avatarButton} type="button" onClick={handleOpenFilePicker} disabled={isDisabled}>
         <Avatar className={styles.avatarImage} src={avatarUrl} name={firstName} alt={`Foto de perfil de ${firstName}`} />
         <span className={styles.avatarEditIndicator} title="Editar foto">✎</span>
       </button>
@@ -43,7 +44,7 @@ export const ProfileAvatarUploader = ({
         type="file"
         accept="image/*"
         onChange={handleFileChange}
-        disabled={isDisabled || isUploading}
+        disabled={isDisabled}
       />
       <p className={styles.avatarHelpText}>
         {isUploading && <span className={styles.uploadingBadge}> Fazendo upload da imagem...</span>}

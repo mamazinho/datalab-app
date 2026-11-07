@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { ReactNode } from 'react';
-import { ACCESS_TOKEN, api } from '../../test/msw/handlers';
+import { ACCESS_TOKEN, api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import { createTestQueryClient } from '../../test/test-utils';
 import { axiosPrivateInstance } from '../../services/datalab-api/axios';
@@ -83,7 +83,7 @@ describe('AuthProvider', () => {
     localStorage.setItem('accessToken', 'token-expirado');
     server.use(
       http.get(api('users/me'), () =>
-        HttpResponse.json({ detail: 'Not authenticated' }, { status: 401 }),
+        apiErrorResponse(401, 'Not authenticated'),
       ),
     );
     const { result } = renderAuth();

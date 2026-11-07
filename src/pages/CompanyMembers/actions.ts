@@ -37,7 +37,6 @@ export const updateMemberPermissionsAction = createFormAction(
   ({ membershipId, ...selection }) =>
     DatalabAPI.MembershipsResource.updateMemberPermissions(membershipId, selection),
   {
-    errorPrefix: 'Erro ao salvar permissões: ',
     mapFormData: (formData) => ({ membershipId: formData.get('membershipId'), ...selectedPermissions(formData) }),
   },
 );

@@ -17,7 +17,7 @@ export interface IIntegrationCallbackEvent {
   status: 'connected' | 'error';
   provider: Provider | null;
   integration: IntegrationKey | null;
-  error: string | null;
+  friendlyMessage: string | null;
 }
 
 export type AuthChannelEvent = ISocialLoginCallbackEvent | IIntegrationCallbackEvent;

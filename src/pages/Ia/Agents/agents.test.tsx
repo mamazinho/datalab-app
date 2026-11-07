@@ -1,10 +1,11 @@
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders, screen, userEvent, waitFor, within } from '../../../test/test-utils';
-import { api } from '../../../test/msw/handlers';
+import { api, apiErrorResponse } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
 import {
   buildAgent,
+  buildApiError,
   buildCompany,
   buildCurrentMembership,
   buildRoutePermission,
@@ -368,7 +369,7 @@ describe('<Agents />', () => {
       givenAgents([buildAgent({ id: uuid(10) })]);
       server.use(
         http.delete(api(`agents/${uuid(10)}/`), () =>
-          HttpResponse.json({ detail: 'Agente em uso por um chat.' }, { status: 409 }),
+          apiErrorResponse(409, 'Agente em uso por um chat.'),
         ),
       );
       renderAgents();
@@ -378,6 +379,26 @@ describe('<Agents />', () => {
       await answerConfirmation(user, 'Excluir');
 
       expect(await screen.findByText('Agente em uso por um chat.')).toBeInTheDocument();
+    });
+
+    it('shows the support code of the refusal in the toast', async () => {
+      const user = userEvent.setup();
+      givenAgents([buildAgent({ id: uuid(10) })]);
+      server.use(
+        http.delete(api(`agents/${uuid(10)}/`), () =>
+          HttpResponse.json(buildApiError({ status: 409, friendly_message: 'Agente em uso por um chat.' }), {
+            status: 409,
+            headers: { traceresponse: '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01' },
+          }),
+        ),
+      );
+      renderAgents();
+      await openRowMenu(user);
+
+      await user.click(screen.getByRole('menuitem', { name: 'Excluir' }));
+      await answerConfirmation(user, 'Excluir');
+
+      expect(await screen.findByTitle('Código para o suporte')).toHaveTextContent('4bf92f3577b34da6a3ce929d0e0e4736');
     });
   });
 });

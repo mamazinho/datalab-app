@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./password-input.module.css";
 import { PasswordRequirements } from "./password-requirements";
 
@@ -21,18 +21,10 @@ export const PasswordInput: React.FC<IPasswordInputProps> = ({
     const [showPassword, setShowPassword] = useState(false);
     const [typedPassword, setTypedPassword] = useState('');
 
-    const shouldValidateMatch = useMemo(
-        () => typeof matchValue === 'string' && (enableMatchValidation ?? true),
-        [matchValue, enableMatchValidation],
-    );
+    const shouldValidateMatch = typeof matchValue === 'string' && (enableMatchValidation ?? true);
 
-    const isMismatch = shouldValidateMatch && typedPassword.length > 0 && typedPassword !== matchValue;
-
-    useEffect(() => {
-        if (typeof props.value === 'string') {
-            setTypedPassword(props.value);
-        }
-    }, [props.value]);
+    const password = typeof props.value === 'string' ? props.value : typedPassword;
+    const isMismatch = shouldValidateMatch && password.length > 0 && password !== matchValue;
 
     useEffect(() => {
         if (!inputRef.current) return;
@@ -85,7 +77,7 @@ export const PasswordInput: React.FC<IPasswordInputProps> = ({
                     )}
                 </button>
             </div>
-            {showRequirements && isFocused && <PasswordRequirements password={typedPassword} />}
+            {showRequirements && isFocused && <PasswordRequirements password={password} />}
             {isMismatch && <p className={styles.matchError}>{mismatchMessage}</p>}
         </div>
     )

@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../contexts/auth';
 import { useAuthPopup } from './use-auth-popup';
@@ -17,12 +16,9 @@ export function useSocialLogin() {
     navigate('/');
   });
 
-  const handleSocialLogin = useCallback(
-    (provider: Provider) => {
-      openPopup(DatalabAPI.AuthResource.socialLoginUrl(provider), `${provider}_login_popup`);
-    },
-    [openPopup],
-  );
+  const handleSocialLogin = (provider: Provider) => {
+    openPopup(DatalabAPI.AuthResource.socialLoginUrl(provider), `${provider}_login_popup`);
+  };
 
   return { handleSocialLogin };
 }

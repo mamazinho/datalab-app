@@ -18,7 +18,6 @@ export const createSaveMcpServerAction = (mcpServer: IRetrieveMcpServer | null) 
         auth: keepsSavedAuth ? undefined : payload.auth,
       });
     },
-    { errorPrefix: 'Falha ao salvar o servidor MCP: ' },
   );
 
 export const testMcpServerConnection = async (formData: FormData) => {

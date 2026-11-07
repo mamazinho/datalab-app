@@ -2,7 +2,7 @@ import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 import { renderWithProviders, screen, userEvent, waitFor } from '../../test/test-utils';
-import { api } from '../../test/msw/handlers';
+import { api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import { buildUser, uuid } from '../../test/factories';
 import { Register } from './register';
@@ -129,7 +129,7 @@ describe('<Register />', () => {
     const user = setupUser();
     server.use(
       http.post(api('users'), () =>
-        HttpResponse.json({ detail: 'E-mail já cadastrado.' }, { status: 409 }),
+        apiErrorResponse(409, 'E-mail já cadastrado.'),
       ),
     );
     renderRegister();
@@ -257,7 +257,7 @@ describe('<Register />', () => {
     const user = setupUser();
     server.use(
       http.post(api(`users/${uuid(3)}/resend-confirmation`), () =>
-        HttpResponse.json({ detail: 'Limite excedido.' }, { status: 429 }),
+        apiErrorResponse(429, 'Limite excedido.'),
       ),
     );
     renderRegister();
@@ -265,6 +265,6 @@ describe('<Register />', () => {
 
     await user.click(screen.getByRole('button', { name: 'Reenviar Código' }));
 
-    expect(await screen.findByText(/Falha ao reenviar código/i)).toBeInTheDocument();
+    expect(await screen.findByText('Limite excedido.')).toBeInTheDocument();
   });
 });

@@ -10,9 +10,9 @@ import {
   userEvent,
   waitFor,
 } from '../../../test/test-utils';
-import { ACCESS_TOKEN, api } from '../../../test/msw/handlers';
+import { ACCESS_TOKEN, api, apiErrorResponse } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
-import { buildChat, buildCompany, uuid } from '../../../test/factories';
+import { buildApiError, buildChat, buildCompany, uuid } from '../../../test/factories';
 import { meQuery } from '../../../queries';
 import type { IChatStreamEvent } from '../../../services/datalab-api/chatMessagesResource';
 import type { IRetrieveChat } from '../../../services/datalab-api/chatsResource';
@@ -97,7 +97,7 @@ describe('<ChatMessages />', () => {
 
   it('sends the user back to the list when the chat does not exist', async () => {
     server.use(
-      http.get(api(`chats/${CHAT_ID}/`), () => HttpResponse.json({ detail: 'Não encontrado' }, { status: 404 })),
+      http.get(api(`chats/${CHAT_ID}/`), () => apiErrorResponse(404, 'Não encontrado')),
     );
     renderMessages();
 
@@ -288,7 +288,9 @@ describe('<ChatMessages />', () => {
     it('shows the error the backend streamed', async () => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);
-      givenStreamedAnswer([{ type: 'error', content: 'O agente ficou sem contexto.' }]);
+      givenStreamedAnswer([
+        { type: 'error', content: buildApiError({ error: 'ChatRunFailedFriendlyException', friendly_message: 'O agente ficou sem contexto.' }) },
+      ]);
       renderMessages();
 
       await sendPrompt(user, 'Qual foi a receita?');
@@ -325,15 +327,39 @@ describe('<ChatMessages />', () => {
       givenHistory([]);
       server.use(
         http.post(api(`chats/${CHAT_ID}/messages/`), () =>
-          HttpResponse.json({ detail: 'Agente indisponível.' }, { status: 503 }),
+          apiErrorResponse(503, 'Agente indisponível.'),
         ),
       );
       renderMessages();
 
       await sendPrompt(user, 'Qual foi a receita?');
 
-      expect(await screen.findByText('Erro:')).toBeInTheDocument();
-      expect(await screen.findByText(/status code 503/)).toBeInTheDocument();
+      expect(await screen.findByText('Agente indisponível.')).toBeInTheDocument();
+    });
+
+    it('renews an expired session and still sends the message', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      let attempts = 0;
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/messages/`), () => {
+          attempts += 1;
+          if (attempts === 1) return apiErrorResponse(401, 'Sessão expirada.', 'InvalidAccessTokenFriendlyException');
+          const stream = new ReadableStream({
+            start(controller) {
+              controller.enqueue(encoder.encode(`${JSON.stringify(answer('Receita de R$ 10 mil.'))}\n`));
+              controller.close();
+            },
+          });
+          return new HttpResponse(stream, { headers: { 'Content-Type': 'application/x-ndjson' } });
+        }),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Qual foi a receita?');
+
+      expect(await screen.findByText('Receita de R$ 10 mil.')).toBeInTheDocument();
+      expect(attempts).toBe(2);
     });
   });
 
@@ -463,8 +489,8 @@ describe('<ChatMessages />', () => {
       return contentTypes;
     };
 
-    const givenUploadRefused = (status: number, detail: string) => {
-      server.use(http.post(api(`chats/${CHAT_ID}/files/`), () => HttpResponse.json({ detail }, { status })));
+    const givenUploadRefused = (status: number, apiMessage: string) => {
+      server.use(http.post(api(`chats/${CHAT_ID}/files/`), () => apiErrorResponse(status, apiMessage)));
     };
 
     const captureMessageBody = () => {
@@ -557,24 +583,24 @@ describe('<ChatMessages />', () => {
     });
 
     it.each([
-      [413, 'File is larger than 10MB', /relatorio\.pdf: Arquivo grande demais/],
-      [415, 'Unsupported file type: application/pdf', /relatorio\.pdf: Tipo de arquivo não suportado/],
-    ])('explains an upload the API refuses with %i', async (status, detail, message) => {
+      [413, 'Arquivo grande demais. O limite é de 10240KB.'],
+      [415, 'Tipo de arquivo não suportado. Envie PDF, imagem ou texto.'],
+    ])('shows the reason the API gives for refusing an upload with %i', async (status, friendlyMessage) => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);
-      givenUploadRefused(status, detail);
+      givenUploadRefused(status, friendlyMessage);
       renderMessages();
 
       await attach(user, pdf());
 
       expect(await screen.findByText('falhou')).toBeInTheDocument();
-      expect(screen.getByText(message)).toBeInTheDocument();
+      expect(screen.getByText(`relatorio.pdf: ${friendlyMessage}`)).toBeInTheDocument();
     });
 
     it('keeps a refused attachment out of the message', async () => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);
-      givenUploadRefused(413, 'File is larger than 10MB');
+      givenUploadRefused(413, 'Arquivo grande demais. O limite é de 10240KB.');
       const sent = captureMessageBody();
       renderMessages();
 

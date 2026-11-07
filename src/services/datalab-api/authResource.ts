@@ -1,5 +1,5 @@
-import axios from "axios";
 import { axiosInstance, axiosPrivateInstance } from "./axios";
+import { ApiError } from "../../utils/api-error";
 import type { IntegrationKey, Provider } from "../../types/integrations";
 
 export interface ILoginUserRequest {
@@ -75,7 +75,7 @@ export const AuthResource = {
     try {
       await axiosPrivateInstance.delete(`auth/${provider}/connection/`);
     } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.status === 404) return;
+      if (ApiError.from(error).status === 404) return;
       throw error;
     }
   },

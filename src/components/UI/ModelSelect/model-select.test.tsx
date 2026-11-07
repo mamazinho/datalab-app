@@ -1,7 +1,7 @@
-import { HttpResponse, http } from 'msw';
+import { http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders, screen, userEvent, within } from '../../../test/test-utils';
-import { api } from '../../../test/msw/handlers';
+import { api, apiErrorResponse } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
 import { ModelSelect } from './model-select';
 
@@ -53,7 +53,7 @@ describe('<ModelSelect />', () => {
     const user = userEvent.setup();
     server.use(
       http.get(api('agents/available-models'), () =>
-        HttpResponse.json({ detail: 'Falha no provider.' }, { status: 500 }),
+        apiErrorResponse(500, 'Falha no provider.'),
       ),
     );
     renderModelSelect('gpt-4o');

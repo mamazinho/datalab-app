@@ -2,26 +2,19 @@ import styles from './server-error.module.css';
 import { useEffect, useRef } from "react";
 import type { FallbackProps } from "react-error-boundary";
 import { toast, type Id } from "react-toastify";
+import { toastError } from '../ErrorToast';
+import { ApiError } from '../../../utils/api-error';
 import 'react-toastify/dist/ReactToastify.css';
-import { isAxiosError, AxiosError } from 'axios';
 
 export const ServerErrorComponent = ({ error, resetErrorBoundary }: FallbackProps) => {
   const toastId = useRef<Id | null>(null);
-
-  const getStatus = (err: AxiosError) => {
-    if (isAxiosError(err)) {
-      return err.response?.status || 500;
-    }
-  };
-  const status = getStatus(error as AxiosError) || 500;
-
-  const isClientError = status >= 400 && status < 500; 
+  const { status, friendly_message, traceId } = ApiError.from(error);
+  const isClientError = status >= 400 && status < 500;
 
   useEffect(() => {
     if (isClientError) {
-      const message = (error as Error)?.message || "Erro na requisição";
       if (toastId.current === null || !toast.isActive(toastId.current)) {
-        toastId.current = toast.error(`Atenção: ${message}`, {
+        toastId.current = toastError(friendly_message, traceId, {
           toastId: `error-${status}`,
           position: "top-right",
           autoClose: 5000,
@@ -33,7 +26,7 @@ export const ServerErrorComponent = ({ error, resetErrorBoundary }: FallbackProp
         });
       }
     }
-  }, [isClientError, error, status]);
+  }, [isClientError, friendly_message, status, traceId]);
 
   if (isClientError) {
     return (
@@ -56,7 +49,8 @@ export const ServerErrorComponent = ({ error, resetErrorBoundary }: FallbackProp
       </p>
       <div className={styles.footer}>
         <code className={styles.errorMessageCode}>
-          {(error as Error)?.message || "Erro desconhecido"}
+          {friendly_message}
+          {traceId && <small className={styles.traceId} title="Código para o suporte">{traceId}</small>}
         </code>
         <button className={styles.retryButton} 
           onClick={resetErrorBoundary} 

@@ -1,6 +1,6 @@
 import modal from '../../../../styles/modal-form.module.css';
 import mcpServersStyles from '../mcp-servers.module.css';
-import { useActionState, useMemo, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Collapsible } from '../../../../components/UI/Collapsible';
@@ -12,9 +12,11 @@ import { useAgents } from '../../../../hooks/use-agents';
 import { mcpServersQuery } from '../../../../queries';
 import type { IRetrieveMcpServer } from '../../../../services/datalab-api/mcpServersResource';
 import { INITIAL_ACTION_STATE } from '../../../../types/actions';
+import { ApiError } from '../../../../utils/api-error';
 import { MCP_SERVER_ROUTE_PERMISSIONS } from '../../../../utils/route-permissions';
 import { createSaveMcpServerAction, testMcpServerConnection } from '../actions';
 import { AUTH_TYPE_LABELS, TRANSPORT_LABELS } from '../schemas';
+import { FormFieldset, SubmitButton } from '../../../../components/UI/Forms';
 
 const SAVED_SECRET_PLACEHOLDER = '•••• configurado — deixe em branco para manter';
 
@@ -27,8 +29,8 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
   const isEditing = mcpServer !== null;
   const { data: agents } = useAgents();
   const queryClient = useQueryClient();
-  const boundAction = useMemo(() => createSaveMcpServerAction(mcpServer), [mcpServer]);
-  const [formState, formAction, isPending] = useActionState(boundAction, INITIAL_ACTION_STATE);
+  const boundAction = createSaveMcpServerAction(mcpServer);
+  const [formState, formAction] = useActionState(boundAction, INITIAL_ACTION_STATE);
   const connectionTest = useMutation({ mutationFn: testMcpServerConnection });
   const [agentId, setAgentId] = useState(mcpServer?.agent_id ?? '');
   const [authType, setAuthType] = useState<string>(mcpServer?.auth_type ?? 'none');
@@ -51,7 +53,7 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
 
   return (
     <form className={modal.form} action={formAction} onChange={() => connectionTest.reset()}>
-      <fieldset className={modal.fieldset} disabled={isPending}>
+      <FormFieldset className={modal.fieldset}>
         <div className={modal.field}>
           <label className={modal.label} htmlFor="mcp-agent">Agente *</label>
           <select className={modal.select}
@@ -72,7 +74,7 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
           )}
         </div>
 
-        <fieldset className={modal.fieldset} disabled={!agentId}>
+        <FormFieldset className={modal.fieldset} disabled={!agentId}>
           <div className={modal.field}>
             <label className={modal.label} htmlFor="mcp-name">Nome *</label>
             <input className={modal.input}
@@ -181,18 +183,18 @@ const McpServerForm = ({ mcpServer, onClose }: IMcpServerFormProps) => {
               {connectionTest.isPending ? 'Testando...' : 'Testar conexão'}
             </button>
           </PermissionGate>
-          {connectionTest.error && <p className={modal.error} role="alert">{connectionTest.error.message}</p>}
+          {connectionTest.error && <p className={modal.error} role="alert">{ApiError.from(connectionTest.error).friendly_message}</p>}
           {connectionTest.data && (
             <p className={mcpServersStyles.mcpTestSuccess} role="status">Conexão OK — tools: {toolNames || 'nenhuma'}</p>
           )}
-        </fieldset>
+        </FormFieldset>
 
         {formState.error && !formState.success && <p className={modal.error}>{formState.error}</p>}
 
-        <button className={modal.submit} type="submit" disabled={!agentId}>
-          {isPending ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Adicionar servidor'}
-        </button>
-      </fieldset>
+        <SubmitButton className={modal.submit} disabled={!agentId} pendingLabel="Salvando...">
+          {isEditing ? 'Salvar alterações' : 'Adicionar servidor'}
+        </SubmitButton>
+      </FormFieldset>
     </form>
   );
 };

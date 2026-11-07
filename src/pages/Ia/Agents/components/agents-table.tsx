@@ -2,17 +2,14 @@ import iaStyles from '../../ia.module.css';
 import styles from '../agents.module.css';
 import { TruncatedText } from '../../../../components/UI/TruncatedText';
 import { Avatar } from '../../../../components/UI/Avatar';
-import { useCallback, useState } from 'react';
-import { toast } from 'react-toastify';
-import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../../components/UI/Tables/ActionTable';
 import { DatalabAPI } from '../../../../services/datalab-api';
 import type { IRetrieveAgentWithState } from '../../../../services/datalab-api/agentsResource';
-import type { UUID7 } from '../../../../types/ids';
 import { useCompanyContext } from '../../../../contexts/company';
 import { useConfirm } from '../../../../contexts/confirm';
 import { AGENT_ROUTE_PERMISSIONS } from '../../../../utils/route-permissions';
 import { agentsQuery } from '../../../../queries';
+import { useRowActions } from '../../../../hooks/use-row-actions';
 
 interface IAgentsTableProps {
   agents: IRetrieveAgentWithState[];
@@ -30,70 +27,60 @@ const renderStatusBadge = (agent: IRetrieveAgentWithState) =>
     <span className={styles.agentBadge} data-variant="user-disabled">Inativo</span>
   );
 
+// Same rule the API applies: an agent runs unless the company or the user turned it off
+const withState = (
+  agent: IRetrieveAgentWithState,
+  state: Partial<Pick<IRetrieveAgentWithState, 'disabled_by_company' | 'disabled_by_user'>>,
+): IRetrieveAgentWithState => {
+  const next = { ...agent, ...state };
+  return { ...next, is_enabled: !(next.disabled_by_company || next.disabled_by_user) };
+};
+
 export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
   const { currentCompany, hasPermissionByRoute } = useCompanyContext();
-  const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [removingId, setRemovingId] = useState<UUID7 | null>(null);
-  const [togglingId, setTogglingId] = useState<UUID7 | null>(null);
-
-  const invalidateAgents = useCallback(
-    () => void queryClient.invalidateQueries({ queryKey: agentsQuery.queryKey }),
-    [queryClient],
-  );
+  const { rows, busyId, run } = useRowActions(agentsQuery.queryKey, agents);
 
   const canUpdate = hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.update);
   const canRemove = hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.remove);
   const canToggleCompany = hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.companyState);
 
-  const handleDelete = useCallback(async (agent: IRetrieveAgentWithState) => {
+  const handleDelete = async (agent: IRetrieveAgentWithState) => {
     const confirmed = await confirm({
       title: 'Excluir agente',
       message: `Excluir o agente "${agent.name}"? Essa ação não pode ser desfeita.`,
       confirmLabel: 'Excluir',
     });
     if (!confirmed) return;
-    setRemovingId(agent.id);
-    try {
-      await DatalabAPI.AgentsResource.deleteSpecialist(agent.id);
-      toast.success('Agente excluído.');
-      invalidateAgents();
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Erro ao excluir o agente.');
-    } finally {
-      setRemovingId(null);
-    }
-  }, [confirm, invalidateAgents]);
+    run({
+      id: agent.id,
+      request: () => DatalabAPI.AgentsResource.deleteSpecialist(agent.id),
+      successMessage: 'Agente excluído.',
+      optimistic: null,
+    });
+  };
 
-  const handleCompanyToggle = useCallback(async (agent: IRetrieveAgentWithState) => {
+  const handleCompanyToggle = (agent: IRetrieveAgentWithState) => {
     const enable = agent.disabled_by_company;
-    setTogglingId(agent.id);
-    try {
-      await DatalabAPI.AgentsResource.setCompanyState(agent.id, enable);
-      toast.success(enable ? 'Agente ativado para a empresa.' : 'Agente desativado para a empresa.');
-      invalidateAgents();
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Erro ao alterar o estado do agente.');
-    } finally {
-      setTogglingId(null);
-    }
-  }, [invalidateAgents]);
+    run({
+      id: agent.id,
+      request: () => DatalabAPI.AgentsResource.setCompanyState(agent.id, enable),
+      successMessage: enable ? 'Agente ativado para a empresa.' : 'Agente desativado para a empresa.',
+      optimistic: withState(agent, { disabled_by_company: !enable }),
+    });
+  };
 
-  const handleUserToggle = useCallback(async (agent: IRetrieveAgentWithState) => {
+  const handleUserToggle = (agent: IRetrieveAgentWithState) => {
     const enable = agent.disabled_by_user;
-    setTogglingId(agent.id);
-    try {
-      await DatalabAPI.AgentsResource.setUserState(agent.id, enable);
-      toast.success(enable ? 'Agente ativado para você.' : 'Agente desativado para você.');
-      invalidateAgents();
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Erro ao alterar o estado do agente.');
-    } finally {
-      setTogglingId(null);
-    }
-  }, [invalidateAgents]);
+    run({
+      id: agent.id,
+      request: () => DatalabAPI.AgentsResource.setUserState(agent.id, enable),
+      successMessage: enable ? 'Agente ativado para você.' : 'Agente desativado para você.',
+      optimistic: withState(agent, { disabled_by_user: !enable }),
+    });
+  };
 
-  if (agents.length === 0) {
+  if (rows.length === 0) {
     return <p className={iaStyles.emptyMessage}>Nenhum agente encontrado.</p>;
   }
 
@@ -107,8 +94,8 @@ export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
         <th>Gerenciado por</th>
       </TableHeaders>
 
-      {agents.map((agent) => {
-        const isBusy = removingId === agent.id || togglingId === agent.id;
+      {rows.map((agent) => {
+        const isBusy = busyId === agent.id;
         const canEditAgent = canUpdate && !agent.is_system;
         const canDeleteAgent = canRemove && !agent.is_system;
 
@@ -145,16 +132,16 @@ export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
                   </TableAction>
                 )}
                 {canToggleCompany && (
-                  <TableAction disabled={isBusy} onClick={() => void handleCompanyToggle(agent)}>
+                  <TableAction disabled={isBusy} onClick={() => handleCompanyToggle(agent)}>
                     {agent.disabled_by_company ? 'Ativar para a empresa' : 'Desativar para a empresa'}
                   </TableAction>
                 )}
-                <TableAction disabled={isBusy} onClick={() => void handleUserToggle(agent)}>
+                <TableAction disabled={isBusy} onClick={() => handleUserToggle(agent)}>
                   {agent.disabled_by_user ? 'Ativar para você' : 'Desativar para você'}
                 </TableAction>
                 {canDeleteAgent && (
                   <TableAction disabled={isBusy} onClick={() => void handleDelete(agent)}>
-                    {removingId === agent.id ? 'Excluindo...' : 'Excluir'}
+                    Excluir
                   </TableAction>
                 )}
               </TableActions>
