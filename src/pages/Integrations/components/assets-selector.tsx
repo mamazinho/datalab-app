@@ -1,5 +1,4 @@
 import styles from '../integrations.module.css';
-import { useCallback } from 'react';
 import type { IProviderAsset } from '../../../services/datalab-api/companiesResource';
 import { assetTypeLabel, groupAssets, type IAssetGroup } from '../../../utils/integrations';
 import type { Provider } from '../../../types/integrations';
@@ -115,48 +114,39 @@ const AssetGroupItem = ({
 export const AssetsSelector = ({ assets, provider, selected, onChange }: IAssetsSelectorProps) => {
   const groups = groupAssets(assets, provider);
 
-  const toggleAsset = useCallback(
-    (externalId: string) => {
-      const next = new Set(selected);
-      if (next.has(externalId)) next.delete(externalId);
-      else next.add(externalId);
-      onChange(next);
-    },
-    [selected, onChange],
-  );
+  const toggleAsset = (externalId: string) => {
+    const next = new Set(selected);
+    if (next.has(externalId)) next.delete(externalId);
+    else next.add(externalId);
+    onChange(next);
+  };
 
   // The account drives its group: checking it checks everything inside, unchecking it clears them
-  const toggleContainer = useCallback(
-    (group: IAssetGroup<IProviderAsset>) => {
-      if (!group.container) return;
+  const toggleContainer = (group: IAssetGroup<IProviderAsset>) => {
+    if (!group.container) return;
 
-      const next = new Set(selected);
-      const willSelect = !next.has(group.container.external_id);
+    const next = new Set(selected);
+    const willSelect = !next.has(group.container.external_id);
 
-      if (willSelect) {
-        next.add(group.container.external_id);
-        group.items.forEach((asset) => next.add(asset.external_id));
-      } else {
-        next.delete(group.container.external_id);
-        group.items.forEach((asset) => next.delete(asset.external_id));
-      }
+    if (willSelect) {
+      next.add(group.container.external_id);
+      group.items.forEach((asset) => next.add(asset.external_id));
+    } else {
+      next.delete(group.container.external_id);
+      group.items.forEach((asset) => next.delete(asset.external_id));
+    }
 
-      onChange(next);
-    },
-    [selected, onChange],
-  );
+    onChange(next);
+  };
 
-  const toggleItems = useCallback(
-    (items: IProviderAsset[]) => {
-      const next = new Set(selected);
-      const allSelected = items.every((asset) => next.has(asset.external_id));
-      items.forEach((asset) =>
-        allSelected ? next.delete(asset.external_id) : next.add(asset.external_id),
-      );
-      onChange(next);
-    },
-    [selected, onChange],
-  );
+  const toggleItems = (items: IProviderAsset[]) => {
+    const next = new Set(selected);
+    const allSelected = items.every((asset) => next.has(asset.external_id));
+    items.forEach((asset) =>
+      allSelected ? next.delete(asset.external_id) : next.add(asset.external_id),
+    );
+    onChange(next);
+  };
 
   return (
     <div className={styles.assetsList}>

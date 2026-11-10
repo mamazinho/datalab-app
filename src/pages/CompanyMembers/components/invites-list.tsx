@@ -1,7 +1,4 @@
 import styles from '../company-members.module.css';
-import { useCallback, useState } from 'react';
-import { toast } from 'react-toastify';
-import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../components/UI/Tables/ActionTable';
 import { PermissionGate } from '../../../components/Tools/permission-gate';
 import { useConfirm } from '../../../contexts/confirm';
@@ -9,7 +6,7 @@ import { MEMBERSHIP_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
 import { DatalabAPI } from '../../../services/datalab-api';
 import { invitesQuery } from '../../../queries';
 import type { IUserInvite } from '../../../services/datalab-api/usersResource';
-import type { UUID7 } from '../../../types/ids';
+import { useRowActions } from '../../../hooks/use-row-actions';
 
 const statusLabel: Record<string, string> = {
   pending: 'Pendente',
@@ -22,33 +19,25 @@ interface IInvitesListProps {
 }
 
 export const InvitesList = ({ invites }: IInvitesListProps) => {
-  const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [removingId, setRemovingId] = useState<UUID7 | null>(null);
+  const { rows, isBusy, run } = useRowActions(invitesQuery.queryKey, invites);
 
-  const handleRemove = useCallback(
-    async (invite: IUserInvite) => {
-      const confirmed = await confirm({
-        title: 'Remover convite',
-        message: `Remover convite para ${invite.email}?`,
-        confirmLabel: 'Remover',
-      });
-      if (!confirmed) return;
-      setRemovingId(invite.id);
-      try {
-        await DatalabAPI.MembershipsResource.deleteInvite(invite.id);
-        toast.success('Convite removido.');
-        void queryClient.invalidateQueries({ queryKey: invitesQuery.queryKey });
-      } catch (e: unknown) {
-        toast.error(e instanceof Error ? e.message : 'Erro ao remover convite.');
-      } finally {
-        setRemovingId(null);
-      }
-    },
-    [confirm, queryClient],
-  );
+  const handleRemove = async (invite: IUserInvite) => {
+    const confirmed = await confirm({
+      title: 'Remover convite',
+      message: `Remover convite para ${invite.email}?`,
+      confirmLabel: 'Remover',
+    });
+    if (!confirmed) return;
+    run({
+      id: invite.id,
+      request: () => DatalabAPI.MembershipsResource.deleteInvite(invite.id),
+      successMessage: 'Convite removido.',
+      optimistic: null,
+    });
+  };
 
-  if (invites.length === 0) {
+  if (rows.length === 0) {
     return <p className={styles.membersEmpty}>Nenhum convite enviado ainda.</p>;
   }
 
@@ -61,7 +50,7 @@ export const InvitesList = ({ invites }: IInvitesListProps) => {
         <th>Data</th>
       </TableHeaders>
 
-      {invites.map((invite) => (
+      {rows.map((invite) => (
         <TableRow key={invite.id}>
           <td>{invite.email}</td>
           <td>
@@ -78,10 +67,10 @@ export const InvitesList = ({ invites }: IInvitesListProps) => {
             <PermissionGate route={MEMBERSHIP_ROUTE_PERMISSIONS.removeInvite}>
               <TableActions>
                 <TableAction
-                  disabled={removingId === invite.id}
+                  disabled={isBusy(invite.id)}
                   onClick={() => void handleRemove(invite)}
                 >
-                  {removingId === invite.id ? 'Excluindo...' : 'Excluir convite'}
+                  Excluir convite
                 </TableAction>
               </TableActions>
             </PermissionGate>

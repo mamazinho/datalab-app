@@ -1,3 +1,4 @@
+import type { IApiError } from '../types/errors';
 import type { UUID7 } from '../types/ids';
 import type {
   IListAvailableModelsResponse,
@@ -22,6 +23,15 @@ import type {
 } from '../services/datalab-api/usersResource';
 
 const TIMESTAMPS = { created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' };
+
+export const buildApiError = (overrides: Partial<IApiError> = {}): IApiError => ({
+  error: 'HTTPErrorFriendlyException',
+  status: 400,
+  message: 'Bad Request',
+  friendly_message: 'Não foi possível concluir a solicitação.',
+  detail: null,
+  ...overrides,
+});
 
 // padStart keeps the first block at 8 digits; without it, two-digit seeds make ids that isUuid rejects
 export const uuid = (seed: number): UUID7 =>

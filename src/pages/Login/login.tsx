@@ -10,9 +10,10 @@ import { INITIAL_ACTION_STATE } from '../../types/actions';
 import { PasswordInput } from '../../components/UI/Inputs/Password/password-input';
 import { useSocialLogin } from '../../hooks/use-social-login';
 import { useActionFeedback } from '../../hooks/use-action-feedback';
+import { FormFieldset, SubmitButton } from '../../components/UI/Forms';
 
 export const Login: React.FC = () => {
-  const [loginState, loginFormAction, isLoginPending] = useActionState(loginAction, INITIAL_ACTION_STATE);
+  const [loginState, loginFormAction] = useActionState(loginAction, INITIAL_ACTION_STATE);
   const { login } = useAuthContext();
   const navigate = useNavigate();
   const { handleSocialLogin } = useSocialLogin();
@@ -35,7 +36,7 @@ export const Login: React.FC = () => {
           </header>
 
           <form className={designSystemStyles.authForm} action={loginFormAction}>
-            <fieldset className={designSystemStyles.fieldsWrapper} disabled={isLoginPending}>
+            <FormFieldset className={designSystemStyles.fieldsWrapper}>
               <div className={designSystemStyles.field}>
                 <label className={designSystemStyles.label} htmlFor="inputEmail">Email</label>
                 <input className={designSystemStyles.input}
@@ -60,10 +61,10 @@ export const Login: React.FC = () => {
                 />
               </div>
 
-              <button className={styles.loginButton} type="submit">
-                {isLoginPending ? 'Entrando...' : 'Entrar'}
-              </button>
-            </fieldset>
+              <SubmitButton className={styles.loginButton} pendingLabel="Entrando...">
+                Entrar
+              </SubmitButton>
+            </FormFieldset>
 
             <div className={designSystemStyles.formDivider}>
               <div className={designSystemStyles.dividerLine} />

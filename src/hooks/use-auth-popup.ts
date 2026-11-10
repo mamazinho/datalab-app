@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { SOCIAL_AUTH_CHANNEL, type AuthChannelEvent } from '../types/auth';
 
 // Meta's consent lists portfolios, accounts and pages, so it needs a bigger window than login
@@ -17,65 +17,58 @@ export function useAuthPopup(onMessage: (event: AuthChannelEvent) => void) {
   const watcherRef = useRef<number | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  // Keeps the latest handler without resubscribing to the channel on every render
-  const onMessageRef = useRef(onMessage);
-  onMessageRef.current = onMessage;
-
-  const stopWatching = useCallback(() => {
+  const stopWatching = () => {
     if (watcherRef.current !== null) {
       clearInterval(watcherRef.current);
       watcherRef.current = null;
     }
-  }, []);
+  };
 
-  const closePopup = useCallback(() => {
+  const closePopup = () => {
     popupRef.current?.close();
     popupRef.current = null;
     stopWatching();
     setIsPopupOpen(false);
-  }, [stopWatching]);
+  };
+
+  const handleMessage = useEffectEvent((event: AuthChannelEvent) => {
+    closePopup();
+    onMessage(event);
+  });
 
   useEffect(() => {
     const authChannel = new BroadcastChannel(SOCIAL_AUTH_CHANNEL);
+    authChannel.onmessage = (event: MessageEvent<AuthChannelEvent>) => handleMessage(event.data);
+    return () => authChannel.close();
+  }, []);
 
-    authChannel.onmessage = (event: MessageEvent<AuthChannelEvent>) => {
-      closePopup();
-      onMessageRef.current(event.data);
-    };
+  const stopWatchingOnUnmount = useEffectEvent(stopWatching);
 
-    return () => {
-      authChannel.close();
-    };
-  }, [closePopup]);
+  useEffect(() => () => stopWatchingOnUnmount(), []);
 
-  useEffect(() => stopWatching, [stopWatching]);
+  const openPopup = (url: string, name: string, flow: AuthPopupFlow = 'login'): Window | null => {
+    const { width, height } = POPUP_SIZES[flow];
+    const left = window.screenLeft + (window.innerWidth - width) / 2;
+    const top = window.screenTop + (window.innerHeight - height) / 2;
 
-  const openPopup = useCallback(
-    (url: string, name: string, flow: AuthPopupFlow = 'login'): Window | null => {
-      const { width, height } = POPUP_SIZES[flow];
-      const left = window.screenLeft + (window.innerWidth - width) / 2;
-      const top = window.screenTop + (window.innerHeight - height) / 2;
+    const popup = window.open(
+      url,
+      name,
+      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,status=yes,resizable=yes`,
+    );
 
-      const popup = window.open(
-        url,
-        name,
-        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,status=yes,resizable=yes`,
-      );
+    stopWatching();
+    popupRef.current = popup;
+    setIsPopupOpen(Boolean(popup));
 
-      stopWatching();
-      popupRef.current = popup;
-      setIsPopupOpen(Boolean(popup));
+    if (popup) {
+      watcherRef.current = window.setInterval(() => {
+        if (popupRef.current?.closed !== false) closePopup();
+      }, POPUP_WATCH_INTERVAL_MS);
+    }
 
-      if (popup) {
-        watcherRef.current = window.setInterval(() => {
-          if (popupRef.current?.closed !== false) closePopup();
-        }, POPUP_WATCH_INTERVAL_MS);
-      }
-
-      return popup;
-    },
-    [closePopup, stopWatching],
-  );
+    return popup;
+  };
 
   return { openPopup, closePopup, isPopupOpen };
 }

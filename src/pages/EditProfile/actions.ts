@@ -15,7 +15,6 @@ export const updateProfileAction = createFormAction(
     }),
   {
     invalidMessage: 'Dados invalidos no formulario.',
-    errorPrefix: 'Erro ao atualizar perfil: ',
   },
 );
 

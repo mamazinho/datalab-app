@@ -158,6 +158,21 @@
   li > p {
     margin: 0;
   }
+
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    margin: 0 0 0.5em;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: 0.3em 0.6em;
+    border: 1px solid var(--color-border);
+    text-align: left;
+  }
 }
 
 .mainContent {
@@ -474,15 +489,51 @@
   }
 }
 
-.submitSpinner {
-  display: inline-block;
-  width: 0.95rem;
-  height: 0.95rem;
-  margin-right: 0.45rem;
-  border-radius: 50%;
-  border: 2px solid currentColor;
-  border-top-color: transparent;
-  animation: global(spin) 0.75s linear infinite;
+.stopButton {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  border-radius: 0.7rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-input-background);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+  }
+}
+
+.stopSquare {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 0.15rem;
+  background: currentColor;
+}
+
+.queuedList {
+  margin: 0 0 0.5rem;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.queuedMessage {
+  font-size: calc(0.8rem * var(--font-scale));
+  color: var(--color-text-secondary);
+}
+
+.queuedLabel {
+  font-weight: 700;
+}
+
+.noticeRow {
+  margin: 0 0 0.85rem;
+  font-size: calc(0.78rem * var(--font-scale));
+  color: var(--color-text-secondary);
 }
 
 .submitArrow {

@@ -9,12 +9,13 @@ import { Toggle } from '../../../components/UI/Inputs/Toggle';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { chatListsQueryKey } from '../../../queries';
+import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 
 export const CreateChat = () => {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const [createChatState, createChatFormAction, isCreateChatPending] = useActionState(createChatAction, INITIAL_ACTION_STATE);
+    const [createChatState, createChatFormAction] = useActionState(createChatAction, INITIAL_ACTION_STATE);
 
     useActionFeedback(createChatState, {
         onSuccess: (chat) => {
@@ -40,7 +41,7 @@ export const CreateChat = () => {
                 title="Nova Conversa"
             >
                 <form className={styles.createChatForm} action={createChatFormAction}>
-                    <fieldset className={styles.createChatFieldset} disabled={isCreateChatPending}>
+                    <FormFieldset className={styles.createChatFieldset}>
                         <div className={styles.createChatField}>
                             <label className={designSystemStyles.label} htmlFor="chatTitle">
                                 Título da Conversa
@@ -59,11 +60,11 @@ export const CreateChat = () => {
                         <Toggle name="is_private" label="Conversa privada" defaultChecked />
 
                         <div className={styles.createChatActions}>
-                            <button className={styles.createChatSubmit} type="submit">
-                                {isCreateChatPending ? "Criando..." : "Criar"}
-                            </button>
+                            <SubmitButton className={styles.createChatSubmit} pendingLabel="Criando...">
+                                Criar
+                            </SubmitButton>
                         </div>
-                    </fieldset>
+                    </FormFieldset>
                 </form>
             </Modal>
         </>

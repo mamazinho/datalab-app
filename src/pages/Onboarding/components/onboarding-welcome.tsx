@@ -10,6 +10,7 @@ import { createCompanyAction } from '../actions';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { useInviteActions } from '../../../hooks/use-invite-actions';
 import type { IUserInvite } from '../../../services/datalab-api/usersResource';
+import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 
 const InviteRow = ({ invite }: { invite: IUserInvite }) => {
   const { acceptFormAction, declineFormAction, isAccepting, isDeclining } = useInviteActions();
@@ -46,7 +47,7 @@ export const OnboardingWelcome = () => {
 
   const pendingInvites = (me?.invites ?? []).filter((i) => i.status === 'pending');
 
-  const [createState, createFormAction, isCreating] = useActionState(
+  const [createState, createFormAction] = useActionState(
     createCompanyAction,
     INITIAL_ACTION_STATE,
   );
@@ -85,7 +86,7 @@ export const OnboardingWelcome = () => {
         <p className={styles.onboardingSubtitle}>Crie sua própria empresa para começar.</p>
 
         <form className={styles.onboardingForm} action={createFormAction}>
-          <fieldset className={styles.onboardingFieldset} disabled={isCreating}>
+          <FormFieldset className={styles.onboardingFieldset}>
             <div className={styles.onboardingField}>
               <label className={styles.onboardingLabel} htmlFor="companyName">Nome da empresa</label>
               <input className={styles.onboardingInput}
@@ -102,10 +103,10 @@ export const OnboardingWelcome = () => {
             {createState.error && createState.timestamp > 0 && (
               <p className={styles.onboardingError}>{createState.error}</p>
             )}
-            <button className={styles.onboardingSubmit} type="submit">
-              {isCreating ? 'Criando...' : 'Criar empresa'}
-            </button>
-          </fieldset>
+            <SubmitButton className={styles.onboardingSubmit} pendingLabel="Criando...">
+              Criar empresa
+            </SubmitButton>
+          </FormFieldset>
         </form>
       </div>
     </div>

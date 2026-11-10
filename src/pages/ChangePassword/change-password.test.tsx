@@ -2,7 +2,7 @@ import { HttpResponse, http } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 import { renderWithProviders, screen, userEvent, waitFor } from '../../test/test-utils';
-import { api } from '../../test/msw/handlers';
+import { api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import { buildUser } from '../../test/factories';
 import { ChangePassword } from './change-password';
@@ -65,11 +65,11 @@ describe('<ChangePassword />', () => {
     vi.useRealTimers();
   });
 
-  it('shows an expired-link message inline, without a toast', async () => {
+  it('shows the reason the backend gave inline, without a toast', async () => {
     const user = userEvent.setup({ delay: null });
     server.use(
       http.post(api('users/change-password'), () =>
-        HttpResponse.json({ detail: 'Código expirado.' }, { status: 400 }),
+        apiErrorResponse(400, 'Código expirado.'),
       ),
     );
     renderChangePassword();
@@ -77,7 +77,7 @@ describe('<ChangePassword />', () => {
     await fillNewPassword(user);
     await submit(user);
 
-    expect(await screen.findByText(/O link pode ter expirado\./)).toBeInTheDocument();
+    expect(await screen.findByText('Código expirado.')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Login' })).not.toBeInTheDocument();
   });
 

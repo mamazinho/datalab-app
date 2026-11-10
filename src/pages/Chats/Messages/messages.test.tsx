@@ -10,9 +10,9 @@ import {
   userEvent,
   waitFor,
 } from '../../../test/test-utils';
-import { ACCESS_TOKEN, api } from '../../../test/msw/handlers';
+import { ACCESS_TOKEN, api, apiErrorResponse } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
-import { buildChat, buildCompany, uuid } from '../../../test/factories';
+import { buildApiError, buildChat, buildCompany, buildUser, uuid } from '../../../test/factories';
 import { meQuery } from '../../../queries';
 import type { IChatStreamEvent } from '../../../services/datalab-api/chatMessagesResource';
 import type { IRetrieveChat } from '../../../services/datalab-api/chatsResource';
@@ -51,6 +51,31 @@ const givenStreamedAnswer = (events: object[]) => {
       });
     }),
   );
+};
+
+// An answer the test streams piece by piece, and closes when it wants
+const givenOpenAnswer = () => {
+  let controller!: ReadableStreamDefaultController<Uint8Array>;
+  const stream = new ReadableStream<Uint8Array>({
+    start(streamController) {
+      controller = streamController;
+    },
+  });
+  const sent: unknown[] = [];
+  server.use(
+    http.post(api(`chats/${CHAT_ID}/messages/`), async ({ request }) => {
+      sent.push(await request.json());
+      return new HttpResponse(stream, { headers: { 'Content-Type': 'application/x-ndjson' } });
+    }),
+  );
+
+  return {
+    sent,
+    push: (...events: object[]) =>
+      events.forEach((event) => controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))),
+    close: () => controller.close(),
+    drop: () => controller.error(new TypeError('network error')),
+  };
 };
 
 const givenHistory = (events: IChatStreamEvent[], chat: Partial<IRetrieveChat> = {}) => {
@@ -97,7 +122,7 @@ describe('<ChatMessages />', () => {
 
   it('sends the user back to the list when the chat does not exist', async () => {
     server.use(
-      http.get(api(`chats/${CHAT_ID}/`), () => HttpResponse.json({ detail: 'Não encontrado' }, { status: 404 })),
+      http.get(api(`chats/${CHAT_ID}/`), () => apiErrorResponse(404, 'Não encontrado')),
     );
     renderMessages();
 
@@ -288,7 +313,9 @@ describe('<ChatMessages />', () => {
     it('shows the error the backend streamed', async () => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);
-      givenStreamedAnswer([{ type: 'error', content: 'O agente ficou sem contexto.' }]);
+      givenStreamedAnswer([
+        { type: 'error', content: buildApiError({ error: 'ChatRunFailedFriendlyException', friendly_message: 'O agente ficou sem contexto.' }) },
+      ]);
       renderMessages();
 
       await sendPrompt(user, 'Qual foi a receita?');
@@ -325,15 +352,262 @@ describe('<ChatMessages />', () => {
       givenHistory([]);
       server.use(
         http.post(api(`chats/${CHAT_ID}/messages/`), () =>
-          HttpResponse.json({ detail: 'Agente indisponível.' }, { status: 503 }),
+          apiErrorResponse(503, 'Agente indisponível.'),
         ),
       );
       renderMessages();
 
       await sendPrompt(user, 'Qual foi a receita?');
 
-      expect(await screen.findByText('Erro:')).toBeInTheDocument();
-      expect(await screen.findByText(/status code 503/)).toBeInTheDocument();
+      expect(await screen.findByText('Agente indisponível.')).toBeInTheDocument();
+    });
+
+    it('renews an expired session and still sends the message', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      let attempts = 0;
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/messages/`), () => {
+          attempts += 1;
+          if (attempts === 1) return apiErrorResponse(401, 'Sessão expirada.', 'InvalidAccessTokenFriendlyException');
+          const stream = new ReadableStream({
+            start(controller) {
+              controller.enqueue(encoder.encode(`${JSON.stringify(answer('Receita de R$ 10 mil.'))}\n`));
+              controller.close();
+            },
+          });
+          return new HttpResponse(stream, { headers: { 'Content-Type': 'application/x-ndjson' } });
+        }),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Qual foi a receita?');
+
+      expect(await screen.findByText('Receita de R$ 10 mil.')).toBeInTheDocument();
+      expect(attempts).toBe(2);
+    });
+  });
+
+  describe('choosing the model', () => {
+    it('lets an admin pick the model of the next message', async () => {
+      const user = userEvent.setup({ delay: null });
+      const sent: { body?: unknown } = {};
+      const queryClient = createTestQueryClient();
+      localStorage.setItem('accessToken', ACCESS_TOKEN);
+      givenHistory([]);
+      server.use(
+        http.get(api('users/me'), () => HttpResponse.json(buildUser({ role: 'admin' }))),
+        http.post(api(`chats/${CHAT_ID}/messages/`), async ({ request }) => {
+          sent.body = await request.json();
+          return new HttpResponse(`${JSON.stringify({ type: 'done' })}\n`, {
+            headers: { 'Content-Type': 'application/x-ndjson' },
+          });
+        }),
+      );
+      await queryClient.prefetchQuery(meQuery);
+      renderMessages({ queryClient });
+
+      await user.click(await screen.findByRole('button', { name: /Automático/ }));
+      await user.click(screen.getByRole('tab', { name: 'Google' }));
+      await user.click(screen.getByRole('button', { name: 'Gemini 2.5 Pro' }));
+      await sendPrompt(user, 'Analise o tráfego');
+
+      await waitFor(() => expect(sent.body).toEqual({ prompt: 'Analise o tráfego', model_name: 'gemini-2.5-pro' }));
+    });
+
+    it('keeps the chosen model when the history reloads after the answer', async () => {
+      const user = userEvent.setup({ delay: null });
+      const queryClient = createTestQueryClient();
+      localStorage.setItem('accessToken', ACCESS_TOKEN);
+      givenHistory([]);
+      givenStreamedAnswer([{ type: 'done' }]);
+      server.use(http.get(api('users/me'), () => HttpResponse.json(buildUser({ role: 'admin' }))));
+      await queryClient.prefetchQuery(meQuery);
+      renderMessages({ queryClient });
+
+      await user.click(await screen.findByRole('button', { name: /Automático/ }));
+      await user.click(screen.getByRole('tab', { name: 'Google' }));
+      await user.click(screen.getByRole('button', { name: 'Gemini 2.5 Pro' }));
+      givenHistory([userMessage({ content: 'Analise o tráfego' }), answer('Pronto.')]);
+      await sendPrompt(user, 'Analise o tráfego');
+      await queryClient.invalidateQueries();
+
+      expect(await screen.findByText('Pronto.')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Gemini 2.5 Pro/ })).toBeInTheDocument();
+    });
+
+    it('answers a clarification with the chosen model', async () => {
+      const user = userEvent.setup({ delay: null });
+      const bodies: unknown[] = [];
+      const queryClient = createTestQueryClient();
+      localStorage.setItem('accessToken', ACCESS_TOKEN);
+      givenHistory([]);
+      server.use(
+        http.get(api('users/me'), () => HttpResponse.json(buildUser({ role: 'admin' }))),
+        http.post(api(`chats/${CHAT_ID}/messages/`), async ({ request }) => {
+          bodies.push(await request.json());
+          const events =
+            bodies.length === 1
+              ? [{ type: 'clarification', question: 'De qual período?', options: ['Último mês'], tool_call_id: 'call-1' }]
+              : [{ type: 'done' }];
+          return new HttpResponse(events.map((event) => `${JSON.stringify(event)}\n`).join(''), {
+            headers: { 'Content-Type': 'application/x-ndjson' },
+          });
+        }),
+      );
+      await queryClient.prefetchQuery(meQuery);
+      renderMessages({ queryClient });
+
+      await user.click(await screen.findByRole('button', { name: /Automático/ }));
+      await user.click(screen.getByRole('tab', { name: 'Google' }));
+      await user.click(screen.getByRole('button', { name: 'Gemini 2.5 Pro' }));
+      await sendPrompt(user, 'Qual foi a receita?');
+      await user.click(await screen.findByRole('button', { name: 'Último mês' }));
+
+      await waitFor(() =>
+        expect(bodies[1]).toEqual({
+          prompt: 'Último mês',
+          answer_to_tool_call_id: 'call-1',
+          model_name: 'gemini-2.5-pro',
+        }),
+      );
+    });
+
+    it('keeps the model choice away from who is not an admin', async () => {
+      givenHistory([]);
+      renderMessages();
+
+      await screen.findByRole('textbox');
+      expect(screen.queryByRole('button', { name: /Automático/ })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('while the answer runs', () => {
+    it('stops the answer from the square button', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      let cancelled = false;
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/run/cancel/`), () => {
+          cancelled = true;
+          answerStream.push({ type: 'cancelled' }, { type: 'done' });
+          answerStream.close();
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Monte o relatório');
+      answerStream.push({ type: 'text_delta', content: 'Consultando os dados' });
+      await user.click(await screen.findByRole('button', { name: 'Parar resposta' }));
+
+      expect(await screen.findByText('Resposta interrompida.')).toBeInTheDocument();
+      expect(cancelled).toBe(true);
+      expect(screen.queryByRole('button', { name: 'Parar resposta' })).not.toBeInTheDocument();
+    });
+
+    it('queues a message typed during the answer until the answer takes it in', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      const queued: { body?: unknown } = {};
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/run/messages/`), async ({ request }) => {
+          queued.body = await request.json();
+          return new HttpResponse(null, { status: 202 });
+        }),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Analise o tráfego');
+      answerStream.push({ type: 'text_delta', content: 'Vendo o desktop.' });
+      await sendPrompt(user, 'Inclua o mobile');
+
+      expect(await screen.findByText('Inclua o mobile', { selector: 'li' })).toBeInTheDocument();
+      await waitFor(() => expect(queued.body).toEqual({ prompt: 'Inclua o mobile' }));
+
+      answerStream.push(userMessage({ content: 'Inclua o mobile', queued: true }), { type: 'done' });
+      answerStream.close();
+
+      await waitFor(() => expect(screen.queryByRole('list', { name: 'Mensagens na fila' })).not.toBeInTheDocument());
+      expect(screen.getByText('Inclua o mobile')).toBeInTheDocument();
+    });
+
+    it('does not resend the queue when the connection drops, since the answer may still take it in', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      server.use(http.post(api(`chats/${CHAT_ID}/run/messages/`), () => new HttpResponse(null, { status: 202 })));
+      renderMessages();
+
+      await sendPrompt(user, 'Analise o tráfego');
+      await sendPrompt(user, 'Inclua o mobile');
+      await screen.findByText('Inclua o mobile', { selector: 'li' });
+      answerStream.drop();
+
+      expect(
+        await screen.findByText('A conexão com o servidor caiu no meio da resposta. Tente novamente.'),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('list', { name: 'Mensagens na fila' })).not.toBeInTheDocument();
+      expect(answerStream.sent).toEqual([{ prompt: 'Analise o tráfego' }]);
+    });
+
+    it('sends a queued message as the next one when the answer ended before taking it', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      const sentPrompts: unknown[] = [];
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/run/messages/`), () =>
+          apiErrorResponse(409, 'Essa resposta já terminou.', 'ChatRunNotRunningFriendlyException'),
+        ),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Analise o tráfego');
+      await sendPrompt(user, 'Inclua o mobile');
+      await screen.findByText('Inclua o mobile', { selector: 'li' });
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/messages/`), async ({ request }) => {
+          sentPrompts.push(await request.json());
+          return new HttpResponse(`${JSON.stringify({ type: 'done' })}\n`, {
+            headers: { 'Content-Type': 'application/x-ndjson' },
+          });
+        }),
+      );
+      answerStream.push({ type: 'done' });
+      answerStream.close();
+
+      await waitFor(() => expect(sentPrompts).toEqual([{ prompt: 'Inclua o mobile' }]));
+    });
+
+    it('follows an answer that was already running when the chat opened', async () => {
+      givenHistory([]);
+      server.use(
+        http.get(api(`chats/${CHAT_ID}/run/`), () =>
+          new HttpResponse(
+            [userMessage({ content: 'Monte o relatório' }), { type: 'text_delta', content: 'Quase pronto.' }, { type: 'done' }]
+              .map((event) => `${JSON.stringify(event)}\n`)
+              .join(''),
+            { headers: { 'Content-Type': 'application/x-ndjson' } },
+          ),
+        ),
+      );
+      renderMessages();
+
+      expect(await screen.findByText('Monte o relatório')).toBeInTheDocument();
+      expect(await screen.findByText('Quase pronto.')).toBeInTheDocument();
+    });
+
+    it('says so when the running answer cannot be followed', async () => {
+      givenHistory([]);
+      server.use(
+        http.get(api(`chats/${CHAT_ID}/run/`), () => apiErrorResponse(500, 'Não deu para acompanhar a resposta.')),
+      );
+      renderMessages();
+
+      expect(await screen.findByText('Não deu para acompanhar a resposta.')).toBeInTheDocument();
     });
   });
 
@@ -463,8 +737,8 @@ describe('<ChatMessages />', () => {
       return contentTypes;
     };
 
-    const givenUploadRefused = (status: number, detail: string) => {
-      server.use(http.post(api(`chats/${CHAT_ID}/files/`), () => HttpResponse.json({ detail }, { status })));
+    const givenUploadRefused = (status: number, apiMessage: string) => {
+      server.use(http.post(api(`chats/${CHAT_ID}/files/`), () => apiErrorResponse(status, apiMessage)));
     };
 
     const captureMessageBody = () => {
@@ -557,24 +831,24 @@ describe('<ChatMessages />', () => {
     });
 
     it.each([
-      [413, 'File is larger than 10MB', /relatorio\.pdf: Arquivo grande demais/],
-      [415, 'Unsupported file type: application/pdf', /relatorio\.pdf: Tipo de arquivo não suportado/],
-    ])('explains an upload the API refuses with %i', async (status, detail, message) => {
+      [413, 'Arquivo grande demais. O limite é de 10240KB.'],
+      [415, 'Tipo de arquivo não suportado. Envie PDF, imagem ou texto.'],
+    ])('shows the reason the API gives for refusing an upload with %i', async (status, friendlyMessage) => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);
-      givenUploadRefused(status, detail);
+      givenUploadRefused(status, friendlyMessage);
       renderMessages();
 
       await attach(user, pdf());
 
       expect(await screen.findByText('falhou')).toBeInTheDocument();
-      expect(screen.getByText(message)).toBeInTheDocument();
+      expect(screen.getByText(`relatorio.pdf: ${friendlyMessage}`)).toBeInTheDocument();
     });
 
     it('keeps a refused attachment out of the message', async () => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);
-      givenUploadRefused(413, 'File is larger than 10MB');
+      givenUploadRefused(413, 'Arquivo grande demais. O limite é de 10240KB.');
       const sent = captureMessageBody();
       renderMessages();
 

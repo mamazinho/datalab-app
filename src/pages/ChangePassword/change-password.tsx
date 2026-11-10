@@ -8,12 +8,13 @@ import { changePasswordAction } from './actions';
 import { INITIAL_ACTION_STATE } from '../../types/actions';
 import { useActionFeedback } from '../../hooks/use-action-feedback';
 import { PasswordInput } from '../../components/UI/Inputs/Password/password-input';
+import { FormFieldset, SubmitButton } from '../../components/UI/Forms';
 
 export const ChangePassword: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const [changePasswordState, changePasswordFormAction, isChangePasswordPending] = useActionState(changePasswordAction, INITIAL_ACTION_STATE);
+  const [changePasswordState, changePasswordFormAction] = useActionState(changePasswordAction, INITIAL_ACTION_STATE);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -41,7 +42,7 @@ export const ChangePassword: React.FC = () => {
           <form className={designSystemStyles.authForm} action={changePasswordFormAction}>
             <input type="hidden" name="email" value={email} />
             <input type="hidden" name="code" value={code} />
-            <fieldset className={designSystemStyles.fieldsWrapper} disabled={isChangePasswordPending}>
+            <FormFieldset className={designSystemStyles.fieldsWrapper}>
               <div className={designSystemStyles.field}>
                 <label className={designSystemStyles.label} htmlFor="inputPassword">Nova Senha</label>
                 <PasswordInput
@@ -70,10 +71,10 @@ export const ChangePassword: React.FC = () => {
                 {changePasswordState.error && <p className={designSystemStyles.errorText}>{changePasswordState.error}</p>}
               </div>
 
-              <button className={designSystemStyles.primaryButton} type="submit">
-                  {isChangePasswordPending ? 'Alterando...' : 'Alterar Senha'}
-              </button>
-            </fieldset>
+              <SubmitButton className={designSystemStyles.primaryButton} pendingLabel="Alterando...">
+                  Alterar Senha
+              </SubmitButton>
+            </FormFieldset>
             <div className={designSystemStyles.footerLinks}>
                <Link className={styles.changePasswordCancelLink} to="/login">Cancelar</Link>
             </div>

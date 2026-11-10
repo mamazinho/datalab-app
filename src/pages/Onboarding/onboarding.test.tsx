@@ -2,7 +2,7 @@ import { HttpResponse, http } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 import { renderWithProviders, screen, userEvent, waitFor } from '../../test/test-utils';
-import { ACCESS_TOKEN, api } from '../../test/msw/handlers';
+import { ACCESS_TOKEN, api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import { buildCompany, buildInvite, buildUser, uuid } from '../../test/factories';
 import type { IUserResponse } from '../../services/datalab-api/usersResource';
@@ -65,7 +65,7 @@ describe('<Onboarding />', () => {
       givenLoggedUser({ companies: [], invites: [] });
       server.use(
         http.post(api('companies/'), () =>
-          HttpResponse.json({ detail: 'Nome de empresa já existe.' }, { status: 409 }),
+          apiErrorResponse(409, 'Nome de empresa já existe.'),
         ),
       );
       renderOnboarding();

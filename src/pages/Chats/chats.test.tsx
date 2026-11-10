@@ -2,7 +2,7 @@ import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 import { renderWithProviders, screen, userEvent, waitFor, within } from '../../test/test-utils';
-import { api } from '../../test/msw/handlers';
+import { api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import { buildChat, buildCompany, buildCurrentMembership, buildRoutePermission, uuid } from '../../test/factories';
 import type { IRetrieveChat } from '../../services/datalab-api/chatsResource';
@@ -135,7 +135,7 @@ describe('<Chats />', () => {
     const user = userEvent.setup({ delay: null });
     server.use(
       http.post(api('chats/'), () =>
-        HttpResponse.json({ detail: 'Limite de conversas atingido.' }, { status: 402 }),
+        apiErrorResponse(402, 'Limite de conversas atingido.'),
       ),
     );
     renderChats();
@@ -212,6 +212,31 @@ describe('<Chats />', () => {
       expect(body).toEqual({ archived: true });
     });
 
+    it('keeps a conversation busy until its own request ends, even when another one finishes first', async () => {
+      const user = userEvent.setup();
+      let releaseFirst = () => {};
+      givenChats([buildChat({ id: uuid(20) }), buildChat({ id: uuid(21) })]);
+      server.use(
+        http.patch(api(`chats/${uuid(20)}/`), async () => {
+          await new Promise<void>((resolve) => {
+            releaseFirst = resolve;
+          });
+          return HttpResponse.json(buildChat({ id: uuid(20), archived: true }));
+        }),
+        http.patch(api(`chats/${uuid(21)}/`), () => HttpResponse.json(buildChat({ id: uuid(21), archived: true }))),
+      );
+      renderChats();
+
+      const [first, second] = await screen.findAllByRole('listitem');
+      await user.click(within(first).getByRole('button', { name: 'Arquivar' }));
+      await user.click(within(second).getByRole('button', { name: 'Arquivar' }));
+
+      await waitFor(() => expect(within(second).getByRole('button', { name: 'Excluir' })).toBeEnabled());
+      expect(within(first).getByRole('button', { name: 'Excluir' })).toBeDisabled();
+      releaseFirst();
+      await waitFor(() => expect(within(first).getByRole('button', { name: 'Excluir' })).toBeEnabled());
+    });
+
     it('unarchives an archived conversation', async () => {
       const user = userEvent.setup();
       let body: unknown;
@@ -269,6 +294,41 @@ describe('<Chats />', () => {
 
       expect(await screen.findByText('Conversa excluída.')).toBeInTheDocument();
       expect(await screen.findByText('Nenhum chat encontrado.')).toBeInTheDocument();
+    });
+
+    it('takes the conversation off the list while the deletion runs', async () => {
+      const user = userEvent.setup();
+      let releaseDeletion!: () => void;
+      const deletion = new Promise<void>((resolve) => {
+        releaseDeletion = resolve;
+      });
+      givenChats([buildChat({ id: uuid(20), title: 'Receita de agosto' })]);
+      server.use(
+        http.delete(api(`chats/${uuid(20)}/`), async () => {
+          await deletion;
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+      renderChats();
+
+      await user.click(await screen.findByRole('button', { name: 'Excluir' }));
+      await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Excluir' }));
+
+      await waitFor(() => expect(screen.queryByText('Receita de agosto')).not.toBeInTheDocument());
+      releaseDeletion();
+    });
+
+    it('brings the conversation back when the deletion fails', async () => {
+      const user = userEvent.setup();
+      givenChats([buildChat({ id: uuid(20), title: 'Receita de agosto' })]);
+      server.use(http.delete(api(`chats/${uuid(20)}/`), () => apiErrorResponse(403, 'Você não pode excluir esta conversa.')));
+      renderChats();
+
+      await user.click(await screen.findByRole('button', { name: 'Excluir' }));
+      await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Excluir' }));
+
+      expect(await screen.findByText('Você não pode excluir esta conversa.')).toBeInTheDocument();
+      expect(await screen.findByText('Receita de agosto')).toBeInTheDocument();
     });
   });
 });

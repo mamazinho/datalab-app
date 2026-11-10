@@ -1,5 +1,5 @@
 import styles from './steps.module.css';
-import { type ReactNode, type ReactElement, forwardRef, useImperativeHandle, useState } from "react";
+import { type ReactNode, type ReactElement, type Ref, useImperativeHandle, useState } from "react";
 import React from "react";
 import type { IStepProps } from "./step";
 import { StepsProgressBar } from "./steps-progress-bar";
@@ -8,6 +8,7 @@ interface IStepsControllerProps {
   initialStep?: number;
   children: ReactNode;
   showProgress?: boolean;
+  ref?: Ref<StepsRef>;
 }
 
 export interface StepsRef {
@@ -17,7 +18,7 @@ export interface StepsRef {
   currentStep: number;
 }
 
-export const StepsController = forwardRef<StepsRef, IStepsControllerProps>(({ children, initialStep = 1, showProgress = true }, ref) => {
+export const StepsController = ({ children, initialStep = 1, showProgress = true, ref }: IStepsControllerProps) => {
   const [currentStep, setCurrentStep] = useState(initialStep);
   const steps = React.Children.toArray(children) as ReactElement<IStepProps>[];
   const totalSteps = steps.length;
@@ -88,4 +89,4 @@ export const StepsController = forwardRef<StepsRef, IStepsControllerProps>(({ ch
       </div>
     </div>
   );
-});
+};

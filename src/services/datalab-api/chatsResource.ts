@@ -29,7 +29,7 @@ export interface ICreateChat {
   is_private: boolean;
 }
 
-export type ChatUsageOrigin = 'supervisor' | 'specialist' | 'complexity_classifier' | 'answer_rewriter';
+export type ChatUsageOrigin = 'supervisor' | 'specialist' | 'complexity_classifier' | 'presentation';
 
 export interface IChatUsageByMember extends IChatUsage {
   membership_id: UUID7 | null;

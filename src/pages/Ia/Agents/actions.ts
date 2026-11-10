@@ -20,5 +20,4 @@ export const createSaveAgentAction = (agentId: UUID7 | null) =>
         ? DatalabAPI.AgentsResource.updateSpecialist(agentId, payload)
         : DatalabAPI.AgentsResource.createSpecialist({ ...payload, name, instructions });
     },
-    { errorPrefix: 'Falha ao salvar o agente: ' },
   );

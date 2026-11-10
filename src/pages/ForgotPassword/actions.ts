@@ -9,6 +9,5 @@ export const forgotPasswordAction = createFormAction(
   },
   {
     invalidMessage: 'E-mail inválido.',
-    errorPrefix: 'Falha ao enviar o link de recuperação: ',
   },
 );

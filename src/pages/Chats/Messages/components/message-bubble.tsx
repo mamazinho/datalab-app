@@ -1,6 +1,6 @@
 import styles from '../messages.module.css';
 import type { ReactNode } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { Markdown } from '../../../../components/UI/Markdown';
 import type { IChatMember } from '../../../../services/datalab-api/chatsResource';
 import { AuthoredRow } from './authored-row';
 
@@ -21,7 +21,7 @@ export const MessageBubble = ({ content, isUser, author, showAuthor, createdAt, 
         <div className={styles.bubble}>
             {(content || isStreaming) && (
                 <div className={styles.mainContent}>
-                    <ReactMarkdown>{content}</ReactMarkdown>
+                    <Markdown>{content}</Markdown>
                     {isStreaming && <span className={styles.streamingCursor} aria-hidden>▍</span>}
                 </div>
             )}

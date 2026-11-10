@@ -1,6 +1,6 @@
-import { HttpResponse, http } from 'msw';
+import { http } from 'msw';
 import { describe, expect, it } from 'vitest';
-import { ACCESS_TOKEN, api } from '../../test/msw/handlers';
+import { ACCESS_TOKEN, api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import { renderWithProviders, screen } from '../../test/test-utils';
 import { SOCIAL_AUTH_CHANNEL, SOCIAL_LOGIN_SUCCESS, type AuthChannelEvent } from '../../types/auth';
@@ -28,17 +28,19 @@ describe('<SocialCallback />', () => {
     });
   });
 
-  it('shows the error the provider sent back', async () => {
-    renderWithProviders(<SocialCallback />, { route: '/auth/google/callback?error=access_denied' });
+  it('shows the friendly message of the refusal the API sent back', async () => {
+    renderWithProviders(<SocialCallback />, {
+      route: '/auth/google/callback?error=AccountLockedFriendlyException&friendly_message=Conta%20bloqueada.',
+    });
 
-    expect(await screen.findByText('access_denied')).toBeInTheDocument();
+    expect(await screen.findByText('Conta bloqueada.')).toBeInTheDocument();
   });
 
-  it('explains when the session did not come back from the provider', async () => {
-    server.use(http.post(api('auth/refresh/'), () => HttpResponse.json({ detail: 'Session expired' }, { status: 401 })));
+  it('shows why the session did not come back from the provider', async () => {
+    server.use(http.post(api('auth/refresh/'), () => apiErrorResponse(401, 'Session expired')));
 
     renderWithProviders(<SocialCallback />, { route: '/auth/google/callback' });
 
-    expect(await screen.findByText('Não foi possível concluir o login com o provedor.')).toBeInTheDocument();
+    expect(await screen.findByText('Session expired')).toBeInTheDocument();
   });
 });

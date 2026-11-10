@@ -1,11 +1,12 @@
 import styles from './home.module.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import React from 'react';
 import { useMe } from '../../hooks/use-me';
 import { extractFirstName } from '../../utils/extractors';
 
 export const Home: React.FC = () => {
   const { data: me } = useMe();
+  const navigate = useNavigate();
 
   return (
     <div className={styles.homeContainer}>
@@ -22,7 +23,7 @@ export const Home: React.FC = () => {
           </p>
         </section>
         <section className={styles.featureGrid}>
-          <article className={styles.featureCard}>
+          <article className={styles.featureCard} onClick={() => navigate('/ia/conversas')}>
             <div className={styles.featureIcon}>
               <span aria-hidden="true">🤖</span>
             </div>
@@ -30,7 +31,7 @@ export const Home: React.FC = () => {
             <p className={styles.featureDescription}>
                 Converse com nossa inteligência artificial e tire suas dúvidas em tempo real.
             </p>
-            <Link className={styles.featureLink} to="/ia/conversas">
+            <Link className={styles.featureLink} to="/ia/conversas" onClick={(event) => event.stopPropagation()}>
                 Acessar conversas
             </Link>
           </article>

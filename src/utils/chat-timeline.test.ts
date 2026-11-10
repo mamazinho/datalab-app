@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { IChatStreamEvent } from '../services/datalab-api/chatMessagesResource';
-import { uuid } from '../test/factories';
+import { buildApiError, uuid } from '../test/factories';
 import {
   applyChatEvent,
   findPendingClarification,
@@ -116,6 +116,13 @@ describe('applyChatEvent', () => {
       expect((items[0] as IAssistantBubbleItem).isStreaming).toBe(false);
     });
 
+    it('closes the bubble of a stopped answer with a notice', () => {
+      const items = replay([{ type: 'text_delta', content: 'Consultando' }, { type: 'cancelled' }]);
+
+      expect(kinds(items)).toEqual(['assistant_bubble', 'notice']);
+      expect((items[0] as IAssistantBubbleItem).isStreaming).toBe(false);
+    });
+
     it('swaps the streamed text for the reviewed answer', () => {
       const [bubble] = replay([
         { type: 'text_delta', content: 'Veja em sandbox:/mnt/data/a.pdf' },
@@ -130,6 +137,15 @@ describe('applyChatEvent', () => {
 
       expect((items[0] as IAssistantBubbleItem).isStreaming).toBe(false);
       expect((items[1] as IClarificationItem).status).toBe('pending');
+    });
+
+    it('shows the friendly message of an error the backend streamed', () => {
+      const error = buildApiError({ friendly_message: 'Não consegui concluir a resposta. Tente novamente.' });
+
+      expect(replay([{ type: 'error', content: error }])[0]).toMatchObject({
+        kind: 'stream_error',
+        content: 'Não consegui concluir a resposta. Tente novamente.',
+      });
     });
 
     it('shows a stream error with a default message', () => {

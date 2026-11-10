@@ -65,6 +65,12 @@ project-root/
 ### Convenções Importantes
 
 - Sempre usar imports nomeados (absolutos)
+- **React Compiler ligado** (`vite.config.ts`): não escreva `useMemo`/`useCallback`, o compilador memoiza. O lint (`eslint-plugin-react-hooks` 7) aponta o que ele não consegue compilar, como `setState` síncrono em effect ou ref lida no render: troque por estado derivado, `key` ou ref callback
+- Callback que um effect chama mas que não deve reassinar o effect: `useEffectEvent`, nunca o "ref com o último callback"
+- Contexto: `<XContext value={...}>` e `use(XContext)`; `ref` chega como prop, sem `forwardRef`
+- Markdown na tela: `Markdown` de `components/UI/Markdown`, que já renderiza tabela GFM; nunca `ReactMarkdown` direto
+- Formulário: action com `createFormAction` + `useActionState`; os campos vão num `FormFieldset` e o envio num `SubmitButton pendingLabel="..."` (`components/UI/Forms`), que leem o pending do `<form>` com `useFormStatus` — não repasse `isPending` por prop
+- Ação de linha (excluir, arquivar, ativar): `useRowActions(queryKey, rows)` — pending pela transição, `busyId` da linha, `optimistic` com a linha nova (ou `null` para tirá-la da lista) enquanto a request roda
 
 ---
 
@@ -97,10 +103,12 @@ yarn test:coverage   # relatório de cobertura (v8) em coverage/
 ```ts
 server.use(
   http.post(api('auth/login/'), () =>
-    HttpResponse.json({ detail: 'E-mail ou senha inválidos.' }, { status: 401 }),
+    apiErrorResponse(400, 'E-mail ou senha inválidos.', 'InvalidCredentialsFriendlyException'),
   ),
 );
 ```
+
+- Erro da API sempre no contrato `IApiError` (`src/types/errors.ts`): use `apiErrorResponse(status, friendlyMessage, error?)` ou `buildApiError(...)`, nunca `{ detail }` solto
 
 - Payloads vêm das fábricas de `src/test/factories.ts` (`buildUser`, `buildCompany`, `buildAgent`…), com override parcial: o teste declara só o campo que importa
 - Ids nos testes saem de `uuid(n)` — determinístico e válido para o `isUuid`
@@ -158,6 +166,7 @@ São códigos typescript puro, sem componentes react, que servem como helpers pa
 
 - **Backend da Datalab com API python:**
   - Autenticação: jwt token = access_token no localStorage e refresh_token no cookie httpOnly
+  - Erro: todo erro da API vem no contrato `IApiError`, e os interceptors do axios rejeitam sempre com `ApiError` (`utils/api-error.ts`), inclusive falha de rede ou resposta fora do contrato. Para ler um erro, use `ApiError.from(error)`, que tem os mesmos campos do contrato (o texto para o usuário é sempre `friendly_message`; `message` é o técnico) mais o `traceId`; para avisar o usuário, `toastRequestError(error)`. Sem prefixo nem mensagem fixa por tela: o texto é o do backend. Evento de erro do chat também leva o contrato no `content` (`clientError(...)` para o que nasce no front)
 
 ### Variáveis de Ambiente
 Todas elas são declaradas no arquivo .env

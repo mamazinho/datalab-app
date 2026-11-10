@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { ThemeContext, type ThemeMode, type ThemePreference } from './contexts';
 
 const STORAGE_KEY = 'theme';
@@ -20,24 +20,21 @@ export const CustomThemeProvider = ({ children }: { children: ReactNode }) => {
   const [previewMode, setPreviewMode] = useState<ThemeMode | null>(null);
   const mode = previewMode ?? savedMode;
 
-  const setThemePreference = useCallback((preference: ThemePreference) => {
+  const setThemePreference = (preference: ThemePreference) => {
     const newMode = resolveMode(preference);
     setSavedMode(newMode);
     localStorage.setItem(STORAGE_KEY, newMode);
-  }, []);
+  };
 
-  const previewThemePreference = useCallback((preference: ThemePreference | null) => {
+  const previewThemePreference = (preference: ThemePreference | null) => {
     setPreviewMode(preference ? resolveMode(preference) : null);
-  }, []);
+  };
 
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = mode;
   }, [mode]);
 
-  const contextValue = useMemo(
-    () => ({ mode, setThemePreference, previewThemePreference }),
-    [mode, setThemePreference, previewThemePreference],
-  );
+  const contextValue = { mode, setThemePreference, previewThemePreference };
 
-  return <ThemeContext.Provider value={contextValue}>{children}</ThemeContext.Provider>;
+  return <ThemeContext value={contextValue}>{children}</ThemeContext>;
 };

@@ -185,11 +185,7 @@ export const UsersResource = {
     await axiosPrivateInstance.delete('users/me/');
   },
   async forgotPassword(forgotPasswordData: IForgotPasswordRequest): Promise<void> {
-    const response = await axiosInstance.post(
-      `users/forgot-password`,
-      forgotPasswordData
-    )
-    if (response.status !== 204) throw new Error("Failed to send forgot password request");
+    await axiosInstance.post(`users/forgot-password`, forgotPasswordData);
   },
   async changePassword(changePasswordData: IChangePasswordRequest): Promise<IUserResponse> {
     const response = await axiosInstance.post(

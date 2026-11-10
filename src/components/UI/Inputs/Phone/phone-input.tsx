@@ -1,5 +1,5 @@
 import styles from './phone-input.module.css';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   PhoneInput,
   buildCountryData,
@@ -70,10 +70,7 @@ export const PhoneField = ({
 }: IPhoneFieldProps) => {
   const [countryIso2, setCountryIso2] = useState<CountryIso2>(defaultCountry);
 
-  const currentCountry = useMemo(
-    () => getCountry({ field: 'iso2', value: countryIso2, countries: translatedCountries }),
-    [countryIso2],
-  );
+  const currentCountry = getCountry({ field: 'iso2', value: countryIso2, countries: translatedCountries });
 
   return (
     <div className={styles.wrapper}>

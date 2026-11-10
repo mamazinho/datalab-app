@@ -7,12 +7,13 @@ import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import type { IUserResponse } from '../../../services/datalab-api/usersResource';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { deleteAccountAction } from '../actions';
+import { SubmitButton } from '../../../components/UI/Forms';
 
 export const DeleteAccount = ({ me }: { me: IUserResponse }) => {
   const { logout } = useAuthContext();
   const [isOpen, setIsOpen] = useState(false);
   const [confirmation, setConfirmation] = useState('');
-  const [formState, formAction, isPending] = useActionState(deleteAccountAction, INITIAL_ACTION_STATE);
+  const [formState, formAction] = useActionState(deleteAccountAction, INITIAL_ACTION_STATE);
   const ownsACompany = me.companies.some((company) => company.membership.membership_role === 'owner');
 
   useActionFeedback(formState, {
@@ -70,9 +71,9 @@ export const DeleteAccount = ({ me }: { me: IUserResponse }) => {
 
           {formState.error && <p className={designSystemStyles.errorText} role="alert">{formState.error}</p>}
 
-          <button className={styles.deleteAccountSubmit} type="submit" disabled={confirmation.trim().toLowerCase() !== me.email.toLowerCase() || isPending}>
-            {isPending ? 'Excluindo...' : 'Excluir conta'}
-          </button>
+          <SubmitButton className={styles.deleteAccountSubmit} disabled={confirmation.trim().toLowerCase() !== me.email.toLowerCase()} pendingLabel="Excluindo...">
+            Excluir conta
+          </SubmitButton>
         </form>
       </Modal>
     </section>

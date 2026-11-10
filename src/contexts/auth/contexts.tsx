@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, use } from "react";
 import type { ILoginUserResponse } from "../../services/datalab-api/authResource";
 
 interface IAuthContextProps {
@@ -10,7 +10,7 @@ interface IAuthContextProps {
 export const AuthContext = createContext<IAuthContextProps | null>(null);
 
 export const useAuthContext = () => {
-  const context = useContext(AuthContext);
+  const context = use(AuthContext);
 
   if (!context) {
     throw new Error('useAuthContext must be used within an AuthProvider');

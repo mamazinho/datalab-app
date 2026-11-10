@@ -5,13 +5,13 @@ import { PasswordInput } from '../../../components/UI/Inputs/Password/password-i
 import { PhoneField } from '../../../components/UI/Inputs/Phone';
 import { SocialLoginButtons } from '../../../components/UI/Buttons/social-login-buttons';
 import type { Provider } from '../../../types/integrations';
+import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 
 interface IRegisterFormProps extends React.FormHTMLAttributes<HTMLFormElement> {
-    isPending: boolean;
     onSocialLogin: (provider: Provider) => void;
 }
 
-export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onSocialLogin, ...props }) => {
+export const RegisterForm: React.FC<IRegisterFormProps> = ({ onSocialLogin, ...props }) => {
     const [searchParams] = useSearchParams();
     const emailFromQuery = searchParams.get('email') ?? '';
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -25,7 +25,7 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onSocial
                 <h2 className={designSystemStyles.subtitle}>Crie sua conta</h2>
             </header>
             <form className={designSystemStyles.authForm} {...props}>
-                <fieldset className={designSystemStyles.fieldsWrapper} disabled={isPending}>
+                <FormFieldset className={designSystemStyles.fieldsWrapper}>
                     <div className={designSystemStyles.field}>
                         <label className={designSystemStyles.label} htmlFor="inputName">Nome Completo</label>
                         <input className={designSystemStyles.input}
@@ -61,7 +61,6 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onSocial
                             onValueChange={setPhoneNumber}
                             autoComplete="tel"
                             required
-                            disabled={isPending}
                         />
                     </div>
 
@@ -93,10 +92,10 @@ export const RegisterForm: React.FC<IRegisterFormProps> = ({ isPending, onSocial
                         />
                     </div>
 
-                    <button className={designSystemStyles.primaryButton} type="submit">
-                        {isPending ? "Processando..." : "Cadastrar"}
-                    </button>
-                </fieldset>
+                    <SubmitButton className={designSystemStyles.primaryButton} pendingLabel="Processando...">
+                        Cadastrar
+                    </SubmitButton>
+                </FormFieldset>
 
                 <div className={designSystemStyles.formDivider}>
                     <div className={designSystemStyles.dividerLine} />

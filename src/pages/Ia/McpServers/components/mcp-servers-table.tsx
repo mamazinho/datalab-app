@@ -1,17 +1,14 @@
 import mcpServersStyles from '../mcp-servers.module.css';
 import styles from '../../ia.module.css';
-import { useState } from 'react';
-import { toast } from 'react-toastify';
-import { useQueryClient } from '@tanstack/react-query';
 import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '../../../../components/UI/Tables/ActionTable';
 import { PermissionGate } from '../../../../components/Tools/permission-gate';
 import { useConfirm } from '../../../../contexts/confirm';
 import { mcpServersQuery } from '../../../../queries';
 import { DatalabAPI } from '../../../../services/datalab-api';
 import type { IRetrieveMcpServer } from '../../../../services/datalab-api/mcpServersResource';
-import type { UUID7 } from '../../../../types/ids';
 import { MCP_SERVER_ROUTE_PERMISSIONS } from '../../../../utils/route-permissions';
 import { AUTH_TYPE_LABELS } from '../schemas';
+import { useRowActions } from '../../../../hooks/use-row-actions';
 
 interface IMcpServersTableProps {
   mcpServers: IRetrieveMcpServer[];
@@ -19,9 +16,8 @@ interface IMcpServersTableProps {
 }
 
 export const McpServersTable = ({ mcpServers, onEdit }: IMcpServersTableProps) => {
-  const queryClient = useQueryClient();
   const confirm = useConfirm();
-  const [removingId, setRemovingId] = useState<UUID7 | null>(null);
+  const { rows, isBusy, run } = useRowActions(mcpServersQuery.queryKey, mcpServers);
 
   const handleRemove = async (mcpServer: IRetrieveMcpServer) => {
     const confirmed = await confirm({
@@ -30,19 +26,15 @@ export const McpServersTable = ({ mcpServers, onEdit }: IMcpServersTableProps) =
       confirmLabel: 'Remover',
     });
     if (!confirmed) return;
-    setRemovingId(mcpServer.id);
-    try {
-      await DatalabAPI.McpServersResource.deleteMcpServer(mcpServer.id);
-      toast.success('Servidor MCP removido.');
-      void queryClient.invalidateQueries({ queryKey: mcpServersQuery.queryKey });
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Erro ao remover o servidor MCP.');
-    } finally {
-      setRemovingId(null);
-    }
+    run({
+      id: mcpServer.id,
+      request: () => DatalabAPI.McpServersResource.deleteMcpServer(mcpServer.id),
+      successMessage: 'Servidor MCP removido.',
+      optimistic: null,
+    });
   };
 
-  if (mcpServers.length === 0) {
+  if (rows.length === 0) {
     return <p className={styles.emptyMessage}>Nenhum servidor MCP cadastrado.</p>;
   }
 
@@ -55,7 +47,7 @@ export const McpServersTable = ({ mcpServers, onEdit }: IMcpServersTableProps) =
         <th>Autenticação</th>
       </TableHeaders>
 
-      {mcpServers.map((mcpServer) => (
+      {rows.map((mcpServer) => (
         <TableRow key={mcpServer.id}>
           <td><span className={mcpServersStyles.mcpName}>{mcpServer.name}</span></td>
           <td>{mcpServer.agent_name}</td>
@@ -65,13 +57,13 @@ export const McpServersTable = ({ mcpServers, onEdit }: IMcpServersTableProps) =
             <PermissionGate route={[MCP_SERVER_ROUTE_PERMISSIONS.update, MCP_SERVER_ROUTE_PERMISSIONS.remove]}>
               <TableActions>
                 <PermissionGate route={MCP_SERVER_ROUTE_PERMISSIONS.update}>
-                  <TableAction disabled={removingId === mcpServer.id} onClick={() => onEdit(mcpServer)}>
+                  <TableAction disabled={isBusy(mcpServer.id)} onClick={() => onEdit(mcpServer)}>
                     Editar
                   </TableAction>
                 </PermissionGate>
                 <PermissionGate route={MCP_SERVER_ROUTE_PERMISSIONS.remove}>
-                  <TableAction disabled={removingId === mcpServer.id} onClick={() => void handleRemove(mcpServer)}>
-                    {removingId === mcpServer.id ? 'Removendo...' : 'Remover'}
+                  <TableAction disabled={isBusy(mcpServer.id)} onClick={() => void handleRemove(mcpServer)}>
+                    Remover
                   </TableAction>
                 </PermissionGate>
               </TableActions>

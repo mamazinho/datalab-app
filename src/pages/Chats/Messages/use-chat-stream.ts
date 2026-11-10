@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useReducer, useRef, useState } from 'react';
 import { DatalabAPI } from '../../../services/datalab-api';
 import type { IChatFileRef } from '../../../services/datalab-api/chatFilesResource';
 import type { IChatStreamEvent } from '../../../services/datalab-api/chatMessagesResource';
 import { useMe } from '../../../hooks/use-me';
 import { parseChatStream } from '../../../utils/process-stream';
+import { ApiError, clientError } from '../../../utils/api-error';
 import type { UUID7 } from '../../../types/ids';
 import {
   applyChatEvent,
@@ -13,7 +14,6 @@ import {
 } from '../../../utils/chat-timeline';
 
 type TimelineAction =
-  | { type: 'reset'; history: IChatStreamEvent[] }
   | { type: 'event'; event: IChatStreamEvent }
   | { type: 'reopen_clarification'; toolCallId: string };
 
@@ -21,8 +21,6 @@ const replay = (history: IChatStreamEvent[]) => history.reduce(applyChatEvent, [
 
 const timelineReducer = (items: TimelineItem[], action: TimelineAction): TimelineItem[] => {
   switch (action.type) {
-    case 'reset':
-      return replay(action.history);
     case 'event':
       return applyChatEvent(items, action.event);
     case 'reopen_clarification':
@@ -34,29 +32,58 @@ const STREAM_INTERRUPTED_MESSAGE = 'A conexão com o servidor caiu no meio da re
 
 const EMPTY_PROMPT_WITH_ATTACHMENTS = 'Analise o arquivo anexado.';
 
-const getErrorMessage = (error: unknown, fallback: string): string =>
-  error instanceof Error && error.message ? error.message : fallback;
-
-export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[]) => {
+export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[], modelName: string) => {
   const { data: me } = useMe();
   const [items, dispatch] = useReducer(timelineReducer, initialHistory, replay);
   const [isStreaming, setIsStreaming] = useState(false);
-  // Stream generation: switching chats or unmounting invalidates the loops still running
+  const [queued, setQueued] = useState<string[]>([]);
+  // Stream generation: unmounting (another chat, or a fresh history) invalidates the loops still running
   const generationRef = useRef(0);
-
-  useEffect(() => {
-    generationRef.current += 1;
-    setIsStreaming(false);
-    dispatch({ type: 'reset', history: initialHistory });
-  }, [chatId, initialHistory]);
+  const queuedRef = useRef<string[]>([]);
 
   useEffect(() => () => {
     generationRef.current += 1;
   }, []);
 
-  const pendingClarification = useMemo(() => findPendingClarification(items), [items]);
+  const pendingClarification = findPendingClarification(items);
 
-  const submitPrompt = useCallback(async (
+  const setQueue = (prompts: string[]) => {
+    queuedRef.current = prompts;
+    setQueued(prompts);
+  };
+
+  const follow = async (stream: ReadableStream<Uint8Array>, generation: number) => {
+    let interrupted = false;
+    try {
+      for await (const event of parseChatStream(stream)) {
+        if (generationRef.current !== generation) return;
+        if (event.type === 'user_message' && event.queued) setQueue(queuedRef.current.slice(1));
+        dispatch({ type: 'event', event });
+      }
+    } catch {
+      if (generationRef.current !== generation) return;
+      interrupted = true;
+      dispatch({ type: 'event', event: { type: 'error', content: clientError(STREAM_INTERRUPTED_MESSAGE) } });
+    } finally {
+      if (generationRef.current === generation) {
+        // Closes the streaming bubble even if the backend ends without a done event
+        dispatch({ type: 'event', event: { type: 'done' } });
+        setIsStreaming(false);
+        // A dropped connection says nothing about the run, which may still take the queue in
+        if (interrupted) setQueue([]);
+        else sendWhatTheAnswerDidNotTake();
+      }
+    }
+  };
+
+  const sendWhatTheAnswerDidNotTake = () => {
+    const leftovers = queuedRef.current;
+    if (!leftovers.length) return;
+    setQueue([]);
+    void submitPrompt(leftovers.join('\n\n'));
+  };
+
+  const submitPrompt = async (
     prompt: string,
     attachments: IChatFileRef[] = [],
     answerToToolCallId?: string,
@@ -72,6 +99,7 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
         prompt,
         ...(answerToToolCallId ? { answer_to_tool_call_id: answerToToolCallId } : {}),
         ...(attachments.length ? { file_ids: attachments.map((file) => file.id) } : {}),
+        ...(modelName ? { model_name: modelName } : {}),
       });
     } catch (requestError) {
       if (generationRef.current !== generation) return;
@@ -79,31 +107,48 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
       if (answerToToolCallId) {
         dispatch({ type: 'reopen_clarification', toolCallId: answerToToolCallId });
       }
-      dispatch({ type: 'event', event: { type: 'error', content: getErrorMessage(requestError, 'Erro ao enviar a mensagem.') } });
+      dispatch({ type: 'event', event: { type: 'error', content: ApiError.from(requestError) } });
       setIsStreaming(false);
       return;
     }
 
-    try {
-      for await (const event of parseChatStream(stream)) {
-        if (generationRef.current !== generation) return;
-        dispatch({ type: 'event', event });
-      }
-    } catch {
-      if (generationRef.current !== generation) return;
-      dispatch({ type: 'event', event: { type: 'error', content: STREAM_INTERRUPTED_MESSAGE } });
-    } finally {
-      if (generationRef.current === generation) {
-        // Closes the streaming bubble even if the backend ends without a done event
-        dispatch({ type: 'event', event: { type: 'done' } });
-        setIsStreaming(false);
-      }
-    }
-  }, [chatId, me]);
+    await follow(stream, generation);
+  };
 
-  const sendPrompt = useCallback(async (prompt: string, attachments: IChatFileRef[] = []) => {
+  const queuePrompt = async (prompt: string) => {
+    setQueue([...queuedRef.current, prompt]);
+    try {
+      await DatalabAPI.ChatMessagesResource.queueMessage(chatId, prompt);
+    } catch {
+      // It stays queued and goes out as the next message once the answer ends
+    }
+  };
+
+  const followActiveRun = useEffectEvent(async () => {
+    const generation = ++generationRef.current;
+    const stream = await DatalabAPI.ChatMessagesResource.followRun(chatId).catch((requestError: unknown) => {
+      if (generationRef.current === generation) {
+        dispatch({ type: 'event', event: { type: 'error', content: ApiError.from(requestError) } });
+      }
+      return null;
+    });
+    if (!stream || generationRef.current !== generation) return;
+
+    setIsStreaming(true);
+    await follow(stream, generation);
+  });
+
+  useEffect(() => {
+    void followActiveRun();
+  }, []);
+
+  const sendPrompt = async (prompt: string, attachments: IChatFileRef[] = []) => {
     const trimmedPrompt = prompt.trim();
-    if ((!trimmedPrompt && attachments.length === 0) || isStreaming) return;
+    if (isStreaming) {
+      if (trimmedPrompt) await queuePrompt(trimmedPrompt);
+      return;
+    }
+    if (!trimmedPrompt && attachments.length === 0) return;
 
     // With a pending clarification, free text also answers it
     await submitPrompt(
@@ -111,12 +156,14 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
       attachments,
       pendingClarification?.toolCallId,
     );
-  }, [isStreaming, pendingClarification, submitPrompt]);
+  };
 
-  const answerClarification = useCallback(async (answer: string) => {
+  const answerClarification = async (answer: string) => {
     if (!pendingClarification || isStreaming) return;
     await submitPrompt(answer, [], pendingClarification.toolCallId);
-  }, [isStreaming, pendingClarification, submitPrompt]);
+  };
 
-  return { items, isStreaming, pendingClarification, sendPrompt, answerClarification };
+  const stop = () => DatalabAPI.ChatMessagesResource.cancelRun(chatId).catch(() => undefined);
+
+  return { items, isStreaming, queued, pendingClarification, sendPrompt, answerClarification, stop };
 };

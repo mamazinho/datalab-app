@@ -1,6 +1,6 @@
-import axios from "axios";
 import { axiosCompanyInstance, axiosPrivateInstance } from "./axios";
 import type { UUID7 } from "../../types/ids";
+import { ApiError } from "../../utils/api-error";
 import type { AssetType, IntegrationKey, Provider } from "../../types/integrations";
 import type { CompanyMembershipRole, CompanyMembershipStatus } from "./usersResource";
 const AVAILABLE_ASSETS_TIMEOUT_MS = 30_000;
@@ -125,7 +125,7 @@ export const CompaniesResource = {
     try {
       await axiosCompanyInstance.delete(`companies/${companyId}/provider-assets/${assetId}/`);
     } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.status === 404) return;
+      if (ApiError.from(error).status === 404) return;
       throw error;
     }
   },

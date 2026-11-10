@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { ApiError } from './api-error';
 
 export const MAX_QUERY_RETRIES = 5;
 
@@ -8,11 +8,7 @@ export const QUERY_RETRY_DELAY_MS = 3000;
 export const shouldRetryQuery = (failureCount: number, error: unknown): boolean => {
   if (failureCount >= MAX_QUERY_RETRIES) return false;
 
-  if (axios.isAxiosError(error)) {
-    const status = error.response?.status;
-    if (status === undefined) return true; // sem response = rede/servidor inacessível
-    return status >= 500;
-  }
-
-  return true; // erro não-axios (inesperado): retenta de forma conservadora
+  // Status 0 never reached the API (network, or an unexpected error): retried to be safe
+  const { status } = ApiError.from(error);
+  return status === 0 || status >= 500;
 };

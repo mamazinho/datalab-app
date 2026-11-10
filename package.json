@@ -15,6 +15,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@opentelemetry/sdk-trace-base": "^2.8.0",
+    "@opentelemetry/sdk-trace-web": "^2.8.0",
     "@pydantic/logfire-browser": "^0.18.10",
     "@tanstack/react-query": "^5.101.2",
     "axios": "^1.12.2",
@@ -25,6 +27,7 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.1",
     "react-toastify": "^11.0.5",
+    "remark-gfm": "^4.0.1",
     "uuid": "^14.0.2",
     "zod": "^4.3.6"
   },
@@ -40,8 +43,9 @@
     "@vitejs/plugin-react": "^5.0.3",
     "@vitest/coverage-v8": "^4.1.11",
     "@vitest/eslint-plugin": "^1.6.27",
+    "babel-plugin-react-compiler": "^1.0.0",
     "eslint": "^9.36.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.4.20",
     "eslint-plugin-testing-library": "^7.16.2",
     "globals": "^16.4.0",

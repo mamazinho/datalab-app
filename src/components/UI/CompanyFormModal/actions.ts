@@ -9,7 +9,6 @@ export const createCompanyAction = createFormAction(
   async ({ name }) => {
     await DatalabAPI.CompaniesResource.createCompany({ name });
   },
-  { errorPrefix: 'Falha ao criar empresa: ' },
 );
 
 export const createUpdateCompanyAction = (companyId: UUID7) =>
@@ -18,5 +17,4 @@ export const createUpdateCompanyAction = (companyId: UUID7) =>
     async ({ name }) => {
       await DatalabAPI.CompaniesResource.updateCompany(companyId, { name });
     },
-    { errorPrefix: 'Falha ao atualizar empresa: ' },
   );

@@ -11,7 +11,7 @@ const ORIGIN_LABELS: Record<ChatUsageOrigin, string> = {
   supervisor: 'Supervisor',
   specialist: 'Especialistas',
   complexity_classifier: 'Classificador de complexidade',
-  answer_rewriter: 'Reescrita da resposta',
+  presentation: 'Apresentação',
 };
 
 const formatNumber = new Intl.NumberFormat('pt-BR').format;

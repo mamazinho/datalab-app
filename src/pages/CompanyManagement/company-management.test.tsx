@@ -1,7 +1,7 @@
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders, screen, userEvent, waitFor } from '../../test/test-utils';
-import { api } from '../../test/msw/handlers';
+import { api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import { buildCompany, buildCurrentMembership, buildRoutePermission, uuid } from '../../test/factories';
 import type { IUserCompany } from '../../services/datalab-api/usersResource';
@@ -110,7 +110,7 @@ describe('<CompanyManagement />', () => {
       const user = userEvent.setup({ delay: null });
       server.use(
         http.patch(api(`companies/${owned.id}/`), () =>
-          HttpResponse.json({ detail: 'Nome já usado.' }, { status: 409 }),
+          apiErrorResponse(409, 'Nome já usado.'),
         ),
       );
       renderManagement();
@@ -166,7 +166,7 @@ describe('<CompanyManagement />', () => {
       const user = userEvent.setup({ delay: null });
       server.use(
         http.delete(api(`companies/${owned.id}/`), () =>
-          HttpResponse.json({ detail: 'Empresa possui membros ativos.' }, { status: 400 }),
+          apiErrorResponse(400, 'Empresa possui membros ativos.'),
         ),
       );
       renderManagement();

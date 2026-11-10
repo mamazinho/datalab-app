@@ -64,10 +64,8 @@ export const CompanyMembers = () => {
         </>
       )}
 
-      <InviteMemberModal
-        isOpen={isInviteOpen}
-        onClose={() => setIsInviteOpen(false)}
-      />
+      {/* Mounted only while open, so closing discards what was typed */}
+      {isInviteOpen && <InviteMemberModal isOpen onClose={() => setIsInviteOpen(false)} />}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it, vi } from 'vitest';
 import { renderWithProviders, screen, userEvent, waitFor, within } from '../../test/test-utils';
-import { api } from '../../test/msw/handlers';
+import { api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import { buildCompany, buildCurrentMembership, uuid } from '../../test/factories';
 import type { IIntegrationStatus } from '../../services/datalab-api/authResource';
@@ -49,25 +49,22 @@ const givenIntegrations = (integrations: IIntegrationStatus[]) => {
   server.use(http.get(api('auth/integrations/'), () => HttpResponse.json(integrations)));
 };
 
+const membershipWith = (assets: ICompanyProviderAsset[], role: 'owner' | 'member' = 'owner') =>
+  buildCurrentMembership({
+    membership_role: role,
+    company: {
+      id: uuid(1),
+      name: 'Acme',
+      status: 'active',
+      created_by_user_id: uuid(3),
+      created_at: '2026-01-01T00:00:00Z',
+      updated_at: '2026-01-01T00:00:00Z',
+      provider_assets: assets,
+    },
+  });
+
 const givenCompanyAssets = (assets: ICompanyProviderAsset[], role: 'owner' | 'member' = 'owner') => {
-  server.use(
-    http.get(api('memberships/current/'), () =>
-      HttpResponse.json(
-        buildCurrentMembership({
-          membership_role: role,
-          company: {
-            id: uuid(1),
-            name: 'Acme',
-            status: 'active',
-            created_by_user_id: uuid(3),
-            created_at: '2026-01-01T00:00:00Z',
-            updated_at: '2026-01-01T00:00:00Z',
-            provider_assets: assets,
-          },
-        }),
-      ),
-    ),
-  );
+  server.use(http.get(api('memberships/current/'), () => HttpResponse.json(membershipWith(assets, role))));
 };
 
 const renderIntegrations = (companies: IUserCompany[] = [company], route = '/integracoes') =>
@@ -174,6 +171,47 @@ describe('<Integrations />', () => {
       expect(await screen.findByRole('button', { name: 'Gerenciar permissões' })).toBeInTheDocument();
     });
 
+    it('opens the asset picker when the consent comes back to a company without assets of it', async () => {
+      givenIntegrations([buildIntegration({ connected: true })]);
+      givenCompanyAssets([]);
+      server.use(
+        http.get(api(`companies/${uuid(1)}/provider-assets/available/`), () =>
+          HttpResponse.json({ provider: 'google', integration: 'google_analytics', assets: [], allowed_external_ids: [] }),
+        ),
+        http.get(api(`companies/${uuid(1)}/provider-assets/`), () => HttpResponse.json([])),
+      );
+      renderIntegrations([company], '/integracoes?ativos=google_analytics');
+
+      expect(await screen.findByRole('dialog', { name: 'Ativos — Google Analytics' })).toBeInTheDocument();
+    });
+
+    it('waits for the company assets before deciding on the asset picker of a reconnection', async () => {
+      let releaseMembership = () => {};
+      let membershipRequested = false;
+      let integrationsRequested = false;
+      server.use(
+        http.get(api('auth/integrations/'), () => {
+          integrationsRequested = true;
+          return HttpResponse.json([buildIntegration({ connected: true })]);
+        }),
+        http.get(api('memberships/current/'), async () => {
+          membershipRequested = true;
+          await new Promise<void>((resolve) => {
+            releaseMembership = resolve;
+          });
+          return HttpResponse.json(membershipWith([buildAsset({ name: 'Site institucional' })]));
+        }),
+      );
+      renderIntegrations([company], '/integracoes?ativos=google_analytics');
+
+      await waitFor(() => expect(membershipRequested).toBe(true));
+      expect(integrationsRequested).toBe(false);
+      releaseMembership();
+
+      expect(await screen.findByText('Site institucional')).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
     it('hides asset management from a member', async () => {
       givenIntegrations([buildIntegration({ connected: true })]);
       givenCompanyAssets([], 'member');
@@ -231,7 +269,7 @@ describe('<Integrations />', () => {
       givenIntegrations([buildIntegration()]);
       server.use(
         http.get(api('auth/google/authorize/'), () =>
-          HttpResponse.json({ detail: 'Integração indisponível.' }, { status: 503 }),
+          apiErrorResponse(503, 'Integração indisponível.'),
         ),
       );
       renderIntegrations();
@@ -310,7 +348,7 @@ describe('<Integrations />', () => {
       givenIntegrations([buildIntegration({ connected: true })]);
       server.use(
         http.delete(api('auth/google/connection/'), () =>
-          HttpResponse.json({ detail: 'Provider fora do ar.' }, { status: 502 }),
+          apiErrorResponse(502, 'Provider fora do ar.'),
         ),
       );
       renderIntegrations();

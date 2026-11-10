@@ -1,24 +1,19 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect, useEffectEvent, type RefObject } from 'react';
 
 type ClickOutsideRefs = RefObject<HTMLElement | null> | Array<RefObject<HTMLElement | null>>;
 
 export function useClickOutside(refs: ClickOutsideRefs, onOutside: () => void, enabled = true): void {
-  const refsRef = useRef(refs);
-  refsRef.current = refs;
-  const onOutsideRef = useRef(onOutside);
-  onOutsideRef.current = onOutside;
+  const handleMouseDown = useEffectEvent((event: MouseEvent) => {
+    const target = event.target as Node;
+    const isInside = [refs].flat().some((ref) => ref.current?.contains(target));
+    if (!isInside) onOutside();
+  });
 
   useEffect(() => {
     if (!enabled) return;
 
-    const handleMouseDown = (event: MouseEvent) => {
-      const target = event.target as Node;
-      const refList = Array.isArray(refsRef.current) ? refsRef.current : [refsRef.current];
-      const isInside = refList.some((ref) => ref.current?.contains(target));
-      if (!isInside) onOutsideRef.current();
-    };
-
-    document.addEventListener('mousedown', handleMouseDown);
-    return () => document.removeEventListener('mousedown', handleMouseDown);
+    const listener = (event: MouseEvent) => handleMouseDown(event);
+    document.addEventListener('mousedown', listener);
+    return () => document.removeEventListener('mousedown', listener);
   }, [enabled]);
 }

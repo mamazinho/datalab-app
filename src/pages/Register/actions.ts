@@ -13,7 +13,6 @@ export const registerUserAction = createFormAction(
     }),
   {
     invalidMessage: 'Parâmetros de cadastro inválidos.',
-    errorPrefix: 'Erro ao realizar cadastro: ',
   },
 );
 
@@ -24,6 +23,5 @@ export const confirmUserAction = createFormAction(
   },
   {
     invalidMessage: 'Código de confirmação inválido.',
-    errorPrefix: 'Código inválido ou erro na confirmação: ',
   },
 );

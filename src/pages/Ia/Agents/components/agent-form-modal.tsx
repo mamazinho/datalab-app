@@ -1,5 +1,5 @@
 import modal from '../../../../styles/modal-form.module.css';
-import { useActionState, useMemo } from 'react';
+import { useActionState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient } from '@tanstack/react-query';
 import { Collapsible } from '../../../../components/UI/Collapsible';
@@ -10,6 +10,7 @@ import { useActionFeedback } from '../../../../hooks/use-action-feedback';
 import { agentsQuery } from '../../../../queries';
 import type { IRetrieveAgentWithState } from '../../../../services/datalab-api/agentsResource';
 import { createSaveAgentAction } from '../actions';
+import { FormFieldset, SubmitButton } from '../../../../components/UI/Forms';
 
 interface IAgentFormModalProps {
   isOpen: boolean;
@@ -20,8 +21,8 @@ interface IAgentFormModalProps {
 export const AgentFormModal = ({ isOpen, agent, onClose }: IAgentFormModalProps) => {
   const isEditing = agent !== null;
   const queryClient = useQueryClient();
-  const boundAction = useMemo(() => createSaveAgentAction(agent?.id ?? null), [agent]);
-  const [formState, formAction, isPending] = useActionState(boundAction, INITIAL_ACTION_STATE);
+  const boundAction = createSaveAgentAction(agent?.id ?? null);
+  const [formState, formAction] = useActionState(boundAction, INITIAL_ACTION_STATE);
 
   useActionFeedback(formState, {
     onSuccess: () => {
@@ -40,7 +41,7 @@ export const AgentFormModal = ({ isOpen, agent, onClose }: IAgentFormModalProps)
       title={isEditing ? `Editar agente: ${agent.name}` : 'Criar agente'}
     >
       <form className={modal.form} key={agent?.id ?? 'new'} action={formAction}>
-        <fieldset className={modal.fieldset} disabled={isPending}>
+        <FormFieldset className={modal.fieldset}>
           <div className={modal.field}>
             <label className={modal.label} htmlFor="agent-name">Nome *</label>
             <input className={modal.input}
@@ -113,10 +114,10 @@ export const AgentFormModal = ({ isOpen, agent, onClose }: IAgentFormModalProps)
             <p className={modal.error}>{formState.error}</p>
           )}
 
-          <button className={modal.submit} type="submit">
-            {isPending ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Criar agente'}
-          </button>
-        </fieldset>
+          <SubmitButton className={modal.submit} pendingLabel="Salvando...">
+            {isEditing ? 'Salvar alterações' : 'Criar agente'}
+          </SubmitButton>
+        </FormFieldset>
       </form>
     </Modal>
   );

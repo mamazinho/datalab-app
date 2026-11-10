@@ -1,5 +1,5 @@
 import styles from '../messages.module.css';
-import ReactMarkdown from 'react-markdown';
+import { Markdown } from '../../../../components/UI/Markdown';
 import type { IChatMember } from '../../../../services/datalab-api/chatsResource';
 import type { IClarificationItem } from '../../../../utils/chat-timeline';
 import { AuthoredRow } from './authored-row';
@@ -21,7 +21,7 @@ export const ClarificationCard = ({ item, author, showAuthor, onAnswer, disabled
             <div className={styles.clarificationBox}>
                 <div className={styles.clarificationLabel}>Pergunta do agente</div>
                 <div className={styles.clarificationQuestion}>
-                    <ReactMarkdown>{item.question}</ReactMarkdown>
+                    <Markdown>{item.question}</Markdown>
                 </div>
 
                 {showOptions && (

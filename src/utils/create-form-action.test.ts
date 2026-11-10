@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+import { buildApiError } from '../test/factories';
 import { INITIAL_ACTION_STATE } from '../types/actions';
+import { ApiError } from './api-error';
 import { createFormAction } from './create-form-action';
 
 const loginSchema = z.object({
@@ -47,32 +49,14 @@ describe('createFormAction', () => {
     expect(state).not.toHaveProperty('data');
   });
 
-  it('prefixes the error thrown by the handler', async () => {
-    const action = createFormAction(
-      loginSchema,
-      async () => {
-        throw new Error('credenciais inválidas');
-      },
-      { errorPrefix: 'Falha no login: ' },
-    );
+  it('returns the friendly message and the support code of the failure', async () => {
+    const action = createFormAction(loginSchema, async () => {
+      throw new ApiError(buildApiError({ friendly_message: 'E-mail ou senha inválidos.' }), 'trace-1');
+    });
 
     const state = await action(INITIAL_ACTION_STATE, validForm);
 
-    expect(state).toMatchObject({ success: false, error: 'Falha no login: credenciais inválidas' });
-  });
-
-  it('replaces the handler message when errorMessage is fixed', async () => {
-    const action = createFormAction(
-      loginSchema,
-      async () => {
-        throw new Error('detalhe interno do backend');
-      },
-      { errorMessage: 'Não foi possível entrar.' },
-    );
-
-    const state = await action(INITIAL_ACTION_STATE, validForm);
-
-    expect(state.error).toBe('Não foi possível entrar.');
+    expect(state).toMatchObject({ success: false, error: 'E-mail ou senha inválidos.', traceId: 'trace-1' });
   });
 
   it('uses mapFormData when the input is not a plain Object.fromEntries', async () => {

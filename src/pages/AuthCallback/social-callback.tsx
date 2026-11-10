@@ -5,15 +5,16 @@ import { DatalabAPI } from '../../services/datalab-api';
 import { SOCIAL_LOGIN_SUCCESS } from '../../types/auth';
 import { isProvider } from '../../types/integrations';
 import { closeCallbackWindow, postAuthChannelMessage } from '../../utils/auth-channel';
+import { ApiError } from '../../utils/api-error';
 
 // The API only sets the session cookie (a token in the URL would stay in the history); the access token comes from the refresh
 export const SocialCallback: React.FC = () => {
     const { provider } = useParams<{ provider: string }>();
     const [searchParams] = useSearchParams();
-    const [error, setError] = useState<string | null>(searchParams.get('error'));
+    const [error, setError] = useState<string | null>(searchParams.get('friendly_message'));
 
     useEffect(() => {
-        if (searchParams.get('error')) return;
+        if (searchParams.get('friendly_message')) return;
 
         let stopClosing: (() => void) | undefined;
         let cancelled = false;
@@ -31,8 +32,8 @@ export const SocialCallback: React.FC = () => {
                     window.location.href = '/';
                 });
             })
-            .catch(() => {
-                if (!cancelled) setError('Não foi possível concluir o login com o provedor.');
+            .catch((refreshError: unknown) => {
+                if (!cancelled) setError(ApiError.from(refreshError).friendly_message);
             });
 
         return () => {

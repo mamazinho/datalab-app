@@ -7,5 +7,4 @@ export const createDeleteCompanyAction = (companyId: UUID7) =>
   createFormAction(
     z.object({}),
     () => DatalabAPI.CompaniesResource.deleteCompany(companyId),
-    { errorPrefix: 'Falha ao deletar empresa: ' },
   );

@@ -1,7 +1,7 @@
 import styles from './layout.module.css';
 import { Avatar } from '../../Avatar';
 import { Link } from 'react-router-dom';
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthContext } from "../../../../contexts/auth";
 import { useMe } from "../../../../hooks/use-me";
@@ -20,7 +20,9 @@ export const Header = () => {
     const { data: me } = useMe();
     const { hasPermissionByTag, hasPermissionByRoute } = useCompanyContext();
     const location = useLocation();
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    // Opened on one history entry: any navigation closes it, even back to the same path
+    const [menuOpenedAt, setMenuOpenedAt] = useState<string | null>(null);
+    const isMenuOpen = menuOpenedAt === location.key;
     const menuRef = useRef<HTMLDivElement | null>(null);
 
     const canSeeIaSection = hasPermissionByTag(['chat', 'agents']);
@@ -40,16 +42,9 @@ export const Header = () => {
         { label: 'Gerenciamento', to: managementHref, match: MANAGEMENT_BASE_PATH },
     ];
 
-    const pendingInviteCount = useMemo(
-        () => (me?.invites ?? []).filter((i) => i.status === 'pending').length,
-        [me],
-    );
+    const pendingInviteCount = (me?.invites ?? []).filter((i) => i.status === 'pending').length;
 
-    useClickOutside(menuRef, () => setIsMenuOpen(false), isMenuOpen);
-
-    useEffect(() => {
-        setIsMenuOpen(false);
-    }, [location.pathname]);
+    useClickOutside(menuRef, () => setMenuOpenedAt(null), isMenuOpen);
 
     return (
         <nav className={styles.headerNav}>
@@ -64,7 +59,7 @@ export const Header = () => {
                     <div className={styles.profileWrapper} ref={menuRef}>
                         <button className={styles.profileButton}
                             title="Abrir menu de perfil"
-                            onClick={() => setIsMenuOpen((prev) => !prev)}
+                            onClick={() => setMenuOpenedAt(isMenuOpen ? null : location.key)}
                             aria-haspopup="menu"
                             aria-expanded={isMenuOpen}
                         >
