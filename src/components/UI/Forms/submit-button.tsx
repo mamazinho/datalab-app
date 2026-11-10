@@ -8,7 +8,7 @@ interface ISubmitButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export const SubmitButton = ({ pendingLabel, children, disabled, ...props }: ISubmitButtonProps) => {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending || disabled} {...props}>
+    <button type="submit" {...props} disabled={pending || disabled}>
       {pending ? pendingLabel : children}
     </button>
   );
