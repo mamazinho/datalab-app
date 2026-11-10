@@ -1,5 +1,5 @@
 import styles from '../messages.module.css';
-import { useRef } from 'react';
+import { useRef, type ReactNode } from 'react';
 import type { IPendingAttachment } from '../use-chat-attachments';
 import { ACCEPTED_FILE_TYPES } from '../../../../services/datalab-api/chatFilesResource';
 import { AttachmentChip } from './attachment-chip';
@@ -8,8 +8,10 @@ interface MessageInputProps {
     value: string;
     onChange: (value: string) => void;
     onSubmit: () => void;
-    isLoading: boolean;
-    isDisabled: boolean;
+    isStreaming: boolean;
+    onStop: () => void;
+    queued: string[];
+    modelMenu?: ReactNode;
     placeholder?: string;
     attachments: IPendingAttachment[];
     onAttach: (files: File[]) => void;
@@ -22,8 +24,10 @@ export const MessageInput = ({
     value,
     onChange,
     onSubmit,
-    isLoading,
-    isDisabled,
+    isStreaming,
+    onStop,
+    queued,
+    modelMenu,
     placeholder = 'Digite sua mensagem aqui...',
     attachments,
     onAttach,
@@ -51,10 +55,20 @@ export const MessageInput = ({
                             status={attachment.status}
                             error={attachment.error}
                             onRemove={() => onRemoveAttachment(attachment.localId)}
-                            isDisabled={isDisabled}
+                            isDisabled={isStreaming}
                         />
                     ))}
                 </div>
+            )}
+
+            {queued.length > 0 && (
+                <ul className={styles.queuedList} aria-label="Mensagens na fila">
+                    {queued.map((message, index) => (
+                        <li className={styles.queuedMessage} key={`${index}-${message}`}>
+                            <span className={styles.queuedLabel}>Na fila:</span> {message}
+                        </li>
+                    ))}
+                </ul>
             )}
 
             {rejections.map((rejection) => (
@@ -68,11 +82,12 @@ export const MessageInput = ({
                     type="button"
                     aria-label="Anexar arquivo"
                     title={canAttach ? 'Anexar arquivo' : 'Responda à pergunta acima antes de anexar'}
-                    disabled={isDisabled || !canAttach}
+                    disabled={!canAttach}
                     onClick={() => fileInputRef.current?.click()}
                 >
                     📎
                 </button>
+                {modelMenu}
                 <input className={styles.hiddenFileInput}
                     ref={fileInputRef}
                     type="file"
@@ -89,25 +104,25 @@ export const MessageInput = ({
                     name="prompt"
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
-                    disabled={isDisabled}
                     autoComplete="off"
                     placeholder={placeholder}
                 />
+                {isStreaming && (
+                    <button className={styles.stopButton}
+                        type="button"
+                        aria-label="Parar resposta"
+                        title="Parar resposta"
+                        onClick={onStop}
+                    >
+                        <span className={styles.stopSquare} aria-hidden="true" />
+                    </button>
+                )}
                 <button className={styles.messageSubmit}
                     type="submit"
-                    disabled={isDisabled || !canSubmit}
+                    disabled={!canSubmit}
                 >
-                    {isLoading ? (
-                        <>
-                            <span className={styles.submitSpinner} role="status" aria-hidden="true" />
-                            Enviando...
-                        </>
-                    ) : (
-                        <>
-                            <span className={styles.submitArrow}>➤</span>
-                            Enviar
-                        </>
-                    )}
+                    <span className={styles.submitArrow}>➤</span>
+                    Enviar
                 </button>
             </div>
         </form>

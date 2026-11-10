@@ -12,7 +12,7 @@ import {
 } from '../../../test/test-utils';
 import { ACCESS_TOKEN, api, apiErrorResponse } from '../../../test/msw/handlers';
 import { server } from '../../../test/msw/server';
-import { buildApiError, buildChat, buildCompany, uuid } from '../../../test/factories';
+import { buildApiError, buildChat, buildCompany, buildUser, uuid } from '../../../test/factories';
 import { meQuery } from '../../../queries';
 import type { IChatStreamEvent } from '../../../services/datalab-api/chatMessagesResource';
 import type { IRetrieveChat } from '../../../services/datalab-api/chatsResource';
@@ -51,6 +51,27 @@ const givenStreamedAnswer = (events: object[]) => {
       });
     }),
   );
+};
+
+// An answer the test streams piece by piece, and closes when it wants
+const givenOpenAnswer = () => {
+  let controller!: ReadableStreamDefaultController<Uint8Array>;
+  const stream = new ReadableStream<Uint8Array>({
+    start(streamController) {
+      controller = streamController;
+    },
+  });
+  server.use(
+    http.post(api(`chats/${CHAT_ID}/messages/`), () =>
+      new HttpResponse(stream, { headers: { 'Content-Type': 'application/x-ndjson' } }),
+    ),
+  );
+
+  return {
+    push: (...events: object[]) =>
+      events.forEach((event) => controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))),
+    close: () => controller.close(),
+  };
 };
 
 const givenHistory = (events: IChatStreamEvent[], chat: Partial<IRetrieveChat> = {}) => {
@@ -360,6 +381,163 @@ describe('<ChatMessages />', () => {
 
       expect(await screen.findByText('Receita de R$ 10 mil.')).toBeInTheDocument();
       expect(attempts).toBe(2);
+    });
+  });
+
+  describe('choosing the model', () => {
+    it('lets an admin pick the model of the next message', async () => {
+      const user = userEvent.setup({ delay: null });
+      const sent: { body?: unknown } = {};
+      const queryClient = createTestQueryClient();
+      localStorage.setItem('accessToken', ACCESS_TOKEN);
+      givenHistory([]);
+      server.use(
+        http.get(api('users/me'), () => HttpResponse.json(buildUser({ role: 'admin' }))),
+        http.post(api(`chats/${CHAT_ID}/messages/`), async ({ request }) => {
+          sent.body = await request.json();
+          return new HttpResponse(`${JSON.stringify({ type: 'done' })}\n`, {
+            headers: { 'Content-Type': 'application/x-ndjson' },
+          });
+        }),
+      );
+      await queryClient.prefetchQuery(meQuery);
+      renderMessages({ queryClient });
+
+      await user.click(await screen.findByRole('button', { name: /Automático/ }));
+      await user.click(screen.getByRole('tab', { name: 'Google' }));
+      await user.click(screen.getByRole('button', { name: 'Gemini 2.5 Pro' }));
+      await sendPrompt(user, 'Analise o tráfego');
+
+      await waitFor(() => expect(sent.body).toEqual({ prompt: 'Analise o tráfego', model_name: 'gemini-2.5-pro' }));
+    });
+
+    it('keeps the chosen model when the history reloads after the answer', async () => {
+      const user = userEvent.setup({ delay: null });
+      const queryClient = createTestQueryClient();
+      localStorage.setItem('accessToken', ACCESS_TOKEN);
+      givenHistory([]);
+      givenStreamedAnswer([{ type: 'done' }]);
+      server.use(http.get(api('users/me'), () => HttpResponse.json(buildUser({ role: 'admin' }))));
+      await queryClient.prefetchQuery(meQuery);
+      renderMessages({ queryClient });
+
+      await user.click(await screen.findByRole('button', { name: /Automático/ }));
+      await user.click(screen.getByRole('tab', { name: 'Google' }));
+      await user.click(screen.getByRole('button', { name: 'Gemini 2.5 Pro' }));
+      givenHistory([userMessage({ content: 'Analise o tráfego' }), answer('Pronto.')]);
+      await sendPrompt(user, 'Analise o tráfego');
+      await queryClient.invalidateQueries();
+
+      expect(await screen.findByText('Pronto.')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Gemini 2.5 Pro/ })).toBeInTheDocument();
+    });
+
+    it('keeps the model choice away from who is not an admin', async () => {
+      givenHistory([]);
+      renderMessages();
+
+      await screen.findByRole('textbox');
+      expect(screen.queryByRole('button', { name: /Automático/ })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('while the answer runs', () => {
+    it('stops the answer from the square button', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      let cancelled = false;
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/run/cancel/`), () => {
+          cancelled = true;
+          answerStream.push({ type: 'cancelled' }, { type: 'done' });
+          answerStream.close();
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Monte o relatório');
+      answerStream.push({ type: 'text_delta', content: 'Consultando os dados' });
+      await user.click(await screen.findByRole('button', { name: 'Parar resposta' }));
+
+      expect(await screen.findByText('Resposta interrompida.')).toBeInTheDocument();
+      expect(cancelled).toBe(true);
+      expect(screen.queryByRole('button', { name: 'Parar resposta' })).not.toBeInTheDocument();
+    });
+
+    it('queues a message typed during the answer until the answer takes it in', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      const queued: { body?: unknown } = {};
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/run/messages/`), async ({ request }) => {
+          queued.body = await request.json();
+          return new HttpResponse(null, { status: 202 });
+        }),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Analise o tráfego');
+      answerStream.push({ type: 'text_delta', content: 'Vendo o desktop.' });
+      await sendPrompt(user, 'Inclua o mobile');
+
+      expect(await screen.findByText('Inclua o mobile', { selector: 'li' })).toBeInTheDocument();
+      await waitFor(() => expect(queued.body).toEqual({ prompt: 'Inclua o mobile' }));
+
+      answerStream.push(userMessage({ content: 'Inclua o mobile', queued: true }), { type: 'done' });
+      answerStream.close();
+
+      await waitFor(() => expect(screen.queryByRole('list', { name: 'Mensagens na fila' })).not.toBeInTheDocument());
+      expect(screen.getByText('Inclua o mobile')).toBeInTheDocument();
+    });
+
+    it('sends a queued message as the next one when the answer ended before taking it', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      const sentPrompts: unknown[] = [];
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/run/messages/`), () =>
+          apiErrorResponse(409, 'Essa resposta já terminou.', 'ChatRunNotRunningFriendlyException'),
+        ),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Analise o tráfego');
+      await sendPrompt(user, 'Inclua o mobile');
+      await screen.findByText('Inclua o mobile', { selector: 'li' });
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/messages/`), async ({ request }) => {
+          sentPrompts.push(await request.json());
+          return new HttpResponse(`${JSON.stringify({ type: 'done' })}\n`, {
+            headers: { 'Content-Type': 'application/x-ndjson' },
+          });
+        }),
+      );
+      answerStream.push({ type: 'done' });
+      answerStream.close();
+
+      await waitFor(() => expect(sentPrompts).toEqual([{ prompt: 'Inclua o mobile' }]));
+    });
+
+    it('follows an answer that was already running when the chat opened', async () => {
+      givenHistory([]);
+      server.use(
+        http.get(api(`chats/${CHAT_ID}/run/`), () =>
+          new HttpResponse(
+            [userMessage({ content: 'Monte o relatório' }), { type: 'text_delta', content: 'Quase pronto.' }, { type: 'done' }]
+              .map((event) => `${JSON.stringify(event)}\n`)
+              .join(''),
+            { headers: { 'Content-Type': 'application/x-ndjson' } },
+          ),
+        ),
+      );
+      renderMessages();
+
+      expect(await screen.findByText('Monte o relatório')).toBeInTheDocument();
+      expect(await screen.findByText('Quase pronto.')).toBeInTheDocument();
     });
   });
 

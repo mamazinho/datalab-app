@@ -44,7 +44,7 @@ describe('<Usage />', () => {
         { ...buildChatUsage(), origin: 'supervisor' },
         { ...buildChatUsage(), origin: 'specialist' },
         { ...buildChatUsage(), origin: 'complexity_classifier' },
-        { ...buildChatUsage(), origin: 'answer_rewriter' },
+        { ...buildChatUsage(), origin: 'presentation' },
       ],
       by_model: [{ ...buildChatUsage({ requests: 7 }), model: 'gpt-4o', provider: 'openai' }],
     });
@@ -58,7 +58,7 @@ describe('<Usage />', () => {
     expect(within(byOrigin).getByText('Supervisor')).toBeInTheDocument();
     expect(within(byOrigin).getByText('Especialistas')).toBeInTheDocument();
     expect(within(byOrigin).getByText('Classificador de complexidade')).toBeInTheDocument();
-    expect(within(byOrigin).getByText('Reescrita da resposta')).toBeInTheDocument();
+    expect(within(byOrigin).getByText('Apresentação')).toBeInTheDocument();
     expect(within(byModel).getByText('gpt-4o')).toBeInTheDocument();
     expect(within(byModel).getByText('7')).toBeInTheDocument();
   });

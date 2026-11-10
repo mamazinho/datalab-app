@@ -94,6 +94,8 @@ export const MessageList = ({ chatId, items, isStreaming, onAnswerClarification 
                         onAnswer={onAnswerClarification}
                         disabled={isStreaming}
                     />;
+            case 'notice':
+                return <p className={styles.noticeRow} key={item.id}>{item.content}</p>;
             case 'stream_error':
                 return (
                     <div className={styles.streamErrorRow} key={item.id}>

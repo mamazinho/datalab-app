@@ -25,6 +25,9 @@ const ChatView = ({ chatId }: { chatId: UUID7 }) => {
     // Another chat, or a history that changed on the refetch, starts the timeline over
     const [shown, setShown] = useState({ history, version: 0 });
     if (shown.history !== history) setShown({ history, version: shown.version + 1 });
+    // Outlives the timeline restarts, so the admin's model stays chosen after each answer
+    const [modelChoice, setModelChoice] = useState({ chatId, model: '' });
+    const model = modelChoice.chatId === chatId ? modelChoice.model : '';
 
     return (
         <>
@@ -34,7 +37,13 @@ const ChatView = ({ chatId }: { chatId: UUID7 }) => {
             </header>
 
             <div className={styles.messagesBody}>
-                <ChatConversation key={shown.version} chatId={chatId} history={history} />
+                <ChatConversation
+                    key={shown.version}
+                    chatId={chatId}
+                    history={history}
+                    model={model}
+                    onModelChange={(chosen) => setModelChoice({ chatId, model: chosen })}
+                />
             </div>
         </>
     );

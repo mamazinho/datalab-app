@@ -116,6 +116,13 @@ describe('applyChatEvent', () => {
       expect((items[0] as IAssistantBubbleItem).isStreaming).toBe(false);
     });
 
+    it('closes the bubble of a stopped answer with a notice', () => {
+      const items = replay([{ type: 'text_delta', content: 'Consultando' }, { type: 'cancelled' }]);
+
+      expect(kinds(items)).toEqual(['assistant_bubble', 'notice']);
+      expect((items[0] as IAssistantBubbleItem).isStreaming).toBe(false);
+    });
+
     it('swaps the streamed text for the reviewed answer', () => {
       const [bubble] = replay([
         { type: 'text_delta', content: 'Veja em sandbox:/mnt/data/a.pdf' },

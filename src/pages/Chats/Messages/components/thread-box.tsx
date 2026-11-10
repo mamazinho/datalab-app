@@ -1,5 +1,5 @@
 import styles from '../messages.module.css';
-import ReactMarkdown from 'react-markdown';
+import { Markdown } from '../../../../components/UI/Markdown';
 import type { IThreadBoxItem } from '../../../../utils/chat-timeline';
 
 interface ThreadBoxProps {
@@ -22,10 +22,10 @@ export const ThreadBox = ({ item }: ThreadBoxProps) => (
                         <div className={styles.threadItemMeta}>
                             {entry.author === 'supervisor'
                                 ? `Supervisor → ${formatAgentKey(entry.agentKey)}`
-                                : formatAgentKey(entry.agentKey)}
+                                : `${formatAgentKey(entry.agentKey)} → Supervisor`}
                         </div>
                         <div className={styles.threadItemContent}>
-                            <ReactMarkdown>{entry.content}</ReactMarkdown>
+                            <Markdown>{entry.content}</Markdown>
                         </div>
                     </div>
                 ))}

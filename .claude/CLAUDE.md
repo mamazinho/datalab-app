@@ -68,6 +68,7 @@ project-root/
 - **React Compiler ligado** (`vite.config.ts`): não escreva `useMemo`/`useCallback`, o compilador memoiza. O lint (`eslint-plugin-react-hooks` 7) aponta o que ele não consegue compilar, como `setState` síncrono em effect ou ref lida no render: troque por estado derivado, `key` ou ref callback
 - Callback que um effect chama mas que não deve reassinar o effect: `useEffectEvent`, nunca o "ref com o último callback"
 - Contexto: `<XContext value={...}>` e `use(XContext)`; `ref` chega como prop, sem `forwardRef`
+- Markdown na tela: `Markdown` de `components/UI/Markdown`, que já renderiza tabela GFM; nunca `ReactMarkdown` direto
 - Formulário: action com `createFormAction` + `useActionState`; os campos vão num `FormFieldset` e o envio num `SubmitButton pendingLabel="..."` (`components/UI/Forms`), que leem o pending do `<form>` com `useFormStatus` — não repasse `isPending` por prop
 - Ação de linha (excluir, arquivar, ativar): `useRowActions(queryKey, rows)` — pending pela transição, `busyId` da linha, `optimistic` com a linha nova (ou `null` para tirá-la da lista) enquanto a request roda
 
