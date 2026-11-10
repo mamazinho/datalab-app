@@ -1,4 +1,4 @@
-import { useOptimistic, useState, useTransition } from 'react';
+import { startTransition, useOptimistic, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { toastRequestError } from '../components/Feedback/ErrorToast';
@@ -22,7 +22,6 @@ const applyChange = <T extends { id: string }>(rows: T[], { id, row }: IOptimist
 // The row stays busy until the list refetches, so it never flashes back to its old state
 export function useRowActions<T extends { id: string }>(queryKey: QueryKey, rows: T[] = []) {
   const queryClient = useQueryClient();
-  const [, startTransition] = useTransition();
   const [busyIds, setBusyIds] = useState<ReadonlySet<string>>(new Set());
   const [optimisticRows, showChange] = useOptimistic(rows, applyChange<T>);
 

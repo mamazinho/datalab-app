@@ -61,16 +61,20 @@ const givenOpenAnswer = () => {
       controller = streamController;
     },
   });
+  const sent: unknown[] = [];
   server.use(
-    http.post(api(`chats/${CHAT_ID}/messages/`), () =>
-      new HttpResponse(stream, { headers: { 'Content-Type': 'application/x-ndjson' } }),
-    ),
+    http.post(api(`chats/${CHAT_ID}/messages/`), async ({ request }) => {
+      sent.push(await request.json());
+      return new HttpResponse(stream, { headers: { 'Content-Type': 'application/x-ndjson' } });
+    }),
   );
 
   return {
+    sent,
     push: (...events: object[]) =>
       events.forEach((event) => controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))),
     close: () => controller.close(),
+    drop: () => controller.error(new TypeError('network error')),
   };
 };
 
@@ -533,33 +537,20 @@ describe('<ChatMessages />', () => {
     it('does not resend the queue when the connection drops, since the answer may still take it in', async () => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);
-      let answer!: ReadableStreamDefaultController<Uint8Array>;
-      const sentPrompts: unknown[] = [];
-      server.use(
-        http.post(api(`chats/${CHAT_ID}/run/messages/`), () => new HttpResponse(null, { status: 202 })),
-        http.post(api(`chats/${CHAT_ID}/messages/`), async ({ request }) => {
-          sentPrompts.push(await request.json());
-          const stream = new ReadableStream<Uint8Array>({
-            start(controller) {
-              answer = controller;
-            },
-          });
-          return new HttpResponse(stream, { headers: { 'Content-Type': 'application/x-ndjson' } });
-        }),
-      );
+      const answerStream = givenOpenAnswer();
+      server.use(http.post(api(`chats/${CHAT_ID}/run/messages/`), () => new HttpResponse(null, { status: 202 })));
       renderMessages();
 
       await sendPrompt(user, 'Analise o tráfego');
-      answer.enqueue(encoder.encode(`${JSON.stringify({ type: 'text_delta', content: 'Vendo o desktop.' })}\n`));
       await sendPrompt(user, 'Inclua o mobile');
       await screen.findByText('Inclua o mobile', { selector: 'li' });
-      answer.error(new TypeError('network error'));
+      answerStream.drop();
 
       expect(
         await screen.findByText('A conexão com o servidor caiu no meio da resposta. Tente novamente.'),
       ).toBeInTheDocument();
       expect(screen.queryByRole('list', { name: 'Mensagens na fila' })).not.toBeInTheDocument();
-      expect(sentPrompts).toEqual([{ prompt: 'Analise o tráfego' }]);
+      expect(answerStream.sent).toEqual([{ prompt: 'Analise o tráfego' }]);
     });
 
     it('sends a queued message as the next one when the answer ended before taking it', async () => {
