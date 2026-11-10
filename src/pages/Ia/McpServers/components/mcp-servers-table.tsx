@@ -17,7 +17,7 @@ interface IMcpServersTableProps {
 
 export const McpServersTable = ({ mcpServers, onEdit }: IMcpServersTableProps) => {
   const confirm = useConfirm();
-  const { rows, busyId, run } = useRowActions(mcpServersQuery.queryKey, mcpServers);
+  const { rows, isBusy, run } = useRowActions(mcpServersQuery.queryKey, mcpServers);
 
   const handleRemove = async (mcpServer: IRetrieveMcpServer) => {
     const confirmed = await confirm({
@@ -57,12 +57,12 @@ export const McpServersTable = ({ mcpServers, onEdit }: IMcpServersTableProps) =
             <PermissionGate route={[MCP_SERVER_ROUTE_PERMISSIONS.update, MCP_SERVER_ROUTE_PERMISSIONS.remove]}>
               <TableActions>
                 <PermissionGate route={MCP_SERVER_ROUTE_PERMISSIONS.update}>
-                  <TableAction disabled={busyId === mcpServer.id} onClick={() => onEdit(mcpServer)}>
+                  <TableAction disabled={isBusy(mcpServer.id)} onClick={() => onEdit(mcpServer)}>
                     Editar
                   </TableAction>
                 </PermissionGate>
                 <PermissionGate route={MCP_SERVER_ROUTE_PERMISSIONS.remove}>
-                  <TableAction disabled={busyId === mcpServer.id} onClick={() => void handleRemove(mcpServer)}>
+                  <TableAction disabled={isBusy(mcpServer.id)} onClick={() => void handleRemove(mcpServer)}>
                     Remover
                   </TableAction>
                 </PermissionGate>

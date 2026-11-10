@@ -20,7 +20,7 @@ interface IInvitesListProps {
 
 export const InvitesList = ({ invites }: IInvitesListProps) => {
   const confirm = useConfirm();
-  const { rows, busyId, run } = useRowActions(invitesQuery.queryKey, invites);
+  const { rows, isBusy, run } = useRowActions(invitesQuery.queryKey, invites);
 
   const handleRemove = async (invite: IUserInvite) => {
     const confirmed = await confirm({
@@ -67,7 +67,7 @@ export const InvitesList = ({ invites }: IInvitesListProps) => {
             <PermissionGate route={MEMBERSHIP_ROUTE_PERMISSIONS.removeInvite}>
               <TableActions>
                 <TableAction
-                  disabled={busyId === invite.id}
+                  disabled={isBusy(invite.id)}
                   onClick={() => void handleRemove(invite)}
                 >
                   Excluir convite

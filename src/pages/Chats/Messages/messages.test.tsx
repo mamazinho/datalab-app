@@ -432,6 +432,43 @@ describe('<ChatMessages />', () => {
       expect(screen.getByRole('button', { name: /Gemini 2.5 Pro/ })).toBeInTheDocument();
     });
 
+    it('answers a clarification with the chosen model', async () => {
+      const user = userEvent.setup({ delay: null });
+      const bodies: unknown[] = [];
+      const queryClient = createTestQueryClient();
+      localStorage.setItem('accessToken', ACCESS_TOKEN);
+      givenHistory([]);
+      server.use(
+        http.get(api('users/me'), () => HttpResponse.json(buildUser({ role: 'admin' }))),
+        http.post(api(`chats/${CHAT_ID}/messages/`), async ({ request }) => {
+          bodies.push(await request.json());
+          const events =
+            bodies.length === 1
+              ? [{ type: 'clarification', question: 'De qual período?', options: ['Último mês'], tool_call_id: 'call-1' }]
+              : [{ type: 'done' }];
+          return new HttpResponse(events.map((event) => `${JSON.stringify(event)}\n`).join(''), {
+            headers: { 'Content-Type': 'application/x-ndjson' },
+          });
+        }),
+      );
+      await queryClient.prefetchQuery(meQuery);
+      renderMessages({ queryClient });
+
+      await user.click(await screen.findByRole('button', { name: /Automático/ }));
+      await user.click(screen.getByRole('tab', { name: 'Google' }));
+      await user.click(screen.getByRole('button', { name: 'Gemini 2.5 Pro' }));
+      await sendPrompt(user, 'Qual foi a receita?');
+      await user.click(await screen.findByRole('button', { name: 'Último mês' }));
+
+      await waitFor(() =>
+        expect(bodies[1]).toEqual({
+          prompt: 'Último mês',
+          answer_to_tool_call_id: 'call-1',
+          model_name: 'gemini-2.5-pro',
+        }),
+      );
+    });
+
     it('keeps the model choice away from who is not an admin', async () => {
       givenHistory([]);
       renderMessages();
@@ -538,6 +575,16 @@ describe('<ChatMessages />', () => {
 
       expect(await screen.findByText('Monte o relatório')).toBeInTheDocument();
       expect(await screen.findByText('Quase pronto.')).toBeInTheDocument();
+    });
+
+    it('says so when the running answer cannot be followed', async () => {
+      givenHistory([]);
+      server.use(
+        http.get(api(`chats/${CHAT_ID}/run/`), () => apiErrorResponse(500, 'Não deu para acompanhar a resposta.')),
+      );
+      renderMessages();
+
+      expect(await screen.findByText('Não deu para acompanhar a resposta.')).toBeInTheDocument();
     });
   });
 

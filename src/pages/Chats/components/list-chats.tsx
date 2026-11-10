@@ -13,7 +13,7 @@ import { useRowActions } from '../../../hooks/use-row-actions';
 export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
     const { currentMembership, isOwner, hasPermissionByRoute } = useCompanyContext();
     const confirm = useConfirm();
-    const { rows, busyId, run } = useRowActions(chatListsQueryKey, chats);
+    const { rows, isBusy, run } = useRowActions(chatListsQueryKey, chats);
 
     const canArchive = hasPermissionByRoute(CHAT_ROUTE_PERMISSIONS.update);
     const canRemove = hasPermissionByRoute(CHAT_ROUTE_PERMISSIONS.remove);
@@ -45,7 +45,7 @@ export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
                 const isCreatorOrOwner = isOwner || chat.created_by_membership_id === currentMembership?.id;
                 const canArchiveChat = canArchive && isCreatorOrOwner;
                 const canDeleteChat = canRemove && isCreatorOrOwner;
-                const isBusy = busyId === chat.id;
+                const rowBusy = isBusy(chat.id);
 
                 return (
                     <li className={styles.chatItemCard} key={chat.id}>
@@ -61,12 +61,12 @@ export const ChatList = ({ chats }: { chats: IRetrieveChat[] }) => {
                         {(canArchiveChat || canDeleteChat) && (
                             <div className={styles.chatItemActions}>
                                 {canArchiveChat && (
-                                    <button className={styles.chatItemActionButton} disabled={isBusy} onClick={() => toggleArchived(chat)}>
+                                    <button className={styles.chatItemActionButton} disabled={rowBusy} onClick={() => toggleArchived(chat)}>
                                         {chat.archived ? 'Desarquivar' : 'Arquivar'}
                                     </button>
                                 )}
                                 {canDeleteChat && (
-                                    <button className={styles.chatItemActionButton} disabled={isBusy} onClick={() => void deleteChat(chat)}>
+                                    <button className={styles.chatItemActionButton} disabled={rowBusy} onClick={() => void deleteChat(chat)}>
                                         Excluir
                                     </button>
                                 )}

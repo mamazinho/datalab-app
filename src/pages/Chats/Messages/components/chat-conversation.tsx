@@ -23,7 +23,7 @@ const placeholderFor = (isStreaming: boolean, isClarifying: boolean): string | u
 
 export const ChatConversation = ({ chatId, history, model, onModelChange }: ChatConversationProps) => {
     const { items, isStreaming, queued, pendingClarification, sendPrompt, answerClarification, stop } =
-        useChatStream(chatId, history);
+        useChatStream(chatId, history, model);
     const { attachments, readyFiles, isUploading, addFiles, remove, clear } = useChatAttachments(chatId);
     const [prompt, setPrompt] = useState('');
     const { data: me } = useMe();
@@ -38,7 +38,7 @@ export const ChatConversation = ({ chatId, history, model, onModelChange }: Chat
         const currentFiles = readyFiles;
         setPrompt('');
         clear();
-        void sendPrompt(currentPrompt, currentFiles, model);
+        void sendPrompt(currentPrompt, currentFiles);
     };
 
     return (

@@ -39,7 +39,7 @@ const withState = (
 export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
   const { currentCompany, hasPermissionByRoute } = useCompanyContext();
   const confirm = useConfirm();
-  const { rows, busyId, run } = useRowActions(agentsQuery.queryKey, agents);
+  const { rows, isBusy, run } = useRowActions(agentsQuery.queryKey, agents);
 
   const canUpdate = hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.update);
   const canRemove = hasPermissionByRoute(AGENT_ROUTE_PERMISSIONS.remove);
@@ -95,7 +95,7 @@ export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
       </TableHeaders>
 
       {rows.map((agent) => {
-        const isBusy = busyId === agent.id;
+        const rowBusy = isBusy(agent.id);
         const canEditAgent = canUpdate && !agent.is_system;
         const canDeleteAgent = canRemove && !agent.is_system;
 
@@ -127,20 +127,20 @@ export const AgentsTable = ({ agents, onEdit }: IAgentsTableProps) => {
             <td>
               <TableActions>
                 {canEditAgent && (
-                  <TableAction disabled={isBusy} onClick={() => onEdit(agent)}>
+                  <TableAction disabled={rowBusy} onClick={() => onEdit(agent)}>
                     Editar
                   </TableAction>
                 )}
                 {canToggleCompany && (
-                  <TableAction disabled={isBusy} onClick={() => handleCompanyToggle(agent)}>
+                  <TableAction disabled={rowBusy} onClick={() => handleCompanyToggle(agent)}>
                     {agent.disabled_by_company ? 'Ativar para a empresa' : 'Desativar para a empresa'}
                   </TableAction>
                 )}
-                <TableAction disabled={isBusy} onClick={() => handleUserToggle(agent)}>
+                <TableAction disabled={rowBusy} onClick={() => handleUserToggle(agent)}>
                   {agent.disabled_by_user ? 'Ativar para você' : 'Desativar para você'}
                 </TableAction>
                 {canDeleteAgent && (
-                  <TableAction disabled={isBusy} onClick={() => void handleDelete(agent)}>
+                  <TableAction disabled={rowBusy} onClick={() => void handleDelete(agent)}>
                     Excluir
                   </TableAction>
                 )}

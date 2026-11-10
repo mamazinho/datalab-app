@@ -212,6 +212,31 @@ describe('<Chats />', () => {
       expect(body).toEqual({ archived: true });
     });
 
+    it('keeps a conversation busy until its own request ends, even when another one finishes first', async () => {
+      const user = userEvent.setup();
+      let releaseFirst = () => {};
+      givenChats([buildChat({ id: uuid(20) }), buildChat({ id: uuid(21) })]);
+      server.use(
+        http.patch(api(`chats/${uuid(20)}/`), async () => {
+          await new Promise<void>((resolve) => {
+            releaseFirst = resolve;
+          });
+          return HttpResponse.json(buildChat({ id: uuid(20), archived: true }));
+        }),
+        http.patch(api(`chats/${uuid(21)}/`), () => HttpResponse.json(buildChat({ id: uuid(21), archived: true }))),
+      );
+      renderChats();
+
+      const [first, second] = await screen.findAllByRole('listitem');
+      await user.click(within(first).getByRole('button', { name: 'Arquivar' }));
+      await user.click(within(second).getByRole('button', { name: 'Arquivar' }));
+
+      await waitFor(() => expect(within(second).getByRole('button', { name: 'Excluir' })).toBeEnabled());
+      expect(within(first).getByRole('button', { name: 'Excluir' })).toBeDisabled();
+      releaseFirst();
+      await waitFor(() => expect(within(first).getByRole('button', { name: 'Excluir' })).toBeEnabled());
+    });
+
     it('unarchives an archived conversation', async () => {
       const user = userEvent.setup();
       let body: unknown;

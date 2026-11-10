@@ -32,7 +32,7 @@ const STREAM_INTERRUPTED_MESSAGE = 'A conexão com o servidor caiu no meio da re
 
 const EMPTY_PROMPT_WITH_ATTACHMENTS = 'Analise o arquivo anexado.';
 
-export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[]) => {
+export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[], modelName: string) => {
   const { data: me } = useMe();
   const [items, dispatch] = useReducer(timelineReducer, initialHistory, replay);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -83,7 +83,6 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
     prompt: string,
     attachments: IChatFileRef[] = [],
     answerToToolCallId?: string,
-    modelName?: string,
   ) => {
     const generation = ++generationRef.current;
 
@@ -123,7 +122,12 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
 
   const followActiveRun = useEffectEvent(async () => {
     const generation = ++generationRef.current;
-    const stream = await DatalabAPI.ChatMessagesResource.followRun(chatId).catch(() => null);
+    const stream = await DatalabAPI.ChatMessagesResource.followRun(chatId).catch((requestError: unknown) => {
+      if (generationRef.current === generation) {
+        dispatch({ type: 'event', event: { type: 'error', content: ApiError.from(requestError) } });
+      }
+      return null;
+    });
     if (!stream || generationRef.current !== generation) return;
 
     setIsStreaming(true);
@@ -134,7 +138,7 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
     void followActiveRun();
   }, []);
 
-  const sendPrompt = async (prompt: string, attachments: IChatFileRef[] = [], modelName?: string) => {
+  const sendPrompt = async (prompt: string, attachments: IChatFileRef[] = []) => {
     const trimmedPrompt = prompt.trim();
     if (isStreaming) {
       if (trimmedPrompt) await queuePrompt(trimmedPrompt);
@@ -147,7 +151,6 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[])
       trimmedPrompt || EMPTY_PROMPT_WITH_ATTACHMENTS,
       attachments,
       pendingClarification?.toolCallId,
-      modelName,
     );
   };
 

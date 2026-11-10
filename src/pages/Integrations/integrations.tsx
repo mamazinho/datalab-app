@@ -23,7 +23,7 @@ const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
   const { data: integrations } = useIntegrations();
   const { companyProviderAssets, isOwner } = useCompanyContext();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { busyId: disconnectingKey, run } = useRowActions(integrationsQuery.queryKey);
+  const { isBusy: isDisconnecting, run } = useRowActions(integrationsQuery.queryKey);
 
   const connectable = integrations.filter((i) => !i.is_login);
 
@@ -88,7 +88,7 @@ const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
             integration={integration}
             assets={assetsOf(integration)}
             isOwner={isOwner}
-            isBusy={connectingKey === integration.key || disconnectingKey === integration.key}
+            isBusy={connectingKey === integration.key || isDisconnecting(integration.key)}
             onConnect={(value) => void connect(value)}
             onDisconnect={(value) => void handleDisconnect(value)}
             onManageAssets={setAssetsIntegration}

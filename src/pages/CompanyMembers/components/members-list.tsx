@@ -30,7 +30,7 @@ export const MembersList = ({ members }: IMembersListProps) => {
   const canRemove = hasPermissionByRoute(MEMBERSHIP_ROUTE_PERMISSIONS.remove);
   const [selectedMember, setSelectedMember] = useState<ICompanyMembership | null>(null);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
-  const { rows, busyId, run } = useRowActions(membersQuery.queryKey, members);
+  const { rows, isBusy, run } = useRowActions(membersQuery.queryKey, members);
 
   const runMemberAction = async (
     member: ICompanyMembership,
@@ -101,12 +101,12 @@ export const MembersList = ({ members }: IMembersListProps) => {
                     </TableAction>
                   )}
                   {isOwner && member.status === 'active' && (
-                    <TableAction disabled={busyId === member.id} onClick={() => void transferOwnership(member)}>
+                    <TableAction disabled={isBusy(member.id)} onClick={() => void transferOwnership(member)}>
                       Transferir posse
                     </TableAction>
                   )}
                   {canRemove && (
-                    <TableAction disabled={busyId === member.id} onClick={() => void removeMember(member)}>
+                    <TableAction disabled={isBusy(member.id)} onClick={() => void removeMember(member)}>
                       Remover membro
                     </TableAction>
                   )}
