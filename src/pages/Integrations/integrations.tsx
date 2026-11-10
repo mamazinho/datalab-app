@@ -1,6 +1,7 @@
 import styles from './integrations.module.css';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { LoadingPiece } from '../../components/Feedback/Loadings/loading';
 import { QueryBoundary } from '../../components/Tools/query-boundary';
 import { useCompanyContext } from '../../contexts/company';
 import { useConfirm } from '../../contexts/confirm';
@@ -107,7 +108,7 @@ const IntegrationsContent = ({ companyId }: { companyId: UUID7 }) => {
 };
 
 export const Integrations = () => {
-  const { currentCompany } = useCompanyContext();
+  const { currentCompany, isMembershipLoading } = useCompanyContext();
 
   if (!currentCompany) return null;
 
@@ -124,9 +125,14 @@ export const Integrations = () => {
         </div>
       </div>
 
-      <QueryBoundary>
-        <IntegrationsContent companyId={currentCompany.id} />
-      </QueryBoundary>
+      {/* The ?ativos= return decides on the company assets, so it waits for them */}
+      {isMembershipLoading ? (
+        <LoadingPiece />
+      ) : (
+        <QueryBoundary>
+          <IntegrationsContent companyId={currentCompany.id} />
+        </QueryBoundary>
+      )}
     </div>
   );
 };
