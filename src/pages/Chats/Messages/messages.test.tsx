@@ -582,6 +582,50 @@ describe('<ChatMessages />', () => {
       await waitFor(() => expect(sentPrompts).toEqual([{ prompt: 'Inclua o mobile' }]));
     });
 
+    it('gives the queued messages back to the input when the answer is stopped', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/run/messages/`), () => new HttpResponse(null, { status: 202 })),
+        http.post(api(`chats/${CHAT_ID}/run/cancel/`), () => {
+          answerStream.push({ type: 'cancelled' }, { type: 'done' });
+          answerStream.close();
+          return new HttpResponse(null, { status: 204 });
+        }),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Analise o tráfego');
+      await sendPrompt(user, 'Inclua o mobile');
+      await screen.findByText('Inclua o mobile', { selector: 'li' });
+      await user.click(screen.getByRole('button', { name: 'Parar resposta' }));
+
+      expect(await screen.findByText('Resposta interrompida.')).toBeInTheDocument();
+      await waitFor(() => expect(screen.getByRole('textbox')).toHaveValue('Inclua o mobile'));
+      expect(screen.queryByRole('list', { name: 'Mensagens na fila' })).not.toBeInTheDocument();
+      expect(answerStream.sent).toEqual([{ prompt: 'Analise o tráfego' }]);
+    });
+
+    it('keeps in the queue only what the answer did not take in', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      server.use(http.post(api(`chats/${CHAT_ID}/run/messages/`), () => new HttpResponse(null, { status: 202 })));
+      renderMessages();
+
+      await sendPrompt(user, 'Analise o tráfego');
+      await sendPrompt(user, 'Inclua o mobile');
+      await sendPrompt(user, 'Compare com março');
+      await sendPrompt(user, 'Separe por canal');
+      await screen.findByText('Separe por canal', { selector: 'li' });
+      answerStream.push(userMessage({ content: 'Compare com março\nSepare por canal', queued: true }));
+
+      await waitFor(() => expect(screen.queryByText('Separe por canal', { selector: 'li' })).not.toBeInTheDocument());
+      expect(screen.queryByText('Compare com março', { selector: 'li' })).not.toBeInTheDocument();
+      expect(screen.getByText('Inclua o mobile', { selector: 'li' })).toBeInTheDocument();
+    });
+
     it('follows an answer that was already running when the chat opened', async () => {
       givenHistory([]);
       server.use(

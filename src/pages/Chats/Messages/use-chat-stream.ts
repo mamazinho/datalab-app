@@ -32,7 +32,19 @@ const STREAM_INTERRUPTED_MESSAGE = 'A conexão com o servidor caiu no meio da re
 
 const EMPTY_PROMPT_WITH_ATTACHMENTS = 'Analise o arquivo anexado.';
 
-export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[], modelName: string) => {
+// The answer may read several queued messages at once, and then announces them in one event, one per line
+const withoutTaken = (queue: string[], content: string) =>
+  content.split('\n').reduce((rest, taken) => {
+    const index = rest.indexOf(taken);
+    return index === -1 ? rest : rest.filter((_, position) => position !== index);
+  }, queue);
+
+export const useChatStream = (
+  chatId: UUID7,
+  initialHistory: IChatStreamEvent[],
+  modelName: string,
+  restoreDraft: (text: string) => void,
+) => {
   const { data: me } = useMe();
   const [items, dispatch] = useReducer(timelineReducer, initialHistory, replay);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -54,10 +66,12 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[],
 
   const follow = async (stream: ReadableStream<Uint8Array>, generation: number) => {
     let interrupted = false;
+    let stopped = false;
     try {
       for await (const event of parseChatStream(stream)) {
         if (generationRef.current !== generation) return;
-        if (event.type === 'user_message' && event.queued) setQueue(queuedRef.current.slice(1));
+        if (event.type === 'user_message' && event.queued) setQueue(withoutTaken(queuedRef.current, event.content));
+        if (event.type === 'cancelled') stopped = true;
         dispatch({ type: 'event', event });
       }
     } catch {
@@ -71,9 +85,17 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[],
         setIsStreaming(false);
         // A dropped connection says nothing about the run, which may still take the queue in
         if (interrupted) setQueue([]);
+        else if (stopped) giveBackWhatTheAnswerDidNotTake();
         else sendWhatTheAnswerDidNotTake();
       }
     }
+  };
+
+  const giveBackWhatTheAnswerDidNotTake = () => {
+    const leftovers = queuedRef.current;
+    if (!leftovers.length) return;
+    setQueue([]);
+    restoreDraft(leftovers.join(' '));
   };
 
   const sendWhatTheAnswerDidNotTake = () => {
