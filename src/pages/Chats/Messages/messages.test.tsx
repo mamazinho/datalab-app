@@ -530,6 +530,38 @@ describe('<ChatMessages />', () => {
       expect(screen.getByText('Inclua o mobile')).toBeInTheDocument();
     });
 
+    it('does not resend the queue when the connection drops, since the answer may still take it in', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      let answer!: ReadableStreamDefaultController<Uint8Array>;
+      const sentPrompts: unknown[] = [];
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/run/messages/`), () => new HttpResponse(null, { status: 202 })),
+        http.post(api(`chats/${CHAT_ID}/messages/`), async ({ request }) => {
+          sentPrompts.push(await request.json());
+          const stream = new ReadableStream<Uint8Array>({
+            start(controller) {
+              answer = controller;
+            },
+          });
+          return new HttpResponse(stream, { headers: { 'Content-Type': 'application/x-ndjson' } });
+        }),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Analise o tráfego');
+      answer.enqueue(encoder.encode(`${JSON.stringify({ type: 'text_delta', content: 'Vendo o desktop.' })}\n`));
+      await sendPrompt(user, 'Inclua o mobile');
+      await screen.findByText('Inclua o mobile', { selector: 'li' });
+      answer.error(new TypeError('network error'));
+
+      expect(
+        await screen.findByText('A conexão com o servidor caiu no meio da resposta. Tente novamente.'),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('list', { name: 'Mensagens na fila' })).not.toBeInTheDocument();
+      expect(sentPrompts).toEqual([{ prompt: 'Analise o tráfego' }]);
+    });
+
     it('sends a queued message as the next one when the answer ended before taking it', async () => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);

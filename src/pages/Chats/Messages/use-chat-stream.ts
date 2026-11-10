@@ -53,6 +53,7 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[],
   };
 
   const follow = async (stream: ReadableStream<Uint8Array>, generation: number) => {
+    let interrupted = false;
     try {
       for await (const event of parseChatStream(stream)) {
         if (generationRef.current !== generation) return;
@@ -61,13 +62,16 @@ export const useChatStream = (chatId: UUID7, initialHistory: IChatStreamEvent[],
       }
     } catch {
       if (generationRef.current !== generation) return;
+      interrupted = true;
       dispatch({ type: 'event', event: { type: 'error', content: clientError(STREAM_INTERRUPTED_MESSAGE) } });
     } finally {
       if (generationRef.current === generation) {
         // Closes the streaming bubble even if the backend ends without a done event
         dispatch({ type: 'event', event: { type: 'done' } });
         setIsStreaming(false);
-        sendWhatTheAnswerDidNotTake();
+        // A dropped connection says nothing about the run, which may still take the queue in
+        if (interrupted) setQueue([]);
+        else sendWhatTheAnswerDidNotTake();
       }
     }
   };
