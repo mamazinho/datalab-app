@@ -607,6 +607,24 @@ describe('<ChatMessages />', () => {
       expect(answerStream.sent).toEqual([{ prompt: 'Analise o tráfego' }]);
     });
 
+    it('gives the queued messages back to the input when the answer ends without finishing', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      server.use(http.post(api(`chats/${CHAT_ID}/run/messages/`), () => new HttpResponse(null, { status: 202 })));
+      renderMessages();
+
+      await sendPrompt(user, 'Analise o tráfego');
+      await sendPrompt(user, 'Inclua o mobile');
+      await screen.findByText('Inclua o mobile', { selector: 'li' });
+      answerStream.push({ type: 'text', author: 'supervisor', content: 'A resposta foi interrompida. Envie de novo.' });
+      answerStream.close();
+
+      expect(await screen.findByText('A resposta foi interrompida. Envie de novo.')).toBeInTheDocument();
+      await waitFor(() => expect(screen.getByRole('textbox')).toHaveValue('Inclua o mobile'));
+      expect(answerStream.sent).toEqual([{ prompt: 'Analise o tráfego' }]);
+    });
+
     it('keeps in the queue only what the answer did not take in', async () => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);
@@ -624,6 +642,30 @@ describe('<ChatMessages />', () => {
       await waitFor(() => expect(screen.queryByText('Separe por canal', { selector: 'li' })).not.toBeInTheDocument());
       expect(screen.queryByText('Compare com março', { selector: 'li' })).not.toBeInTheDocument();
       expect(screen.getByText('Inclua o mobile', { selector: 'li' })).toBeInTheDocument();
+    });
+
+    it('answers the question the answer ended on with what was typed meanwhile', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      server.use(http.post(api(`chats/${CHAT_ID}/run/messages/`), () => new HttpResponse(null, { status: 202 })));
+      renderMessages();
+
+      await sendPrompt(user, 'Monte o relatório');
+      await sendPrompt(user, 'Do último mês');
+      await screen.findByText('Do último mês', { selector: 'li' });
+      answerStream.push(
+        { type: 'clarification', question: 'De qual período?', options: ['Último mês'], tool_call_id: 'call-1' },
+        { type: 'done' },
+      );
+      answerStream.close();
+
+      await waitFor(() =>
+        expect(answerStream.sent).toEqual([
+          { prompt: 'Monte o relatório' },
+          { prompt: 'Do último mês', answer_to_tool_call_id: 'call-1' },
+        ]),
+      );
     });
 
     it('follows an answer that was already running when the chat opened', async () => {

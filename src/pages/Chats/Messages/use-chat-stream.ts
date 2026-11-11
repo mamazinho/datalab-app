@@ -67,11 +67,15 @@ export const useChatStream = (
   const follow = async (stream: ReadableStream<Uint8Array>, generation: number) => {
     let interrupted = false;
     let stopped = false;
+    let completed = false;
+    let question: string | undefined;
     try {
       for await (const event of parseChatStream(stream)) {
         if (generationRef.current !== generation) return;
         if (event.type === 'user_message' && event.queued) setQueue(withoutTaken(queuedRef.current, event.content));
         if (event.type === 'cancelled') stopped = true;
+        if (event.type === 'done') completed = true;
+        if (event.type === 'clarification') question = event.tool_call_id;
         dispatch({ type: 'event', event });
       }
     } catch {
@@ -85,8 +89,8 @@ export const useChatStream = (
         setIsStreaming(false);
         // A dropped connection says nothing about the run, which may still take the queue in
         if (interrupted) setQueue([]);
-        else if (stopped) giveBackWhatTheAnswerDidNotTake();
-        else sendWhatTheAnswerDidNotTake();
+        else if (completed && !stopped) sendWhatTheAnswerDidNotTake(question);
+        else giveBackWhatTheAnswerDidNotTake();
       }
     }
   };
@@ -98,11 +102,12 @@ export const useChatStream = (
     restoreDraft(leftovers.join(' '));
   };
 
-  const sendWhatTheAnswerDidNotTake = () => {
+  // An answer that ended on a question takes what was typed meanwhile as the reply to it
+  const sendWhatTheAnswerDidNotTake = (question?: string) => {
     const leftovers = queuedRef.current;
     if (!leftovers.length) return;
     setQueue([]);
-    void submitPrompt(leftovers.join('\n\n'));
+    void submitPrompt(leftovers.join('\n\n'), [], question);
   };
 
   const submitPrompt = async (
