@@ -1,5 +1,6 @@
 import { queryOptions } from '@tanstack/react-query';
 import { DatalabAPI } from './services/datalab-api';
+import { TrackingAPI } from './services/tracking-api';
 import type { UUID7 } from './types/ids';
 import type { IntegrationKey, Provider } from './types/integrations';
 
@@ -119,3 +120,10 @@ export const availableProviderAssetsQuery = (companyId: UUID7, integration: Inte
     staleTime: 0,
     refetchOnMount: 'always',
   });
+
+// Tools, expected IDs and consent options come from the tracking engine, so the form never drifts from its rules
+export const trackingRulesQuery = queryOptions({
+  queryKey: ['tracking-rules'],
+  queryFn: () => TrackingAPI.TrackingResource.getRules(),
+  staleTime: Infinity,
+});

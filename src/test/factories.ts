@@ -22,6 +22,13 @@ import type {
   IUserResponse,
 } from '../services/datalab-api/usersResource';
 
+import type {
+  IBuildResult,
+  IContainerFile,
+  ISiteAnalysis,
+  ITrackingRules,
+} from '../services/tracking-api/trackingResource';
+
 const TIMESTAMPS = { created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' };
 
 export const buildApiError = (overrides: Partial<IApiError> = {}): IApiError => ({
@@ -209,5 +216,58 @@ export const buildMcpServerTestResult = (
     { name: 'create_deal', description: null },
   ],
   error: null,
+  ...overrides,
+});
+
+export const buildTrackingRules = (overrides: Partial<ITrackingRules> = {}): ITrackingRules => ({
+  tools: [
+    { key: 'ga4', label: 'GA4' },
+    { key: 'meta_ads', label: 'Meta Ads' },
+  ],
+  ids: [
+    { key: 'ga4_measurement_id', constant: 'CONS - GA4 | Measurement ID', secret: false, optional: false, example: 'G-123456789' },
+    { key: 'meta_pixel_id', constant: 'CONS - Meta Ads | Pixel ID', secret: false, optional: false, example: '123456789' },
+    { key: 'cookie_domain', constant: 'CONS - Site | Cookie Domain', secret: false, optional: false, example: '.exemplo.com.br' },
+  ],
+  banners: ['opt_in', 'opt_out', 'region'],
+  modes: ['advanced', 'basic'],
+  ...overrides,
+});
+
+export const buildSiteAnalysis = (overrides: Partial<ISiteAnalysis> = {}): ISiteAnalysis => ({
+  url: 'https://www.lojaexemplo.com.br',
+  final_url: 'https://www.lojaexemplo.com.br/',
+  host: 'www.lojaexemplo.com.br',
+  cookie_domain: '.lojaexemplo.com.br',
+  reachable: true,
+  error: null,
+  platform: 'VTEX',
+  is_ecommerce: true,
+  cmp: 'OneTrust',
+  has_datalayer: true,
+  gtm_containers: [],
+  hardcoded: {},
+  inside_gtm: {},
+  funnel_domains: [],
+  hostnames: ['www.lojaexemplo.com.br'],
+  detected_tools: [],
+  suggested_ids: { cookie_domain: '.lojaexemplo.com.br' },
+  considerations: ['Cookie domain do container: .lojaexemplo.com.br.'],
+  diagnosis_markdown: '# Diagnóstico do site\n',
+  ...overrides,
+});
+
+export const buildContainerFile = (overrides: Partial<IContainerFile> = {}): IContainerFile => ({
+  file: 'GoTrackin_Web.json',
+  content: '{}',
+  validation: { ok: true, counts: { tag: 10, trigger: 5, variable: 8 }, issues: [] },
+  pending_ids: [],
+  ...overrides,
+});
+
+export const buildBuildResult = (overrides: Partial<IBuildResult> = {}): IBuildResult => ({
+  site: buildSiteAnalysis(),
+  web: buildContainerFile(),
+  tag_map: { tags: 10, attributes: 8, markdown: '# Mapa de Tags\n', tags_csv: '', attributes_csv: '' },
   ...overrides,
 });
