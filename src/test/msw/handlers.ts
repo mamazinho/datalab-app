@@ -141,9 +141,7 @@ export const handlers = [
 
   http.delete(api('chats/:chatId/'), () => new HttpResponse(null, { status: 204 })),
 
-  http.get(api('chats/:chatId/messages/'), () => HttpResponse.json([])),
-
-  http.get(api('chats/:chatId/run/'), () => new HttpResponse(null, { status: 204 })),
+  http.get(api('chats/:chatId/messages/'), () => HttpResponse.json({ events: [] })),
 
   http.post(api('chats/:chatId/run/messages/'), () => new HttpResponse(null, { status: 202 })),
 

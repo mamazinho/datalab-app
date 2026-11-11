@@ -16,6 +16,12 @@ export type IChatStreamEvent =
   | { type: 'error'; content?: IApiError }
   | { type: 'done' };
 
+// run_id: an answer still going, kept out of the events and followed from its own log
+export interface IChatHistory {
+  events: IChatStreamEvent[];
+  run_id?: UUID7;
+}
+
 export interface IUserPrompt {
   prompt: string;
   answer_to_tool_call_id?: string;
@@ -24,9 +30,9 @@ export interface IUserPrompt {
 }
 
 export const ChatMessagesResource = {
-  async getChatMessages(chatId: UUID7): Promise<IChatStreamEvent[]> {
+  async getChatMessages(chatId: UUID7): Promise<IChatHistory> {
     const response = await axiosCompanyInstance.get(`chats/${chatId}/messages/`);
-    return response.data as IChatStreamEvent[];
+    return response.data as IChatHistory;
   },
   async sendMessage(chatId: UUID7, payload: IUserPrompt): Promise<ReadableStream<Uint8Array>> {
     const response = await axiosCompanyInstance.post(
@@ -42,14 +48,14 @@ export const ChatMessagesResource = {
     return response.data;
   },
 
-  async followRun(chatId: UUID7): Promise<ReadableStream<Uint8Array> | null> {
-    const response = await axiosCompanyInstance.get(`chats/${chatId}/run/`, {
+  async followRun(chatId: UUID7, runId: UUID7): Promise<ReadableStream<Uint8Array>> {
+    const response = await axiosCompanyInstance.get(`chats/${chatId}/run/${runId}/`, {
       adapter: 'fetch',
       headers: { 'Accept': 'application/x-ndjson' },
       responseType: 'stream'
     });
 
-    return response.status === 204 ? null : response.data;
+    return response.data;
   },
 
   async queueMessage(chatId: UUID7, prompt: string): Promise<void> {

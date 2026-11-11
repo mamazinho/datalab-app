@@ -21,6 +21,7 @@ import { ChatMessages } from './messages';
 type User = ReturnType<typeof userEvent.setup>;
 
 const CHAT_ID = uuid(20);
+const RUN_ID = uuid(21);
 const company = buildCompany({ id: uuid(1) });
 const encoder = new TextEncoder();
 
@@ -78,9 +79,9 @@ const givenOpenAnswer = () => {
   };
 };
 
-const givenHistory = (events: IChatStreamEvent[], chat: Partial<IRetrieveChat> = {}) => {
+const givenHistory = (events: IChatStreamEvent[], chat: Partial<IRetrieveChat> = {}, runId?: string) => {
   server.use(
-    http.get(api(`chats/${CHAT_ID}/messages/`), () => HttpResponse.json(events)),
+    http.get(api(`chats/${CHAT_ID}/messages/`), () => HttpResponse.json({ events, run_id: runId })),
     http.get(api(`chats/${CHAT_ID}/`), () => HttpResponse.json(buildChat({ id: CHAT_ID, ...chat }))),
   );
 };
@@ -323,6 +324,75 @@ describe('<ChatMessages />', () => {
       expect(await screen.findByText('O agente ficou sem contexto.')).toBeInTheDocument();
     });
 
+    it('undoes a message that never reached the server and gives it back to the input', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      server.use(http.post(api(`chats/${CHAT_ID}/messages/`), () => apiErrorResponse(500, 'Algo deu errado.')));
+      renderMessages();
+
+      await sendPrompt(user, 'Qual foi a receita?');
+
+      expect(await screen.findByText('Algo deu errado.')).toBeInTheDocument();
+      expect(screen.queryByText('Qual foi a receita?')).not.toBeInTheDocument();
+      expect(screen.getByRole('textbox')).toHaveValue('Qual foi a receita?');
+    });
+
+    it('shows the answer another member is running when the message is refused for it', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/messages/`), () => {
+          givenHistory([], {}, RUN_ID);
+          return apiErrorResponse(409, 'Já tem uma resposta em andamento.', 'ChatRunInProgressFriendlyException');
+        }),
+        http.get(api(`chats/${CHAT_ID}/run/${RUN_ID}/`), () =>
+          new HttpResponse(
+            [userMessage({ content: 'Monte o relatório' }), { type: 'text_delta', content: 'Quase pronto.' }]
+              .map((event) => `${JSON.stringify(event)}\n`)
+              .join(''),
+            { headers: { 'Content-Type': 'application/x-ndjson' } },
+          ),
+        ),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Qual foi a receita?');
+
+      expect(await screen.findByText('Quase pronto.')).toBeInTheDocument();
+      expect(screen.getByRole('textbox')).toHaveValue('Qual foi a receita?');
+    });
+
+    it('picks the answer back up from the server when the connection drops', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      server.use(
+        http.get(api(`chats/${CHAT_ID}/run/${RUN_ID}/`), () =>
+          new HttpResponse(
+            [
+              userMessage({ content: 'Analise o tráfego' }),
+              { type: 'text_delta', content: 'Vendo o desktop. ' },
+              { type: 'text_delta', content: 'O mobile cresceu.' },
+              { type: 'done' },
+            ]
+              .map((event) => `${JSON.stringify(event)}\n`)
+              .join(''),
+            { headers: { 'Content-Type': 'application/x-ndjson' } },
+          ),
+        ),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Analise o tráfego');
+      answerStream.push({ type: 'text_delta', content: 'Vendo o desktop. ' });
+      await screen.findByText('Vendo o desktop.');
+      givenHistory([], {}, RUN_ID);
+      answerStream.drop();
+
+      expect(await screen.findByText('Vendo o desktop. O mobile cresceu.')).toBeInTheDocument();
+      expect(screen.getAllByText('Analise o tráfego')).toHaveLength(1);
+    });
+
     it('explains a connection that drops in the middle of the answer', async () => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);
@@ -553,6 +623,57 @@ describe('<ChatMessages />', () => {
       expect(answerStream.sent).toEqual([{ prompt: 'Analise o tráfego' }]);
     });
 
+    it('gives back to the input what never reached the server when the connection drops', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      const queued: string[] = [];
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/run/messages/`), async ({ request }) => {
+          const { prompt } = (await request.json()) as { prompt: string };
+          queued.push(prompt);
+          return prompt === 'Inclua o mobile' ? new HttpResponse(null, { status: 202 }) : HttpResponse.error();
+        }),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Analise o tráfego');
+      await sendPrompt(user, 'Inclua o mobile');
+      await sendPrompt(user, 'E o tablet');
+      await waitFor(() => expect(queued).toHaveLength(2));
+      answerStream.drop();
+
+      await waitFor(() => expect(screen.getByRole('textbox')).toHaveValue('E o tablet'));
+      expect(screen.queryByRole('list', { name: 'Mensagens na fila' })).not.toBeInTheDocument();
+    });
+
+    it('gives back to the input what the server refused after the connection dropped', async () => {
+      const user = userEvent.setup({ delay: null });
+      givenHistory([]);
+      const answerStream = givenOpenAnswer();
+      let refuse!: () => void;
+      const refused = new Promise<void>((resolve) => {
+        refuse = resolve;
+      });
+      server.use(
+        http.post(api(`chats/${CHAT_ID}/run/messages/`), async () => {
+          await refused;
+          return HttpResponse.error();
+        }),
+      );
+      renderMessages();
+
+      await sendPrompt(user, 'Analise o tráfego');
+      await sendPrompt(user, 'Inclua o mobile');
+      await screen.findByText('Inclua o mobile', { selector: 'li' });
+      answerStream.drop();
+      await screen.findByText('A conexão com o servidor caiu no meio da resposta. Tente novamente.');
+      expect(screen.getByRole('textbox')).toHaveValue('');
+      refuse();
+
+      await waitFor(() => expect(screen.getByRole('textbox')).toHaveValue('Inclua o mobile'));
+    });
+
     it('sends a queued message as the next one when the answer ended before taking it', async () => {
       const user = userEvent.setup({ delay: null });
       givenHistory([]);
@@ -669,9 +790,9 @@ describe('<ChatMessages />', () => {
     });
 
     it('follows an answer that was already running when the chat opened', async () => {
-      givenHistory([]);
+      givenHistory([], {}, RUN_ID);
       server.use(
-        http.get(api(`chats/${CHAT_ID}/run/`), () =>
+        http.get(api(`chats/${CHAT_ID}/run/${RUN_ID}/`), () =>
           new HttpResponse(
             [userMessage({ content: 'Monte o relatório' }), { type: 'text_delta', content: 'Quase pronto.' }, { type: 'done' }]
               .map((event) => `${JSON.stringify(event)}\n`)
@@ -687,9 +808,11 @@ describe('<ChatMessages />', () => {
     });
 
     it('says so when the running answer cannot be followed', async () => {
-      givenHistory([]);
+      givenHistory([], {}, RUN_ID);
       server.use(
-        http.get(api(`chats/${CHAT_ID}/run/`), () => apiErrorResponse(500, 'Não deu para acompanhar a resposta.')),
+        http.get(api(`chats/${CHAT_ID}/run/${RUN_ID}/`), () =>
+          apiErrorResponse(500, 'Não deu para acompanhar a resposta.'),
+        ),
       );
       renderMessages();
 

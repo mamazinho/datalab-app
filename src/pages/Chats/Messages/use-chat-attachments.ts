@@ -43,8 +43,20 @@ export const useChatAttachments = (chatId: UUID7) => {
 
   const clear = () => setAttachments([]);
 
+  const restore = (files: IChatFileRef[]) =>
+    setAttachments((current) => [
+      ...files.map((file) => ({
+        localId: `attachment-${++attachmentCounter}`,
+        filename: file.filename,
+        size: file.size,
+        status: 'ready' as const,
+        file,
+      })),
+      ...current,
+    ]);
+
   const readyFiles = attachments.flatMap((attachment) => (attachment.file ? [attachment.file] : []));
   const isUploading = attachments.some((attachment) => attachment.status === 'uploading');
 
-  return { attachments, readyFiles, isUploading, addFiles, remove, clear };
+  return { attachments, readyFiles, isUploading, addFiles, remove, clear, restore };
 };

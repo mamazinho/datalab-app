@@ -10,6 +10,7 @@ import { isUuid7, type UUID7 } from '../../../types/ids';
 import { ApiError } from '../../../utils/api-error';
 import { useChat } from '../../../hooks/use-chat';
 import { useChatMessages } from '../../../hooks/use-chat-messages';
+import { useChatAttachments } from './use-chat-attachments';
 
 // A missing or inaccessible chat (404) goes back to the list; other errors show the retry screen
 const ChatErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => {
@@ -22,12 +23,13 @@ const ChatErrorFallback = ({ error, resetErrorBoundary }: FallbackProps) => {
 const ChatView = ({ chatId }: { chatId: UUID7 }) => {
     const { data: chat } = useChat(chatId);
     const { data: history } = useChatMessages(chatId);
-    // Another chat, or a history that changed on the refetch, starts the timeline over
+    // A history that changed on the refetch starts the timeline over
     const [shown, setShown] = useState({ history, version: 0 });
     if (shown.history !== history) setShown({ history, version: shown.version + 1 });
-    // Outlives the timeline restarts, so the admin's model stays chosen after each answer
-    const [modelChoice, setModelChoice] = useState({ chatId, model: '' });
-    const model = modelChoice.chatId === chatId ? modelChoice.model : '';
+    // The draft outlives the timeline restarts: what was typed, attached or chosen stays while the timeline is rebuilt
+    const [model, setModel] = useState('');
+    const [prompt, setPrompt] = useState('');
+    const attachments = useChatAttachments(chatId);
 
     return (
         <>
@@ -42,7 +44,10 @@ const ChatView = ({ chatId }: { chatId: UUID7 }) => {
                     chatId={chatId}
                     history={history}
                     model={model}
-                    onModelChange={(chosen) => setModelChoice({ chatId, model: chosen })}
+                    onModelChange={setModel}
+                    prompt={prompt}
+                    onPromptChange={setPrompt}
+                    attachments={attachments}
                 />
             </div>
         </>
@@ -60,7 +65,7 @@ export const ChatMessages = () => {
                 {({ reset }) => (
                     <ErrorBoundary FallbackComponent={ChatErrorFallback} onReset={reset}>
                         <Suspense fallback={<LoadingPiece />}>
-                            <ChatView chatId={chatId} />
+                            <ChatView key={chatId} chatId={chatId} />
                         </Suspense>
                     </ErrorBoundary>
                 )}
