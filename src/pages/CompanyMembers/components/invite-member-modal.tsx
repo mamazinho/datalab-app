@@ -30,17 +30,28 @@ export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) 
   const [inviteState, inviteFormAction] = useActionState(inviteMembersAction, INITIAL_ACTION_STATE);
 
   useActionFeedback(inviteState, {
-    onSuccess: (sentCount) => {
+    onSuccess: (sent) => {
+      const sentCount = sent?.sentCount ?? 0;
+      const alreadyMembers = sent?.alreadyMembers ?? [];
+      const alreadyInvited = sent?.alreadyInvited ?? [];
       toast.success(
         sentCount === 1
           ? 'Convite enviado com sucesso!'
           : `${sentCount} convites enviados com sucesso!`,
       );
+      if (alreadyMembers.length === 1) {
+        toast.warning(`${alreadyMembers[0]} já é membro da empresa e não recebeu um novo convite.`);
+      } else if (alreadyMembers.length > 1) {
+        toast.warning(`${alreadyMembers.join(', ')} já são membros da empresa e não receberam um novo convite.`);
+      }
+      if (alreadyInvited.length === 1) {
+        toast.warning(`${alreadyInvited[0]} já tem um convite pendente e não recebeu um novo e-mail.`);
+      } else if (alreadyInvited.length > 1) {
+        toast.warning(`${alreadyInvited.join(', ')} já têm um convite pendente e não receberam um novo e-mail.`);
+      }
       void queryClient.invalidateQueries({ queryKey: invitesQuery.queryKey });
       onClose();
     },
-    // The error shows inline in the form
-    onError: () => {},
   });
 
   const addEmail = (raw: string) => {
@@ -73,7 +84,6 @@ export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) 
     setEmails((prev) => prev.filter((e) => e !== email));
   };
 
-  const formError = tagError ?? (!inviteState.success ? inviteState.error : null);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Convidar membros">
@@ -109,21 +119,22 @@ export const InviteMemberModal = ({ isOpen, onClose }: IInviteMemberModalProps) 
             </div>
           </div>
 
-          <QueryBoundary>
+          {/* React 19 resets the form after the action and unchecks the boxes; remounting redraws them from state */}
+          <QueryBoundary key={`routes-${inviteState.timestamp}`}>
             <RoutePermissionsField
               selected={selectedRoutePermissions}
               onChange={setSelectedRoutePermissions}
             />
           </QueryBoundary>
 
-          <QueryBoundary>
+          <QueryBoundary key={`providers-${inviteState.timestamp}`}>
             <ProviderPermissionsField
               selected={selectedProviderPermissions}
               onChange={setSelectedProviderPermissions}
             />
           </QueryBoundary>
 
-          {formError && <p className={modal.error}>{formError}</p>}
+          {tagError && <p className={modal.error}>{tagError}</p>}
 
           <SubmitButton className={modal.submit} pendingLabel="Enviando...">
             Enviar convites

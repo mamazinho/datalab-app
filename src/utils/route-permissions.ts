@@ -61,7 +61,7 @@ export const MEMBERSHIP_ROUTE_PERMISSIONS = {
   invite: { method: 'PUT', path: 'memberships/invites/' },
   removeInvite: { method: 'DELETE', path: 'memberships/invites/{invite_id}/' },
   updatePermissions: { method: 'PUT', path: 'memberships/members/{membership_id}/permissions/' },
-  remove: { method: 'DELETE', path: 'memberships/members/{membership_id}/' },
+  updateStatus: { method: 'PATCH', path: 'memberships/members/{membership_id}/' },
 } as const satisfies Record<string, IRoutePermissionRef>;
 
 export const COMPANY_ROUTE_PERMISSIONS = {

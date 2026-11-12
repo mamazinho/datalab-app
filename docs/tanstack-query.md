@@ -139,7 +139,7 @@ A mudança de mentalidade é o ponto mais importante da lib: **a mutação não 
 | Enviar convites (`invite-member-modal.tsx`) | `['invites']` |
 | Remover convite (`invites-list.tsx`) | `['invites']` |
 | Salvar permissões de membro (`member-permissions-modal.tsx`) | `['member-route-permissions', id]` e `['member-provider-permissions', id]` |
-| Remover membro (`members-list.tsx`) | `['members']` |
+| Remover/reativar membro (`members-list.tsx`) | `['members']` |
 | Aceitar/recusar convite (`use-invite-actions.ts`) | `['me']` |
 | Criar empresa (`onboarding-welcome.tsx`) | `['me']` |
 | Editar perfil (`edit-profile.tsx`) | `['me']` |

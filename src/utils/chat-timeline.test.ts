@@ -51,6 +51,22 @@ describe('applyChatEvent', () => {
       expect(second.threadId).toBe('t2');
     });
 
+    it('names the thread after the agent as it was registered', () => {
+      const [box] = replay([
+        { type: 'agent_event', thread_id: 't1', author: 'supervisor', agent_key: 'insights', agent_name: 'Insights da Loja', content: 'Pergunta' },
+      ]) as IThreadBoxItem[];
+
+      expect(box.agentName).toBe('Insights da Loja');
+    });
+
+    it('makes the key readable for a thread saved without the agent name', () => {
+      const [box] = replay([
+        { type: 'agent_event', thread_id: 't1', author: 'supervisor', agent_key: 'google_analytics', content: 'Pergunta' },
+      ]) as IThreadBoxItem[];
+
+      expect(box.agentName).toBe('google analytics');
+    });
+
     it('keeps an unanswered question waiting', () => {
       expect(findPendingClarification(replay([question]))?.toolCallId).toBe('call-1');
     });

@@ -7,12 +7,12 @@ const selectedPermissions = (formData: FormData) => ({
   provider_permissions: formData.getAll('provider_permissions'),
 });
 
-// data is the number of invites sent, for the singular or plural toast
 export const inviteMembersAction = createFormAction(
   inviteMembersSchema,
   async (payload) => {
-    await DatalabAPI.MembershipsResource.upsertInvite(payload);
-    return payload.emails.length;
+    const { invites, already_members: alreadyMembers, already_invited: alreadyInvited } =
+      await DatalabAPI.MembershipsResource.upsertInvite(payload);
+    return { sentCount: invites.length, alreadyMembers, alreadyInvited };
   },
   {
     // Joins the tokenized e-mails with the draft that was not tokenized yet

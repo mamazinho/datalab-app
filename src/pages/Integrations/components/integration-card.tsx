@@ -14,8 +14,6 @@ interface IIntegrationCardProps {
   onManageAssets: (integration: IIntegrationStatus) => void;
 }
 
-const isExpired = (value: string | null) => !!value && new Date(value).getTime() <= Date.now();
-
 export const IntegrationCard = ({
   integration,
   assets,
@@ -25,7 +23,7 @@ export const IntegrationCard = ({
   onDisconnect,
   onManageAssets,
 }: IIntegrationCardProps) => {
-  const expired = isExpired(integration.token_expires_at);
+  const expired = integration.token_expired;
   const providerLabel = PROVIDER_LABELS[integration.provider];
   const assetGroups = groupAssets(assets, integration.provider);
   const missingScopes = integration.missing_scopes ?? [];

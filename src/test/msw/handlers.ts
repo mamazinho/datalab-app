@@ -65,7 +65,7 @@ export const handlers = [
 
   http.get(api('memberships/members/'), () => HttpResponse.json([])),
 
-  http.delete(api('memberships/members/:membershipId'), () => new HttpResponse(null, { status: 204 })),
+  http.patch(api('memberships/members/:membershipId'), () => HttpResponse.json(buildMember({ status: 'inactive' }))),
 
   http.post(api('memberships/transfer-ownership'), () =>
     HttpResponse.json(buildMember({ membership_role: 'owner' })),
@@ -73,7 +73,7 @@ export const handlers = [
 
   http.get(api('memberships/invites/'), () => HttpResponse.json([])),
 
-  http.put(api('memberships/invites/'), () => HttpResponse.json([buildInvite()])),
+  http.put(api('memberships/invites/'), () => HttpResponse.json({ invites: [buildInvite()], already_members: [], already_invited: [] })),
 
   http.delete(api('memberships/invites/:inviteId'), () => new HttpResponse(null, { status: 204 })),
 
