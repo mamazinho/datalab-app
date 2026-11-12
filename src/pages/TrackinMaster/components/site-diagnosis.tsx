@@ -1,5 +1,5 @@
 import styles from '../trackin-master.module.css';
-import type { ISiteAnalysis } from '../../../services/tracking-api/trackingResource';
+import type { ISiteAnalysis } from '../../../services/datalab-api/trackingResource';
 import { saveBlob } from '../../../utils/download';
 
 const listOrNone = (values: string[], none: string) => (values.length ? values.join(', ') : none);

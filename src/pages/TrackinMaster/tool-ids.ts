@@ -1,4 +1,4 @@
-import type { ITrackingIdRule } from '../../services/tracking-api/trackingResource';
+import type { ITrackingIdRule } from '../../services/datalab-api/trackingResource';
 
 // Engine ID keys start with the tool they belong to; keys without a tool prefix (cookie domain, sGTM URL) are always asked
 const ID_PREFIX_BY_TOOL: Record<string, string> = {

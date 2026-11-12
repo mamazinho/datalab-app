@@ -5,7 +5,7 @@ import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 import { Toggle } from '../../../components/UI/Inputs/Toggle';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { useTrackingRules } from '../../../hooks/use-tracking-rules';
-import type { IBuildResult, ISiteAnalysis } from '../../../services/tracking-api/trackingResource';
+import type { IBuildResult, ISiteAnalysis } from '../../../services/datalab-api/trackingResource';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { createBuildContainersAction } from '../actions';
 import { BANNER_LABELS, ID_FIELD_PREFIX, MODE_LABELS } from '../schemas';

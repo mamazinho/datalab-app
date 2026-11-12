@@ -1,4 +1,4 @@
-import { trackingAxios } from './axios';
+import { axiosCompanyInstance } from './axios';
 
 export type ConsentBanner = 'opt_in' | 'opt_out' | 'region';
 export type ConsentMode = 'advanced' | 'basic';
@@ -102,15 +102,15 @@ export interface IBuildResult {
 
 export const TrackingResource = {
   async getRules(): Promise<ITrackingRules> {
-    const response = await trackingAxios.get('rules');
+    const response = await axiosCompanyInstance.get('tracking/rules/');
     return response.data as ITrackingRules;
   },
   async scanSite(siteUrl: string): Promise<ISiteAnalysis> {
-    const response = await trackingAxios.post('scan', { site_url: siteUrl });
+    const response = await axiosCompanyInstance.post('tracking/scan/', { site_url: siteUrl });
     return response.data as ISiteAnalysis;
   },
   async build(payload: IBuildRequest): Promise<IBuildResult> {
-    const response = await trackingAxios.post('build', payload);
+    const response = await axiosCompanyInstance.post('tracking/build/', payload);
     return response.data as IBuildResult;
   },
 };

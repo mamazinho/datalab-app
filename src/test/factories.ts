@@ -27,7 +27,7 @@ import type {
   IContainerFile,
   ISiteAnalysis,
   ITrackingRules,
-} from '../services/tracking-api/trackingResource';
+} from '../services/datalab-api/trackingResource';
 
 const TIMESTAMPS = { created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' };
 

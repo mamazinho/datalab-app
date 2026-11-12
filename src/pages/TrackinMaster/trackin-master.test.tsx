@@ -1,10 +1,10 @@
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { renderWithProviders, screen, userEvent, waitFor, within } from '../../test/test-utils';
-import { apiErrorResponse, trackingApi } from '../../test/msw/handlers';
+import { api, apiErrorResponse } from '../../test/msw/handlers';
 import { server } from '../../test/msw/server';
 import { buildBuildResult, buildContainerFile, buildSiteAnalysis } from '../../test/factories';
-import type { IBuildRequest } from '../../services/tracking-api/trackingResource';
+import type { IBuildRequest } from '../../services/datalab-api/trackingResource';
 import { TrackinMaster } from './trackin-master';
 
 type User = ReturnType<typeof userEvent.setup>;
@@ -25,7 +25,7 @@ describe('<TrackinMaster />', () => {
 
   it('shows the site diagnosis and prefills what was found on the site', async () => {
     server.use(
-      http.post(trackingApi('scan'), () =>
+      http.post(api('tracking/scan/'), () =>
         HttpResponse.json(
           buildSiteAnalysis({
             gtm_containers: ['GTM-ABC1234'],
@@ -53,7 +53,7 @@ describe('<TrackinMaster />', () => {
   it('sends the analyzed site with the choices and shows the files to download', async () => {
     let sent: IBuildRequest | null = null;
     server.use(
-      http.post(trackingApi('build'), async ({ request }) => {
+      http.post(api('tracking/build/'), async ({ request }) => {
         sent = (await request.json()) as IBuildRequest;
         return HttpResponse.json(
           buildBuildResult({ web: buildContainerFile({ pending_ids: ['ga4_measurement_id'] }) }),
@@ -93,7 +93,7 @@ describe('<TrackinMaster />', () => {
   });
 
   it('asks for the responsibility term when the site has no cookie banner', async () => {
-    server.use(http.post(trackingApi('scan'), () => HttpResponse.json(buildSiteAnalysis({ cmp: null }))));
+    server.use(http.post(api('tracking/scan/'), () => HttpResponse.json(buildSiteAnalysis({ cmp: null }))));
     const user = userEvent.setup({ delay: null });
     renderWithProviders(<TrackinMaster />);
     await analyze(user);
@@ -103,7 +103,7 @@ describe('<TrackinMaster />', () => {
   });
 
   it('shows the message of the engine when the build fails', async () => {
-    server.use(http.post(trackingApi('build'), () => apiErrorResponse(400, 'Informe a URL do site.')));
+    server.use(http.post(api('tracking/build/'), () => apiErrorResponse(400, 'Informe a URL do site.')));
     const user = userEvent.setup({ delay: null });
     renderWithProviders(<TrackinMaster />);
     await analyze(user);

@@ -2,7 +2,7 @@ import styles from '../trackin-master.module.css';
 import type { ReactNode } from 'react';
 import { Collapsible } from '../../../components/UI/Collapsible';
 import { Markdown } from '../../../components/UI/Markdown';
-import type { IBuildResult, IContainerFile } from '../../../services/tracking-api/trackingResource';
+import type { IBuildResult, IContainerFile } from '../../../services/datalab-api/trackingResource';
 import { saveBlob } from '../../../utils/download';
 
 const MISSING_ID_PREFIX = 'ID não informado';

@@ -1,10 +1,10 @@
-import { TrackingAPI } from '../../services/tracking-api';
-import type { ISiteAnalysis } from '../../services/tracking-api/trackingResource';
+import { DatalabAPI } from '../../services/datalab-api';
+import type { ISiteAnalysis } from '../../services/datalab-api/trackingResource';
 import { createFormAction } from '../../utils/create-form-action';
 import { buildContainersSchema, ID_FIELD_PREFIX, scanSiteSchema } from './schemas';
 
 export const scanSiteAction = createFormAction(scanSiteSchema, ({ site_url }) =>
-  TrackingAPI.TrackingResource.scanSite(site_url),
+  DatalabAPI.TrackingResource.scanSite(site_url),
 );
 
 const idsFrom = (formData: FormData) =>
@@ -34,7 +34,7 @@ export const createBuildContainersAction = (site: ISiteAnalysis) =>
   createFormAction(
     buildContainersSchema,
     async ({ banner, mode, client_export, ...data }) =>
-      TrackingAPI.TrackingResource.build({
+      DatalabAPI.TrackingResource.build({
         ...data,
         site_url: site.url,
         site,

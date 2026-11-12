@@ -5,10 +5,6 @@ const BASE_URL = import.meta.env.VITE_DATALAB_API_URL;
 
 export const api = (path: string): string => `${BASE_URL}/${path.replace(/^\//, '')}`;
 
-const TRACKING_URL = import.meta.env.VITE_TRACKING_API_URL;
-
-export const trackingApi = (path: string): string => `${TRACKING_URL}/${path.replace(/^\//, '')}`;
-
 export const ACCESS_TOKEN = 'access-token-do-teste';
 
 export const apiErrorResponse = (status: number, friendlyMessage: string, error = 'HTTPErrorFriendlyException') =>
@@ -151,12 +147,12 @@ export const handlers = [
 
   http.post(api('chats/:chatId/run/cancel/'), () => new HttpResponse(null, { status: 204 })),
 
-  http.get(trackingApi('rules'), () => HttpResponse.json(buildTrackingRules())),
+  http.get(api('tracking/rules/'), () => HttpResponse.json(buildTrackingRules())),
 
-  http.post(trackingApi('scan'), async ({ request }) => {
+  http.post(api('tracking/scan/'), async ({ request }) => {
     const { site_url } = (await request.json()) as { site_url: string };
     return HttpResponse.json(buildSiteAnalysis({ url: site_url }));
   }),
 
-  http.post(trackingApi('build'), () => HttpResponse.json(buildBuildResult())),
+  http.post(api('tracking/build/'), () => HttpResponse.json(buildBuildResult())),
 ];

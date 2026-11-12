@@ -3,7 +3,7 @@ import styles from '../trackin-master.module.css';
 import { useActionState } from 'react';
 import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
-import type { ISiteAnalysis } from '../../../services/tracking-api/trackingResource';
+import type { ISiteAnalysis } from '../../../services/datalab-api/trackingResource';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { scanSiteAction } from '../actions';
 

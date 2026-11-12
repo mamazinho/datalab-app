@@ -1,7 +1,7 @@
 import styles from './trackin-master.module.css';
 import { useState } from 'react';
 import { QueryBoundary } from '../../components/Tools/query-boundary';
-import type { IBuildResult, ISiteAnalysis } from '../../services/tracking-api/trackingResource';
+import type { IBuildResult, ISiteAnalysis } from '../../services/datalab-api/trackingResource';
 import { BuildForm } from './components/build-form';
 import { BuildResults } from './components/build-results';
 import { SiteDiagnosis } from './components/site-diagnosis';

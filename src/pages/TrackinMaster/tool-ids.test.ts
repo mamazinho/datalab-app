@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { ITrackingIdRule } from '../../services/tracking-api/trackingResource';
+import type { ITrackingIdRule } from '../../services/datalab-api/trackingResource';
 import { idLabel, idRulesFor } from './tool-ids';
 
 const rule = (key: string, constant = `CONS - ${key}`): ITrackingIdRule => ({
