@@ -42,20 +42,35 @@ const containerId = z
   .toUpperCase()
   .regex(/^GTM-[A-Z0-9]{4,10}$/, 'Informe o código do contêiner no formato GTM-XXXXXXX.');
 
-export const PAGE_KINDS: Array<{ kind: PageKind; label: string; hint: string }> = [
-  { kind: 'home', label: 'Página inicial', hint: 'https://www.loja.com.br' },
-  { kind: 'category', label: 'Categoria ou busca', hint: 'Uma página com lista de produtos' },
-  { kind: 'product', label: 'Produto', hint: 'Uma página de produto' },
-  { kind: 'cart', label: 'Carrinho', hint: 'A página do carrinho' },
-  { kind: 'checkout', label: 'Checkout', hint: 'A primeira etapa do checkout' },
-  { kind: 'confirmation', label: 'Confirmação do pedido', hint: 'A página de pedido concluído, se abrir sem compra' },
+export const PAGE_KINDS: Array<{ kind: PageKind; label: string }> = [
+  { kind: 'home', label: 'Página inicial' },
+  { kind: 'category', label: 'Categoria ou busca' },
+  { kind: 'product', label: 'Produto' },
+  { kind: 'cart', label: 'Carrinho' },
+  { kind: 'checkout', label: 'Checkout' },
+  { kind: 'confirmation', label: 'Confirmação do pedido (thank you page)' },
 ];
 
+// The format of the Tag Assistant "Shareable debug link"; the API checks every part of it again
+export const PREVIEW_LINK_PATTERN = /^https:\/\/tagassistant\.google\.com\/?#\/\?(?=(?:.*&)?id=GTM-[A-Z0-9]{4,10}(?:&|$))(?=(?:.*&)?url=https?%3A%2F%2F)(?=(?:.*&)?gtm_auth=[\w-]{8,64}(?:&|$))(?=(?:.*&)?gtm_preview=env-\d{1,6}(?:&|$))/;
+export const PREVIEW_LINK_EXAMPLE =
+  'https://tagassistant.google.com/#/?id=GTM-XXXXXXX&url=https%3A%2F%2Fqa.seusite.com.br%2F...&gtm_auth=...&gtm_preview=env-...';
+
+const pageKindLabel = (kind: PageKind) => PAGE_KINDS.find((page) => page.kind === kind)?.label ?? kind;
+
 export const validateImplementationSchema = z.object({
-  container_id: containerId,
   pages: z
-    .array(z.object({ kind: z.enum(['home', 'category', 'product', 'cart', 'checkout', 'confirmation']), url: z.string() }))
-    .min(1, 'Informe ao menos a página inicial.'),
+    .array(z.object({ kind: z.enum(['home', 'category', 'product', 'cart', 'checkout', 'confirmation']), preview_link: z.string() }))
+    .min(1, 'Informe ao menos o link da página inicial.')
+    .superRefine((pages, context) => {
+      const wrong = pages.find((page) => !PREVIEW_LINK_PATTERN.test(page.preview_link));
+      if (wrong) {
+        context.addIssue({
+          code: 'custom',
+          message: `${pageKindLabel(wrong.kind)}: cole o "Shareable debug link" do Tag Assistant, que começa com https://tagassistant.google.com/#/?id=GTM-.`,
+        });
+      }
+    }),
 });
 
 export const verifyPublicationSchema = z.object({ container_id: containerId });

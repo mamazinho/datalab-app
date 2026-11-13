@@ -121,7 +121,7 @@ export const NextSteps = ({ result, publicIds, onClose, onRegenerate, regenerati
       )}
       {stage === 'validate' && (
         <>
-          <ImplementationCheck ids={publicIds} containerId={containerId} siteUrl={result.site.url} />
+          <ImplementationCheck ids={publicIds} />
           <button className={styles.trackinSecondaryButton} type="button" onClick={() => setStage(validateFrom)}>Voltar</button>
         </>
       )}

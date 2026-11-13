@@ -186,9 +186,15 @@ export interface IPublicationResult {
 export type PageKind = 'home' | 'category' | 'product' | 'cart' | 'checkout' | 'confirmation';
 
 export interface IImplementationRequest {
-  container_id: string;
   ids: Record<string, string>;
-  pages: Array<{ kind: PageKind; url: string }>;
+  pages: Array<{ kind: PageKind; preview_link: string }>;
+}
+
+// A page refused because it is not a shareable debug link of the same workspace, in the error detail
+export interface IInvalidPreviewLink {
+  kind: PageKind;
+  label: string;
+  message: string;
 }
 
 export interface IEventCheck {

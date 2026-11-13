@@ -65,15 +65,16 @@ export const createVerifyPublicationAction = (ids: Record<string, string>) =>
 export const PAGE_FIELD_PREFIX = 'page:';
 
 const pagesFrom = (formData: FormData) =>
-  PAGE_KINDS.map(({ kind }) => ({ kind, url: String(formData.get(`${PAGE_FIELD_PREFIX}${kind}`) ?? '').trim() })).filter(
-    (page) => page.url,
-  );
+  PAGE_KINDS.map(({ kind }) => ({
+    kind,
+    preview_link: String(formData.get(`${PAGE_FIELD_PREFIX}${kind}`) ?? '').trim(),
+  })).filter((page) => page.preview_link);
 
 export const createValidateImplementationAction = (ids: Record<string, string>) =>
   createFormAction(
     validateImplementationSchema,
-    ({ container_id, pages }) => DatalabAPI.TrackingResource.validateImplementation({ container_id, ids, pages }),
-    { mapFormData: (formData) => ({ container_id: formData.get('container_id') ?? '', pages: pagesFrom(formData) }) },
+    ({ pages }) => DatalabAPI.TrackingResource.validateImplementation({ ids, pages }),
+    { mapFormData: (formData) => ({ pages: pagesFrom(formData) }) },
   );
 
 export const importHelpAction = createFormAction(importHelpSchema, (data) => DatalabAPI.TrackingResource.importHelp(data));
