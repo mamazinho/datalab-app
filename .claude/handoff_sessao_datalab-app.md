@@ -38,7 +38,7 @@ Nada foi feito no `main` de nenhum deles.
 
 Definido e aplicado, a partir dos decks da Datalab: Montserrat e Bebas Neue, amarelo `#FBBC04` com cinzas `#9E9E9E`/`#434343`/`#999999` e texto `#1C1C1C`, capa dividida com o ícone do notebook, cabeçalho "Documentação de tagueamento | seção" e o logo da Datalab (`engine/document/assets/logo.png`). Tudo em `engine/document/brand.py`.
 
-**Pendente (pergunta ao Rafa):** o PDF leva o logo da **Datalab** ou da **Go Trackin'**? A marca está mudando. Hoje leva o da Datalab. Se for Go Trackin', basta o arquivo do logo (PNG com fundo transparente ou SVG) e, se as cores da Go Trackin' forem outras, os hex; a troca é só em `brand.py` e `assets/logo.png`.
+**Logo (decidido pelo Rafa):** o PDF leva o logo da **Go Trackin'**. Enquanto o Rafa não envia os arquivos, fica o da Datalab. Quando chegarem (PNG com fundo transparente ou SVG, e os hex se as cores mudarem), a troca é só em `brand.py` e `assets/logo.png`.
 
 ## Formatos de ID não confirmados (para o Rafa conferir com contas reais)
 
@@ -56,7 +56,7 @@ Nenhuma dessas fontes foi conferida nesta sessão contra uma conta real. Confirm
 ## Próximos passos
 
 1. Rafa: aplicar o patch do datalab-commons, publicar a tag `v0.8.0`, subir a dependência nas duas APIs e remover `TRACKING_BODY_URLS` do `app_builder.py` da datalab-api (a core-api já não precisa da exclusão: nenhuma rota dela recebe o export do cliente).
-2. Rafa: responder logo Datalab ou Go Trackin'.
+2. Rafa: enviar os arquivos do logo da Go Trackin' (e as cores, se mudarem) para substituir o da Datalab no PDF.
 3. Rafa: confirmar os formatos da tabela acima.
 4. Rafa: capturar os 16 prints de `engine/guide/LISTA_DE_PRINTS.md` (datalab-api).
 5. Math (infraestrutura): criar a rotina diária `purge-tracking-usage` na AWS. O passo a passo está no README da datalab-api: registrar a task definition a partir de `deploy/ecs/purge-tracking-usage.task-definition.json`, criar a role do EventBridge Scheduler, rodar `scripts/schedule-purge-tracking-usage.sh` e dar à role do GitHub Actions permissão de registrar a família. A release já atualiza a imagem da task quando a família existir.
