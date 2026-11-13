@@ -129,7 +129,10 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
                     aria-describedby={problem ? `${errorId} ${hintId}` : hintId}
                   />
                   {problem && <p className={styles.trackinFieldError} id={errorId}>{problem}</p>}
-                  <p className={modal.hint} id={hintId}>Formato: {rule.format}. Onde encontrar: {rule.where}</p>
+                  <p className={modal.hint} id={hintId}>
+                    Formato: {rule.format}.{!rule.confirmed && ' Formato ainda não confirmado: confira antes de publicar.'}{' '}
+                    Onde encontrar: {rule.where}
+                  </p>
                 </div>
               );
             })}
@@ -154,13 +157,7 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
 
         {formState.error && !formState.success && <p className={modal.error} role="alert">{formState.error}</p>}
 
-        <p className={modal.hint} id="trackin-update-notice">
-          Ao gerar este container, todas as pessoas com acesso a esta organização passam a receber por e-mail os avisos
-          de quando ele precisar de atualização. O descadastro é feito no próprio e-mail.
-        </p>
-        <SubmitButton className={modal.submit} pendingLabel="Gerando..." aria-describedby="trackin-update-notice">
-          Gerar containers
-        </SubmitButton>
+        <SubmitButton className={modal.submit} pendingLabel="Gerando...">Gerar containers</SubmitButton>
       </FormFieldset>
     </form>
   );

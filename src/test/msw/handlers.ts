@@ -159,8 +159,4 @@ export const handlers = [
   http.post(api('tracking/verify/'), () => HttpResponse.json(buildPublicationResult())),
 
   http.post(api('tracking/import-help/'), () => HttpResponse.json(buildImportHelp())),
-
-  http.get(api('tracking/updates/'), () => HttpResponse.json([])),
-
-  http.post(api('tracking/updates/unsubscribe/'), () => new HttpResponse(null, { status: 204 })),
 ];

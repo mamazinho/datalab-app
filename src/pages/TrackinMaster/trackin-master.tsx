@@ -11,7 +11,6 @@ import { BuildResults } from './components/build-results';
 import { NextSteps } from './components/next-steps';
 import { SiteDiagnosis } from './components/site-diagnosis';
 import { SiteStep } from './components/site-step';
-import { UpdateNotices } from './components/update-notices';
 import { publicIds } from './tool-ids';
 
 const Delivery = ({ built, onRegenerated }: { built: IBuilt; onRegenerated: (built: IBuilt) => void }) => {
@@ -72,8 +71,6 @@ export const TrackinMaster = () => {
           documentação.
         </p>
       </div>
-
-      <UpdateNotices />
 
       <SiteStep onAnalyzed={handleAnalyzed} />
 

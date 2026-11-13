@@ -6,10 +6,11 @@ import { server } from '../../test/msw/server';
 import {
   buildApiError,
   buildBuildResult,
-  buildCompany,
   buildImportHelp,
   buildPublicationResult,
   buildSiteAnalysis,
+  buildTrackingIdRule,
+  buildTrackingRules,
 } from '../../test/factories';
 import type { IBuildRequest, IPublicationRequest } from '../../services/datalab-api/trackingResource';
 import { TrackinMaster } from './trackin-master';
@@ -326,36 +327,47 @@ describe('<TrackinMaster />', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Informe a URL do site.');
   });
 
-  it('warns about the containers of the company that fell behind the standard', async () => {
+  it('says when the format of an id is not confirmed yet', async () => {
     server.use(
-      http.get(api('tracking/updates/'), () =>
-        HttpResponse.json([
-          {
-            site_host: 'www.lojaexemplo.com.br',
-            generated_version: '1.0.0',
-            latest_version: '1.1.0',
-            tools: ['meta_ads'],
-            summaries: ['A deduplicação da Meta mudou.'],
-            generated_at: '2026-11-13T12:00:00Z',
-          },
-        ]),
+      http.get(api('tracking/rules/'), () =>
+        HttpResponse.json(
+          buildTrackingRules({
+            ids: [buildTrackingIdRule({ key: 'meta_pixel_id', constant: 'CONS - Meta Ads | Pixel ID', tools: ['meta_ads'], confirmed: false })],
+          }),
+        ),
       ),
     );
-    renderWithProviders(<TrackinMaster />, { companies: [buildCompany()] });
-
-    const notices = await screen.findByRole('region', { name: 'Containers que precisam de atualização' });
-
-    expect(within(notices).getByText(/O container de www.lojaexemplo.com.br precisa de atualização/)).toBeInTheDocument();
-    expect(within(notices).getByText('A deduplicação da Meta mudou.')).toBeInTheDocument();
-  });
-
-  it('tells, before generating, that the organization will receive the update e-mails', async () => {
     const user = userEvent.setup({ delay: null });
     renderWithProviders(<TrackinMaster />);
     await analyze(user);
 
-    expect(await screen.findByRole('button', { name: 'Gerar containers' })).toHaveAccessibleDescription(
-      /todas as pessoas com acesso a esta organização passam a receber por e-mail os avisos/,
+    await user.click(await screen.findByRole('checkbox', { name: /Meta Ads/ }));
+
+    expect(screen.getByRole('textbox', { name: /Meta Ads \| Pixel ID/ })).toHaveAccessibleDescription(
+      /Formato ainda não confirmado: confira antes de publicar./,
     );
+  });
+
+  it('asks to check, before publishing, the ids accepted with an unconfirmed format', async () => {
+    server.use(
+      http.post(api('tracking/build/'), () =>
+        HttpResponse.json(
+          buildBuildResult({
+            id_warnings: [
+              { key: 'dito_api_key', constant: 'CONS - Dito | API Key', label: 'Dito | API Key',
+                message: 'Formato não confirmado: confira antes de publicar.', format: 'letras e números' },
+            ],
+          }),
+        ),
+      ),
+    );
+    const user = userEvent.setup({ delay: null });
+    renderWithProviders(<TrackinMaster />);
+    await analyze(user);
+
+    await buildWithGa4(user);
+
+    const popup = await screen.findByRole('dialog', { name: 'Importar e testar' });
+    expect(within(popup).getByRole('note', { name: 'IDs com formato não confirmado' })).toHaveTextContent('Dito | API Key');
   });
 });

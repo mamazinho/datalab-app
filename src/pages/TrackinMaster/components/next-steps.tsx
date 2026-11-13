@@ -5,6 +5,7 @@ import { Modal } from '../../../components/UI/Modal/modal';
 import type { IBuildResult } from '../../../services/datalab-api/trackingResource';
 import { downloadContainer, downloadDocument } from '../downloads';
 import { GuideSteps } from './guide-steps';
+import { IdWarnings } from './id-warnings';
 import { ImportProblem } from './import-problem';
 import { PublicationCheck } from './publication-check';
 
@@ -22,6 +23,7 @@ const ImportStage = ({ result }: { result: IBuildResult }) => {
   const importFile = result.merge ?? result.web;
   return (
     <>
+      <IdWarnings warnings={result.id_warnings} />
       <section className={styles.trackinModalSection} aria-label="Arquivos para baixar">
         <h4>Arquivos</h4>
         <div className={styles.trackinActions}>

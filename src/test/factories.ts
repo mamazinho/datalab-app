@@ -232,6 +232,7 @@ export const buildTrackingIdRule = (overrides: Partial<ITrackingIdRule> = {}): I
   server_only: false,
   format: 'G-XXXXXXXXXX',
   where: 'GA4 > Administrador > Fluxos de dados',
+  confirmed: true,
   ...overrides,
 });
 
@@ -317,6 +318,7 @@ const purchaseEvent = { event: 'GT_purchase', when: 'Na confirmação do pedido.
 
 export const buildBuildResult = (overrides: Partial<IBuildResult> = {}): IBuildResult => ({
   standard_version: '1.0.0',
+  id_warnings: [],
   site: buildSiteAnalysis(),
   web: buildContainerFile(),
   server: null,

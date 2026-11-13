@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Collapsible } from '../../../components/UI/Collapsible';
 import type { IBuildResult, IContainerFile } from '../../../services/datalab-api/trackingResource';
 import { downloadContainer, downloadDocument, downloadText } from '../downloads';
+import { IdWarnings } from './id-warnings';
 
 interface IContainerCardProps {
   title: string;
@@ -64,6 +65,7 @@ export const BuildResults = ({ result, onShowNextSteps }: IBuildResultsProps) =>
           Ver próximos passos
         </button>
       </div>
+      <IdWarnings warnings={result.id_warnings} />
       <section className={styles.trackinCard} data-state="ok" aria-label="Documentação do cliente">
         <div className={styles.trackinCardHead}>
           <h3 className={styles.trackinCardTitle}>Documentação Go Trackin' (padrão v{result.standard_version})</h3>

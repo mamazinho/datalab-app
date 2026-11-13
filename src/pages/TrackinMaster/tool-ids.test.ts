@@ -12,6 +12,7 @@ const rule = (key: string, overrides: Partial<ITrackingIdRule> = {}): ITrackingI
   server_only: false,
   format: 'só números',
   where: 'Painel > Configurações',
+  confirmed: true,
   ...overrides,
 });
 
