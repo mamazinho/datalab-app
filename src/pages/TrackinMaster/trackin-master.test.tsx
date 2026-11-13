@@ -6,6 +6,7 @@ import { server } from '../../test/msw/server';
 import {
   buildApiError,
   buildBuildResult,
+  buildCompany,
   buildImportHelp,
   buildPublicationResult,
   buildSiteAnalysis,
@@ -322,5 +323,38 @@ describe('<TrackinMaster />', () => {
     await buildWithGa4(user);
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Informe a URL do site.');
+  });
+
+  it('warns about the containers of the company that fell behind the standard', async () => {
+    server.use(
+      http.get(api('tracking/updates/'), () =>
+        HttpResponse.json([
+          {
+            site_host: 'www.lojaexemplo.com.br',
+            generated_version: '1.0.0',
+            latest_version: '1.1.0',
+            tools: ['meta_ads'],
+            summaries: ['A deduplicação da Meta mudou.'],
+            generated_at: '2026-11-13T12:00:00Z',
+          },
+        ]),
+      ),
+    );
+    renderWithProviders(<TrackinMaster />, { companies: [buildCompany()] });
+
+    const notices = await screen.findByRole('region', { name: 'Containers que precisam de atualização' });
+
+    expect(within(notices).getByText(/O container de www.lojaexemplo.com.br precisa de atualização/)).toBeInTheDocument();
+    expect(within(notices).getByText('A deduplicação da Meta mudou.')).toBeInTheDocument();
+  });
+
+  it('tells, before generating, that the organization will receive the update e-mails', async () => {
+    const user = userEvent.setup({ delay: null });
+    renderWithProviders(<TrackinMaster />);
+    await analyze(user);
+
+    expect(await screen.findByRole('button', { name: 'Gerar containers' })).toHaveAccessibleDescription(
+      /todas as pessoas com acesso a esta organização passam a receber por e-mail os avisos/,
+    );
   });
 });

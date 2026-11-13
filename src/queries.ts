@@ -126,3 +126,9 @@ export const trackingRulesQuery = queryOptions({
   queryFn: () => DatalabAPI.TrackingResource.getRules(),
   staleTime: Infinity,
 });
+
+export const trackingUpdatesQuery = (companyId: UUID7) =>
+  queryOptions({
+    queryKey: ['tracking-updates', companyId],
+    queryFn: () => DatalabAPI.TrackingResource.getUpdates(),
+  });

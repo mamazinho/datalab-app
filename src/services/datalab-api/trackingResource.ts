@@ -1,4 +1,4 @@
-import { axiosCompanyInstance } from './axios';
+import { axiosCompanyInstance, axiosInstance } from './axios';
 
 export type ConsentBanner = 'opt_in' | 'opt_out' | 'region';
 export type ConsentMode = 'advanced' | 'basic';
@@ -186,6 +186,15 @@ export interface IImportHelp {
   matched_known_error: boolean;
 }
 
+export interface ITrackingUpdateNotice {
+  site_host: string;
+  generated_version: string;
+  latest_version: string;
+  tools: string[];
+  summaries: string[];
+  generated_at: string;
+}
+
 export const TrackingResource = {
   async getRules(): Promise<ITrackingRules> {
     const response = await axiosCompanyInstance.get('tracking/rules/');
@@ -206,5 +215,13 @@ export const TrackingResource = {
   async importHelp(payload: IImportHelpRequest): Promise<IImportHelp> {
     const response = await axiosCompanyInstance.post('tracking/import-help/', payload);
     return response.data as IImportHelp;
+  },
+  async getUpdates(): Promise<ITrackingUpdateNotice[]> {
+    const response = await axiosCompanyInstance.get('tracking/updates/');
+    return response.data as ITrackingUpdateNotice[];
+  },
+  // Public: the link of the e-mail works without logging in, the signed token is the credential
+  async unsubscribeUpdates(token: string): Promise<void> {
+    await axiosInstance.post('tracking/updates/unsubscribe/', { token });
   },
 };

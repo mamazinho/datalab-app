@@ -154,7 +154,13 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
 
         {formState.error && !formState.success && <p className={modal.error} role="alert">{formState.error}</p>}
 
-        <SubmitButton className={modal.submit} pendingLabel="Gerando...">Gerar containers</SubmitButton>
+        <p className={modal.hint} id="trackin-update-notice">
+          Ao gerar este container, todas as pessoas com acesso a esta organização passam a receber por e-mail os avisos
+          de quando ele precisar de atualização. O descadastro é feito no próprio e-mail.
+        </p>
+        <SubmitButton className={modal.submit} pendingLabel="Gerando..." aria-describedby="trackin-update-notice">
+          Gerar containers
+        </SubmitButton>
       </FormFieldset>
     </form>
   );
