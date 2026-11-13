@@ -33,3 +33,19 @@ export const MODE_LABELS: Record<z.infer<typeof buildContainersSchema>['mode'], 
 };
 
 export const ID_FIELD_PREFIX = 'id:';
+
+export const verifyPublicationSchema = z.object({
+  container_id: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^GTM-[A-Z0-9]{4,10}$/, 'Informe o código do contêiner no formato GTM-XXXXXXX.'),
+});
+
+export const importHelpSchema = z.object({
+  kind: z.string().min(1, 'Escolha o tipo de problema.'),
+  message: z.string().trim().max(2000, 'Cole até 2.000 caracteres da mensagem.'),
+});
+
+export const ANTI_BOT_MESSAGE =
+  'Seu site tem proteção anti-robô e não pôde ser mapeado automaticamente. Você pode continuar informando os dados manualmente ou liberar nosso leitor no firewall.';

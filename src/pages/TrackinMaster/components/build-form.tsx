@@ -5,28 +5,36 @@ import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 import { Toggle } from '../../../components/UI/Inputs/Toggle';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { useTrackingRules } from '../../../hooks/use-tracking-rules';
-import type { IBuildResult, ISiteAnalysis } from '../../../services/datalab-api/trackingResource';
+import type { ISiteAnalysis } from '../../../services/datalab-api/trackingResource';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
-import { createBuildContainersAction } from '../actions';
+import { createBuildContainersAction, type IBuilt } from '../actions';
 import { BANNER_LABELS, ID_FIELD_PREFIX, MODE_LABELS } from '../schemas';
-import { idLabel, idRulesFor } from '../tool-ids';
+import { idLabel, idProblemsFrom, idRulesFor } from '../tool-ids';
 
 interface IBuildFormProps {
   site: ISiteAnalysis;
-  onBuilt: (result: IBuildResult) => void;
+  onBuilt: (built: IBuilt) => void;
 }
 
 // Mounted with key={site.url}: a new analysis restarts the defaults it suggested
 export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
   const { data: rules } = useTrackingRules();
-  const [formState, formAction] = useActionState(createBuildContainersAction(site), INITIAL_ACTION_STATE);
+  const [clientName, setClientName] = useState(site.host.replace(/^www\./, ''));
+  const [banner, setBanner] = useState('opt_in');
+  const [mode, setMode] = useState('advanced');
+  const [termAccepted, setTermAccepted] = useState(false);
+  const [ids, setIds] = useState<Record<string, string>>(site.suggested_ids);
+  const [clientExport, setClientExport] = useState<File | null>(null);
+  const [formState, formAction] = useActionState(createBuildContainersAction(site, clientExport), INITIAL_ACTION_STATE);
   const [tools, setTools] = useState(() => rules.tools.map((t) => t.key).filter((key) => site.detected_tools.includes(key)));
   // An unreachable site says nothing about the banner, so the default stays "has one"
   const [hasCmp, setHasCmp] = useState(!site.reachable || site.cmp !== null);
+  const [serverSide, setServerSide] = useState(false);
+  const idProblems = formState.success ? {} : idProblemsFrom(formState.errorDetail);
 
   useActionFeedback(formState, {
-    onSuccess: (result) => {
-      if (result) onBuilt(result);
+    onSuccess: (built) => {
+      if (built) onBuilt(built);
     },
     onError: () => {},
   });
@@ -35,14 +43,15 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
     setTools((current) => (checked ? [...current, key] : current.filter((tool) => tool !== key)));
 
   return (
-    <form className={styles.trackinForm} action={formAction} aria-label="Gerar containers">
+    // React resets the form after every action; a refused build has to keep the ids, the consent and the file
+    <form className={styles.trackinForm} action={formAction} onReset={(e) => e.preventDefault()} aria-label="Gerar containers">
       <FormFieldset className={modal.fieldset}>
         <section className={styles.trackinSection}>
           <h2 className={styles.trackinSectionTitle}>2. Cenário</h2>
           <div className={modal.field}>
             <label className={modal.label} htmlFor="trackin-client">Nome do cliente</label>
             <input className={modal.input} id="trackin-client" name="client_name" type="text"
-              defaultValue={site.host.replace(/^www\./, '')} autoComplete="off" />
+              value={clientName} onChange={(e) => setClientName(e.target.value)} autoComplete="off" />
           </div>
           <fieldset className={styles.trackinChoices}>
             <legend className={modal.label}>Ferramentas</legend>
@@ -56,7 +65,8 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
               </label>
             ))}
           </fieldset>
-          <Toggle label="O cliente tem (ou quer) server-side" name="server_side" />
+          <Toggle label="O cliente tem (ou quer) server-side" name="server_side" checked={serverSide}
+            onChange={(e) => setServerSide(e.target.checked)} />
         </section>
 
         <section className={styles.trackinSection}>
@@ -64,13 +74,15 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
           <div className={styles.trackinGrid}>
             <div className={modal.field}>
               <label className={modal.label} htmlFor="trackin-banner">Modelo do banner</label>
-              <select className={modal.select} id="trackin-banner" name="banner" defaultValue="opt_in">
+              <select className={modal.select} id="trackin-banner" name="banner" value={banner}
+                onChange={(e) => setBanner(e.target.value)}>
                 {Object.entries(BANNER_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select>
             </div>
             <div className={modal.field}>
               <label className={modal.label} htmlFor="trackin-mode">Modo do Consent Mode</label>
-              <select className={modal.select} id="trackin-mode" name="mode" defaultValue="advanced">
+              <select className={modal.select} id="trackin-mode" name="mode" value={mode}
+                onChange={(e) => setMode(e.target.value)}>
                 {Object.entries(MODE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select>
             </div>
@@ -79,7 +91,8 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
             onChange={(e) => setHasCmp(e.target.checked)} />
           {!hasCmp && (
             <label className={styles.trackinCheck}>
-              <input type="checkbox" name="term_accepted" required />
+              <input type="checkbox" name="term_accepted" required checked={termAccepted}
+                onChange={(e) => setTermAccepted(e.target.checked)} />
               Declaro que fui informado de que o site não tem gestão de consentimento e assumo a responsabilidade.
             </label>
           )}
@@ -88,16 +101,20 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
         <section className={styles.trackinSection}>
           <h2 className={styles.trackinSectionTitle}>4. IDs</h2>
           <p className={modal.hint}>
-            Deixe em branco o que ainda não tiver: o container sai com um valor de exemplo e o resultado avisa o que falta.
-            IDs encontrados no site já vêm preenchidos; confirme se são da conta certa.
+            Os IDs obrigatórios das ferramentas escolhidas precisam estar todos preenchidos: sem eles o container não é
+            gerado. Nenhum ID é inventado ou completado. IDs encontrados no site já vêm preenchidos; confirme se são da
+            conta certa.
           </p>
           <div className={styles.trackinGrid}>
-            {idRulesFor(rules.ids, tools).map((rule) => {
+            {idRulesFor(rules.ids, tools, serverSide).map((rule) => {
               const suggested = site.suggested_ids[rule.key];
+              const problem = idProblems[rule.key];
+              const hintId = `trackin-id-${rule.key}-hint`;
+              const errorId = `trackin-id-${rule.key}-error`;
               return (
                 <div key={rule.key} className={modal.field}>
                   <label className={modal.label} htmlFor={`trackin-id-${rule.key}`}>
-                    {idLabel(rule)}
+                    {idLabel(rule)}{rule.optional ? ' (opcional)' : ' *'}
                     {suggested && <span className={styles.trackinBadge}>encontrado no site</span>}
                   </label>
                   <input className={modal.input}
@@ -106,8 +123,13 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
                     type={rule.secret ? 'password' : 'text'}
                     autoComplete={rule.secret ? 'new-password' : 'off'}
                     placeholder={rule.example}
-                    defaultValue={suggested ?? ''}
+                    value={ids[rule.key] ?? ''}
+                    onChange={(e) => setIds((current) => ({ ...current, [rule.key]: e.target.value }))}
+                    aria-invalid={problem ? true : undefined}
+                    aria-describedby={problem ? `${errorId} ${hintId}` : hintId}
                   />
+                  {problem && <p className={styles.trackinFieldError} id={errorId}>{problem}</p>}
+                  <p className={modal.hint} id={hintId}>Formato: {rule.format}. Onde encontrar: {rule.where}</p>
                 </div>
               );
             })}
@@ -118,13 +140,15 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
           <h2 className={styles.trackinSectionTitle}>5. GTM atual do cliente</h2>
           <div className={modal.field}>
             <label className={modal.label} htmlFor="trackin-export">Export do contêiner web (.json)</label>
-            <input id="trackin-export" name="client_export" type="file" accept=".json,application/json"
+            <input id="trackin-export" type="file" accept=".json,application/json"
+              onChange={(e) => setClientExport(e.target.files?.[0] ?? null)}
               aria-describedby="trackin-export-hint" />
             <p className={modal.hint} id="trackin-export-hint">
               {site.gtm_containers.length > 0
                 ? `O site já usa ${site.gtm_containers.join(', ')}: anexe o export para mesclar em vez de criar um container do zero.`
                 : 'Opcional: anexe se o cliente já tiver um GTM, para gerar a mescla e o relatório do que pausar ou revisar.'}
             </p>
+            {clientExport && <p className={modal.hint}>Anexado: {clientExport.name}</p>}
           </div>
         </section>
 

@@ -15,6 +15,15 @@ export interface ITrackingIdRule {
   secret: boolean;
   optional: boolean;
   example: string;
+  tools: string[];
+  server_only: boolean;
+  format: string;
+  where: string;
+}
+
+export interface IImportProblemKind {
+  key: string;
+  label: string;
 }
 
 export interface ITrackingRules {
@@ -22,6 +31,17 @@ export interface ITrackingRules {
   ids: ITrackingIdRule[];
   banners: ConsentBanner[];
   modes: ConsentMode[];
+  import_problems: IImportProblemKind[];
+  standard_version: string;
+}
+
+export interface IHardcodedWarning {
+  tool: string;
+  label: string;
+  ids: string[];
+  chosen: boolean;
+  why: string;
+  where: string[];
 }
 
 export interface ISiteAnalysis {
@@ -31,6 +51,8 @@ export interface ISiteAnalysis {
   cookie_domain: string;
   reachable: boolean;
   error: string | null;
+  blocked: boolean;
+  protection: string | null;
   platform: string | null;
   is_ecommerce: boolean;
   cmp: string | null;
@@ -43,6 +65,7 @@ export interface ISiteAnalysis {
   detected_tools: string[];
   suggested_ids: Record<string, string>;
   considerations: string[];
+  hardcoded_warnings: IHardcodedWarning[];
   diagnosis_markdown: string;
 }
 
@@ -62,7 +85,6 @@ export interface IContainerFile {
   file: string;
   content: string;
   validation: IValidationReport;
-  pending_ids: string[];
 }
 
 export interface IMergeResult extends IContainerFile {
@@ -79,6 +101,21 @@ export interface ITagMapResult {
   attributes_csv: string;
 }
 
+export interface IDataLayerEvent {
+  event: string;
+  when: string;
+  required: string[];
+  tags: number;
+}
+
+export interface IGuideStep {
+  number: number;
+  title: string;
+  text: string;
+  print: string | null;
+  caption: string | null;
+}
+
 export interface IBuildRequest {
   site_url: string;
   site: ISiteAnalysis | null;
@@ -93,11 +130,60 @@ export interface IBuildRequest {
 }
 
 export interface IBuildResult {
+  standard_version: string;
   site: ISiteAnalysis;
   web: IContainerFile;
-  server?: IContainerFile;
-  merge?: IMergeResult;
+  server?: IContainerFile | null;
+  merge?: IMergeResult | null;
   tag_map: ITagMapResult;
+  datalayer: { events: IDataLayerEvent[]; markdown: string; csv: string };
+  requirements: { datalayer: IDataLayerEvent[]; accesses: string[] };
+  guide: { import_steps: IGuideStep[]; publish_steps: IGuideStep[] };
+  document: { file: string; content_base64: string };
+}
+
+// The build refusals carry, in the error detail, what is wrong with each id
+export interface IMissingId {
+  key: string;
+  tool: string;
+  tool_label: string;
+  label: string;
+  where: string;
+  format: string;
+}
+
+export interface IInvalidId {
+  key: string;
+  label: string;
+  message: string;
+  format: string;
+  where: string;
+}
+
+export interface IPublicationRequest {
+  container_id: string;
+  ids: Record<string, string>;
+}
+
+export interface IPublicationResult {
+  container_id: string;
+  published: boolean;
+  ids: Array<{ key: string; label: string; value: string; found: boolean }>;
+  missing: string[];
+}
+
+export interface IImportHelpRequest {
+  kind: string;
+  message: string;
+}
+
+export interface IImportHelp {
+  kind: string;
+  label: string;
+  diagnosis: string;
+  steps: string[];
+  regenerate: boolean;
+  matched_known_error: boolean;
 }
 
 export const TrackingResource = {
@@ -112,5 +198,13 @@ export const TrackingResource = {
   async build(payload: IBuildRequest): Promise<IBuildResult> {
     const response = await axiosCompanyInstance.post('tracking/build/', payload);
     return response.data as IBuildResult;
+  },
+  async verifyPublication(payload: IPublicationRequest): Promise<IPublicationResult> {
+    const response = await axiosCompanyInstance.post('tracking/verify/', payload);
+    return response.data as IPublicationResult;
+  },
+  async importHelp(payload: IImportHelpRequest): Promise<IImportHelp> {
+    const response = await axiosCompanyInstance.post('tracking/import-help/', payload);
+    return response.data as IImportHelp;
   },
 };

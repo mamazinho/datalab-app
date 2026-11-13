@@ -24,3 +24,8 @@ export const formatFileSize = (bytes: number): string => {
 
   return `${unit === 0 ? size : size.toFixed(1)} ${UNITS[unit]}`;
 };
+
+export const saveBase64 = (base64: string, filename: string, type: string): void => {
+  const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+  saveBlob(new Blob([bytes], { type }), filename);
+};

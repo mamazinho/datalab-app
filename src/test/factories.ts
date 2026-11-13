@@ -25,7 +25,10 @@ import type {
 import type {
   IBuildResult,
   IContainerFile,
+  IImportHelp,
+  IPublicationResult,
   ISiteAnalysis,
+  ITrackingIdRule,
   ITrackingRules,
 } from '../services/datalab-api/trackingResource';
 
@@ -219,18 +222,61 @@ export const buildMcpServerTestResult = (
   ...overrides,
 });
 
+export const buildTrackingIdRule = (overrides: Partial<ITrackingIdRule> = {}): ITrackingIdRule => ({
+  key: 'ga4_measurement_id',
+  constant: 'CONS - GA4 | Measurement ID',
+  secret: false,
+  optional: false,
+  example: 'G-123456789',
+  tools: ['ga4'],
+  server_only: false,
+  format: 'G-XXXXXXXXXX',
+  where: 'GA4 > Administrador > Fluxos de dados',
+  ...overrides,
+});
+
 export const buildTrackingRules = (overrides: Partial<ITrackingRules> = {}): ITrackingRules => ({
   tools: [
     { key: 'ga4', label: 'GA4' },
     { key: 'meta_ads', label: 'Meta Ads' },
   ],
   ids: [
-    { key: 'ga4_measurement_id', constant: 'CONS - GA4 | Measurement ID', secret: false, optional: false, example: 'G-123456789' },
-    { key: 'meta_pixel_id', constant: 'CONS - Meta Ads | Pixel ID', secret: false, optional: false, example: '123456789' },
-    { key: 'cookie_domain', constant: 'CONS - Site | Cookie Domain', secret: false, optional: false, example: '.exemplo.com.br' },
+    buildTrackingIdRule(),
+    buildTrackingIdRule({
+      key: 'meta_pixel_id',
+      constant: 'CONS - Meta Ads | Pixel ID',
+      example: '123456789',
+      tools: ['meta_ads'],
+      format: 'só números',
+      where: 'Gerenciador de Eventos da Meta',
+    }),
+    buildTrackingIdRule({
+      key: 'meta_capi_token',
+      constant: 'CONS - Meta Ads | API Access Token',
+      example: 'EAA123',
+      secret: true,
+      server_only: true,
+      tools: ['meta_ads'],
+      format: 'começa com EAA',
+      where: 'Gerenciador de Eventos > API de Conversões',
+    }),
+    buildTrackingIdRule({
+      key: 'server_container_url',
+      constant: 'CONS - Transport URL (Server Container URL)',
+      example: 'https://sgtm.exemplo.com.br',
+      server_only: true,
+      tools: [],
+      format: 'https://dominio',
+      where: 'GTM server',
+    }),
   ],
   banners: ['opt_in', 'opt_out', 'region'],
   modes: ['advanced', 'basic'],
+  import_problems: [
+    { key: 'no_permission', label: 'Sem acesso de edição ou publicação' },
+    { key: 'json_rejected', label: 'O GTM recusou o arquivo JSON' },
+  ],
+  standard_version: '1.0.0',
   ...overrides,
 });
 
@@ -241,6 +287,8 @@ export const buildSiteAnalysis = (overrides: Partial<ISiteAnalysis> = {}): ISite
   cookie_domain: '.lojaexemplo.com.br',
   reachable: true,
   error: null,
+  blocked: false,
+  protection: null,
   platform: 'VTEX',
   is_ecommerce: true,
   cmp: 'OneTrust',
@@ -253,6 +301,7 @@ export const buildSiteAnalysis = (overrides: Partial<ISiteAnalysis> = {}): ISite
   detected_tools: [],
   suggested_ids: { cookie_domain: '.lojaexemplo.com.br' },
   considerations: ['Cookie domain do container: .lojaexemplo.com.br.'],
+  hardcoded_warnings: [],
   diagnosis_markdown: '# Diagnóstico do site\n',
   ...overrides,
 });
@@ -261,13 +310,44 @@ export const buildContainerFile = (overrides: Partial<IContainerFile> = {}): ICo
   file: 'GoTrackin_Web.json',
   content: '{}',
   validation: { ok: true, counts: { tag: 10, trigger: 5, variable: 8 }, issues: [] },
-  pending_ids: [],
   ...overrides,
 });
 
+const purchaseEvent = { event: 'custom_purchase', when: 'Na confirmação do pedido.', required: ['ecommerce.value'], tags: 2 };
+
 export const buildBuildResult = (overrides: Partial<IBuildResult> = {}): IBuildResult => ({
+  standard_version: '1.0.0',
   site: buildSiteAnalysis(),
   web: buildContainerFile(),
+  server: null,
+  merge: null,
   tag_map: { tags: 10, attributes: 8, markdown: '# Mapa de Tags\n', tags_csv: '', attributes_csv: '' },
+  datalayer: { events: [purchaseEvent], markdown: '# Mapa de dataLayer\n', csv: '' },
+  requirements: { datalayer: [purchaseEvent], accesses: ['Permissão de Publicar no contêiner web do GTM.'] },
+  guide: {
+    import_steps: [
+      { number: 1, title: 'Acesse o Google Tag Manager', text: 'Entre em tagmanager.google.com.', print: '01-acessar-gtm.png', caption: 'Tela inicial.' },
+    ],
+    publish_steps: [{ number: 2, title: 'Publique', text: 'Clique em Publicar.', print: null, caption: null }],
+  },
+  document: { file: 'GoTrackin_Documentacao.pdf', content_base64: 'JVBERi0xLjQ=' },
+  ...overrides,
+});
+
+export const buildPublicationResult = (overrides: Partial<IPublicationResult> = {}): IPublicationResult => ({
+  container_id: 'GTM-ABC1234',
+  published: true,
+  ids: [{ key: 'ga4_measurement_id', label: 'GA4 | Measurement ID', value: 'G-ABC123XYZ9', found: true }],
+  missing: [],
+  ...overrides,
+});
+
+export const buildImportHelp = (overrides: Partial<IImportHelp> = {}): IImportHelp => ({
+  kind: 'json_rejected',
+  label: 'O GTM recusou o arquivo JSON',
+  diagnosis: 'O arquivo chegou ao GTM corrompido.',
+  steps: ['Baixe de novo o arquivo no Trackin\' Master.'],
+  regenerate: true,
+  matched_known_error: true,
   ...overrides,
 });
