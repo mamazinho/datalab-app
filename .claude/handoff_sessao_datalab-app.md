@@ -23,12 +23,14 @@ Nada foi feito no `main` de nenhum deles.
 
 - A aba é aberta a todos os membros ativos da empresa.
 - O sistema nunca inventa nem completa ID. Faltou ID obrigatório de ferramenta escolhida: o build é recusado e lista o que falta, por ferramenta, com onde encontrar. IDs `optional` continuam opcionais.
+- Prints do guia: o Rafa pediu que eu os capture no computador dele (Remote Control do Claude Desktop), num contêiner de teste sem dados de cliente.
 - Formato de ID confirmado (GA4, Google Ads, Meta, Clarity, GTM, sGTM, cookie domain, país) é estrito. Formato só inferido (lista abaixo) é aceito com o aviso "formato não confirmado, confira antes de publicar", que aparece no campo, no relatório de validação do container e no resultado. Qualquer ID, confirmado ou não, é recusado com aspas, crase, `<`, `>`, `;`, parênteses, chaves, barra invertida ou espaço/quebra de linha.
 - Eventos de e-commerce: o site envia `GT_<evento do GA4>` (GT_view_item_list, GT_select_item, GT_view_item, GT_add_to_wishlist, GT_add_to_cart, GT_remove_from_cart, GT_view_cart, GT_begin_checkout, GT_add_shipping_info, GT_add_payment_info, GT_purchase, GT_view_promotion, GT_select_promotion), além do que já envia; as tags do container leem só os `GT_`. login, sign_up, generate_lead e page_view não mudam. O mapa único é `engine/rules/events.json`; o master usa só os nomes padrão do GA4 e o build aplica o `GT_` (não sobrou nenhum `custom_` de e-commerce: os gatilhos de compra do master agora são "DL - Purchase" e "DL - Purchase (Rakuten)", escutando `purchase`). O `custom_page_view` que continua no master é outro evento (page view com grupo de conteúdo), fora da regra. As tags seguem enviando os nomes padrão ao GA4, então o container server não muda.
 - Tag instalada no código do site: aviso destacado (ID, por que duplica, onde remover por plataforma), não bloqueia.
 - Anti-robô: aviso com o texto combinado; nada é concluído a partir da página de desafio; o preenchimento manual segue.
 - Server-side: fluxo inalterado; sem server-side o GA4 Config não leva o sGTM URL, e o sGTM URL só é pedido com server-side.
-- Sem navegador headless nesta fase; "Validar implementação" visível e desativado ("em breve").
+- Validação de implementação **completa, com navegador headless** (decisão do Rafa, revendo a anterior): o usuário informa a página inicial (obrigatória) e, se quiser, categoria, produto, carrinho, checkout e confirmação; cada página conta como uma leitura no limite. A core-api abre as páginas num Chromium (`POST /v1/tracking/browse`) e devolve os pushes do dataLayer e as requisições; a datalab-api (`engine/implementation.py`, regras em `engine/rules/implementation.json`) confere, por página, o `GT_` que o tipo da página precisa (com os campos obrigatórios), se o contêiner carregou e quais tags dispararam. Eventos que dependem de clique (add_to_cart, login...) aparecem como "conferir no modo Visualizar". O botão fica no popup de importação e no de publicação.
+- O último popup (Publicar) tem "Fechar instruções"; "Ver próximos passos" reabre.
 - Limites (rígido): leituras (scan e conferência de publicação) 10/h por usuário e 30/dia por empresa; gerações 5/h por usuário e 20/dia por empresa, contando só build entregue. Contados no Postgres, iguais em todas as instâncias e mantidos entre deploys.
 - Avisos de atualização por e-mail (antigo item 11): **retirados desta entrega** a pedido do engenheiro; voltam junto de um sistema centralizado de envio de e-mails. O código removido está no histórico da datalab-api (commit `a72005b` e seguintes) e do app (`25d80dc`).
 - Nenhum e-mail sai para clientes sem aprovação do Rafa.
@@ -59,12 +61,14 @@ Nenhuma dessas fontes foi conferida nesta sessão contra uma conta real. Confirm
 2. Rafa: enviar os arquivos do logo da Go Trackin' (e as cores, se mudarem) para substituir o da Datalab no PDF.
 3. Rafa: confirmar os formatos da tabela acima.
 4. Rafa: capturar os 16 prints de `engine/guide/LISTA_DE_PRINTS.md` (datalab-api).
-5. Math (infraestrutura): criar a rotina diária `purge-tracking-usage` na AWS. O passo a passo está no README da datalab-api: registrar a task definition a partir de `deploy/ecs/purge-tracking-usage.task-definition.json`, criar a role do EventBridge Scheduler, rodar `scripts/schedule-purge-tracking-usage.sh` e dar à role do GitHub Actions permissão de registrar a família. A release já atualiza a imagem da task quando a família existir.
-6. Ao aprovar uma versão nova do padrão: subir `engine/rules/standard.json` (e o CHANGELOG nele).
+5. Math (infraestrutura): a imagem da core-api agora instala o Chromium (`playwright install --with-deps --only-shell chromium` no Dockerfile), o que aumenta a imagem em algumas centenas de MB; cada validação roda até dois Chromium ao mesmo tempo (algumas centenas de MB de memória cada). Rever a memória da task da core-api no ECS.
+6. Math (infraestrutura): criar a rotina diária `purge-tracking-usage` na AWS. O passo a passo está no README da datalab-api: registrar a task definition a partir de `deploy/ecs/purge-tracking-usage.task-definition.json`, criar a role do EventBridge Scheduler, rodar `scripts/schedule-purge-tracking-usage.sh` e dar à role do GitHub Actions permissão de registrar a família. A release já atualiza a imagem da task quando a família existir.
+7. Ao aprovar uma versão nova do padrão: subir `engine/rules/standard.json` (e o CHANGELOG nele).
 
 ## O que não foi testado
 
 - **Ponta a ponta com navegador e banco:** a tela não foi aberta num navegador (só testes com jsdom), e as rotas da datalab-api não rodaram com login real e Postgres juntos. A ida datalab-api → core-api foi exercitada com as duas aplicações reais em execução local (scan, build com PDF e conferência de publicação), mas aqui o DNS de sites externos não resolve, então a leitura de um site real não foi vista.
+- **Validação de implementação:** o Chromium foi testado contra páginas locais (captura do dataLayer, das requisições e o bloqueio de rede interna), e as regras com respostas de exemplo. Não foi aberto nenhum site real nem um contêiner publicado de verdade, e o build da imagem Docker com o Chromium não foi feito aqui.
 - **Anti-robô:** só contra HTML e cabeçalhos de exemplo; não contra sites reais atrás de Cloudflare, Akamai, DataDome, PerimeterX ou Imperva.
 - **Conferência do gtm.js:** não foi feita contra um contêiner publicado de verdade.
 - **Formatos de ID** da tabela acima.

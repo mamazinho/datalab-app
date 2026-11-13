@@ -1,7 +1,15 @@
 import { DatalabAPI } from '../../services/datalab-api';
 import type { IBuildRequest, IBuildResult, ISiteAnalysis } from '../../services/datalab-api/trackingResource';
 import { createFormAction } from '../../utils/create-form-action';
-import { buildContainersSchema, ID_FIELD_PREFIX, importHelpSchema, scanSiteSchema, verifyPublicationSchema } from './schemas';
+import {
+  buildContainersSchema,
+  ID_FIELD_PREFIX,
+  importHelpSchema,
+  PAGE_KINDS,
+  scanSiteSchema,
+  validateImplementationSchema,
+  verifyPublicationSchema,
+} from './schemas';
 
 export interface IBuilt {
   request: IBuildRequest;
@@ -52,6 +60,20 @@ export const createBuildContainersAction = (site: ISiteAnalysis, exportFile: Fil
 export const createVerifyPublicationAction = (ids: Record<string, string>) =>
   createFormAction(verifyPublicationSchema, ({ container_id }) =>
     DatalabAPI.TrackingResource.verifyPublication({ container_id, ids }),
+  );
+
+export const PAGE_FIELD_PREFIX = 'page:';
+
+const pagesFrom = (formData: FormData) =>
+  PAGE_KINDS.map(({ kind }) => ({ kind, url: String(formData.get(`${PAGE_FIELD_PREFIX}${kind}`) ?? '').trim() })).filter(
+    (page) => page.url,
+  );
+
+export const createValidateImplementationAction = (ids: Record<string, string>) =>
+  createFormAction(
+    validateImplementationSchema,
+    ({ container_id, pages }) => DatalabAPI.TrackingResource.validateImplementation({ container_id, ids, pages }),
+    { mapFormData: (formData) => ({ container_id: formData.get('container_id') ?? '', pages: pagesFrom(formData) }) },
   );
 
 export const importHelpAction = createFormAction(importHelpSchema, (data) => DatalabAPI.TrackingResource.importHelp(data));

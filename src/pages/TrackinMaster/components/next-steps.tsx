@@ -6,10 +6,11 @@ import type { IBuildResult } from '../../../services/datalab-api/trackingResourc
 import { downloadContainer, downloadDocument } from '../downloads';
 import { GuideSteps } from './guide-steps';
 import { IdWarnings } from './id-warnings';
+import { ImplementationCheck } from './implementation-check';
 import { ImportProblem } from './import-problem';
 import { PublicationCheck } from './publication-check';
 
-type Stage = 'import' | 'problem' | 'publish';
+type Stage = 'import' | 'problem' | 'publish' | 'validate';
 
 interface INextStepsProps {
   result: IBuildResult;
@@ -70,11 +71,20 @@ const ImportStage = ({ result }: { result: IBuildResult }) => {
 
 export const NextSteps = ({ result, publicIds, onClose, onRegenerate, regenerating }: INextStepsProps) => {
   const [stage, setStage] = useState<Stage>('import');
+  const [validateFrom, setValidateFrom] = useState<Stage>('import');
   const titles: Record<Stage, string> = {
     import: 'Importar e testar',
     problem: 'Tive um problema ao importar',
     publish: 'Publicar',
+    validate: 'Validar implementação',
   };
+  const containerId = result.site.gtm_containers[0] ?? '';
+  const validateButton = (from: Stage) => (
+    <button className={styles.trackinSecondaryButton} type="button"
+      onClick={() => { setValidateFrom(from); setStage('validate'); }}>
+      Validar implementação
+    </button>
+  );
 
   return (
     <Modal isOpen onClose={onClose} title={titles[stage]}>
@@ -82,12 +92,7 @@ export const NextSteps = ({ result, publicIds, onClose, onRegenerate, regenerati
         <>
           <ImportStage result={result} />
           <div className={styles.trackinActions}>
-            <button className={styles.trackinSecondaryButton} type="button" disabled
-              aria-describedby="trackin-validate-soon">
-              <span className={styles.trackinComingSoon}>
-                Validar implementação <span className={styles.trackinBadge} id="trackin-validate-soon">em breve</span>
-              </span>
-            </button>
+            {validateButton('import')}
             <button className={styles.trackinSecondaryButton} type="button" onClick={() => setStage('problem')}>
               Tive um problema ao importar
             </button>
@@ -106,11 +111,18 @@ export const NextSteps = ({ result, publicIds, onClose, onRegenerate, regenerati
           <section className={styles.trackinModalSection} aria-label="Publicar">
             <GuideSteps steps={result.guide.publish_steps} label="Passos para publicar" />
           </section>
-          <PublicationCheck ids={publicIds} containerId={result.site.gtm_containers[0] ?? ''} />
+          <PublicationCheck ids={publicIds} containerId={containerId} />
           <div className={styles.trackinActions}>
             <button className={styles.trackinSecondaryButton} type="button" onClick={() => setStage('import')}>Voltar</button>
+            {validateButton('publish')}
             <button className={styles.trackinSecondaryButton} type="button" onClick={onClose}>Fechar instruções</button>
           </div>
+        </>
+      )}
+      {stage === 'validate' && (
+        <>
+          <ImplementationCheck ids={publicIds} containerId={containerId} siteUrl={result.site.url} />
+          <button className={styles.trackinSecondaryButton} type="button" onClick={() => setStage(validateFrom)}>Voltar</button>
         </>
       )}
     </Modal>

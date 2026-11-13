@@ -183,6 +183,41 @@ export interface IPublicationResult {
   missing: string[];
 }
 
+export type PageKind = 'home' | 'category' | 'product' | 'cart' | 'checkout' | 'confirmation';
+
+export interface IImplementationRequest {
+  container_id: string;
+  ids: Record<string, string>;
+  pages: Array<{ kind: PageKind; url: string }>;
+}
+
+export interface IEventCheck {
+  event: string;
+  status: 'ok' | 'missing' | 'incomplete';
+  missing_fields: string[];
+  note: string | null;
+}
+
+export interface IPageCheck {
+  kind: PageKind;
+  label: string;
+  url: string;
+  final_url: string | null;
+  opened: boolean;
+  problem: string | null;
+  container_loaded: boolean;
+  events: IEventCheck[];
+  tags: Array<{ key: string; label: string; fired: boolean }>;
+}
+
+export interface IImplementationResult {
+  container_id: string;
+  ok: boolean;
+  pages: IPageCheck[];
+  manual_events: string[];
+  notes: string[];
+}
+
 export interface IImportHelpRequest {
   kind: string;
   message: string;
@@ -213,6 +248,11 @@ export const TrackingResource = {
   async verifyPublication(payload: IPublicationRequest): Promise<IPublicationResult> {
     const response = await axiosCompanyInstance.post('tracking/verify/', payload);
     return response.data as IPublicationResult;
+  },
+  async validateImplementation(payload: IImplementationRequest): Promise<IImplementationResult> {
+    // Every page opens in a real browser on the server: up to six pages take a couple of minutes
+    const response = await axiosCompanyInstance.post('tracking/validate/', payload, { timeout: 200_000 });
+    return response.data as IImplementationResult;
   },
   async importHelp(payload: IImportHelpRequest): Promise<IImportHelp> {
     const response = await axiosCompanyInstance.post('tracking/import-help/', payload);

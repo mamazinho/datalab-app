@@ -153,6 +153,10 @@
   color: var(--color-text);
 
   &[data-state='error'] { color: var(--color-error); }
+
+  & > li[data-state='ok']::marker { content: '✓  '; color: var(--color-success); }
+  & > li[data-state='error'] { color: var(--color-error); }
+  & > li[data-state='error']::marker { content: '✗  '; }
 }
 
 .trackinWarning {
@@ -235,8 +239,3 @@
   & h4 { margin: 0; }
 }
 
-.trackinComingSoon {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}

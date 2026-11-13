@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { buildAgent, buildApiError, buildBuildResult, buildChat, buildImportHelp, buildPublicationResult, buildChatUsageReport, buildCompany, buildCurrentMembership, buildInvite, buildMcpServer, buildMember, buildMcpServerTestResult, buildModelProvider, buildSiteAnalysis, buildTrackingRules, buildUser, uuid } from '../factories';
+import { buildAgent, buildApiError, buildBuildResult, buildChat, buildImplementationResult, buildImportHelp, buildPublicationResult, buildChatUsageReport, buildCompany, buildCurrentMembership, buildInvite, buildMcpServer, buildMember, buildMcpServerTestResult, buildModelProvider, buildSiteAnalysis, buildTrackingRules, buildUser, uuid } from '../factories';
 
 const BASE_URL = import.meta.env.VITE_DATALAB_API_URL;
 
@@ -157,6 +157,8 @@ export const handlers = [
   http.post(api('tracking/build/'), () => HttpResponse.json(buildBuildResult())),
 
   http.post(api('tracking/verify/'), () => HttpResponse.json(buildPublicationResult())),
+
+  http.post(api('tracking/validate/'), () => HttpResponse.json(buildImplementationResult())),
 
   http.post(api('tracking/import-help/'), () => HttpResponse.json(buildImportHelp())),
 ];

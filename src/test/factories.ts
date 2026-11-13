@@ -27,6 +27,7 @@ import type {
   IContainerFile,
   IImportHelp,
   IPublicationResult,
+  IImplementationResult,
   ISiteAnalysis,
   ITrackingIdRule,
   ITrackingRules,
@@ -345,6 +346,27 @@ export const buildPublicationResult = (overrides: Partial<IPublicationResult> = 
   published: true,
   ids: [{ key: 'ga4_measurement_id', label: 'GA4 | Measurement ID', value: 'G-ABC123XYZ9', found: true }],
   missing: [],
+  ...overrides,
+});
+
+export const buildImplementationResult = (overrides: Partial<IImplementationResult> = {}): IImplementationResult => ({
+  container_id: 'GTM-ABC1234',
+  ok: true,
+  pages: [
+    {
+      kind: 'home',
+      label: 'Página inicial',
+      url: 'https://www.lojaexemplo.com.br',
+      final_url: 'https://www.lojaexemplo.com.br/',
+      opened: true,
+      problem: null,
+      container_loaded: true,
+      events: [{ event: 'page_view', status: 'ok', missing_fields: [], note: null }],
+      tags: [{ key: 'ga4_measurement_id', label: 'GA4 | Measurement ID', fired: true }],
+    },
+  ],
+  manual_events: ['GT_add_to_cart'],
+  notes: [],
   ...overrides,
 });
 

@@ -6,13 +6,14 @@ import { server } from '../../test/msw/server';
 import {
   buildApiError,
   buildBuildResult,
+  buildImplementationResult,
   buildImportHelp,
   buildPublicationResult,
   buildSiteAnalysis,
   buildTrackingIdRule,
   buildTrackingRules,
 } from '../../test/factories';
-import type { IBuildRequest, IPublicationRequest } from '../../services/datalab-api/trackingResource';
+import type { IBuildRequest, IImplementationRequest, IPublicationRequest } from '../../services/datalab-api/trackingResource';
 import { TrackinMaster } from './trackin-master';
 
 type User = ReturnType<typeof userEvent.setup>;
@@ -226,16 +227,85 @@ describe('<TrackinMaster />', () => {
     });
   });
 
-  it('keeps the implementation check visible but disabled for now', async () => {
+  it('validates the implementation on the pages given and shows each check', async () => {
+    let sent: IImplementationRequest | null = null;
+    server.use(
+      http.post(api('tracking/validate/'), async ({ request }) => {
+        sent = (await request.json()) as IImplementationRequest;
+        return HttpResponse.json(buildImplementationResult({
+          ok: false,
+          notes: ['O navegador do teste não aceita o banner de cookies.'],
+          pages: [
+            buildImplementationResult().pages[0],
+            {
+              ...buildImplementationResult().pages[0],
+              kind: 'product',
+              label: 'Produto',
+              url: 'https://www.lojaexemplo.com.br/camiseta/p',
+              events: [{ event: 'GT_view_item', status: 'incomplete', missing_fields: ['ecommerce.value'], note: null }],
+              tags: [{ key: 'ga4_measurement_id', label: 'GA4 | Measurement ID', fired: false }],
+            },
+          ],
+        }));
+      }),
+    );
     const user = userEvent.setup({ delay: null });
     renderWithProviders(<TrackinMaster />);
     await analyze(user);
-
     await buildWithGa4(user);
 
-    const validate = await screen.findByRole('button', { name: /Validar implementação/ });
-    expect(validate).toBeDisabled();
-    expect(validate).toHaveTextContent('em breve');
+    await user.click(await screen.findByRole('button', { name: 'Validar implementação' }));
+    const popup = await screen.findByRole('dialog', { name: 'Validar implementação' });
+    expect(within(popup).getByRole('textbox', { name: 'Página inicial *' })).toHaveValue('https://www.lojaexemplo.com.br');
+    await user.type(within(popup).getByRole('textbox', { name: 'Código do contêiner publicado' }), 'GTM-ABC1234');
+    await user.type(within(popup).getByRole('textbox', { name: 'Produto' }), 'https://www.lojaexemplo.com.br/camiseta/p');
+    await user.click(within(popup).getByRole('button', { name: 'Validar' }));
+
+    const report = await within(popup).findByRole('status', { name: 'Resultado da validação' });
+    expect(within(report).getByText(/Encontramos pendências/)).toBeInTheDocument();
+    expect(within(report).getByText('GT_view_item: enviado, mas faltam ecommerce.value.')).toBeInTheDocument();
+    expect(within(report).getByText('GA4 | Measurement ID: não disparou')).toBeInTheDocument();
+    expect(within(report).getByText(/não aceita o banner de cookies/)).toBeInTheDocument();
+    expect(within(report).getByText('GT_add_to_cart')).toBeInTheDocument();
+    expect(sent).toEqual({
+      container_id: 'GTM-ABC1234',
+      ids: { ga4_measurement_id: 'G-ABC123XYZ9' },
+      pages: [
+        { kind: 'home', url: 'https://www.lojaexemplo.com.br' },
+        { kind: 'product', url: 'https://www.lojaexemplo.com.br/camiseta/p' },
+      ],
+    });
+  });
+
+  it('tells why a page could not be validated', async () => {
+    server.use(
+      http.post(api('tracking/validate/'), () =>
+        HttpResponse.json(buildImplementationResult({
+          ok: false,
+          pages: [{
+            ...buildImplementationResult().pages[0],
+            opened: false,
+            problem: 'A página tem proteção anti-robô (Cloudflare) e bloqueou o navegador do teste.',
+            events: [],
+            tags: [],
+          }],
+        })),
+      ),
+    );
+    const user = userEvent.setup({ delay: null });
+    renderWithProviders(<TrackinMaster />);
+    await analyze(user);
+    await buildWithGa4(user);
+
+    await user.click(await screen.findByRole('button', { name: 'Avançar' }));
+    await user.click(within(await screen.findByRole('dialog', { name: 'Publicar' })).getByRole('button', { name: 'Validar implementação' }));
+    const popup = await screen.findByRole('dialog', { name: 'Validar implementação' });
+    await user.type(within(popup).getByRole('textbox', { name: 'Código do contêiner publicado' }), 'GTM-ABC1234');
+    await user.click(within(popup).getByRole('button', { name: 'Validar' }));
+
+    expect(await within(popup).findByText(/bloqueou o navegador do teste/)).toBeInTheDocument();
+    await user.click(within(popup).getByRole('button', { name: 'Voltar' }));
+    expect(await screen.findByRole('dialog', { name: 'Publicar' })).toBeInTheDocument();
   });
 
   it('moves on to publishing and checks whether the container is live', async () => {

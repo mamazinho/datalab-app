@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { PageKind } from '../../services/datalab-api/trackingResource';
 
 export const scanSiteSchema = z.object({
   site_url: z.string().trim().min(1, 'Informe a URL do site a ser tagueado.'),
@@ -34,13 +35,30 @@ export const MODE_LABELS: Record<z.infer<typeof buildContainersSchema>['mode'], 
 
 export const ID_FIELD_PREFIX = 'id:';
 
-export const verifyPublicationSchema = z.object({
-  container_id: z
-    .string()
-    .trim()
-    .toUpperCase()
-    .regex(/^GTM-[A-Z0-9]{4,10}$/, 'Informe o código do contêiner no formato GTM-XXXXXXX.'),
+
+const containerId = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .regex(/^GTM-[A-Z0-9]{4,10}$/, 'Informe o código do contêiner no formato GTM-XXXXXXX.');
+
+export const PAGE_KINDS: Array<{ kind: PageKind; label: string; hint: string }> = [
+  { kind: 'home', label: 'Página inicial', hint: 'https://www.loja.com.br' },
+  { kind: 'category', label: 'Categoria ou busca', hint: 'Uma página com lista de produtos' },
+  { kind: 'product', label: 'Produto', hint: 'Uma página de produto' },
+  { kind: 'cart', label: 'Carrinho', hint: 'A página do carrinho' },
+  { kind: 'checkout', label: 'Checkout', hint: 'A primeira etapa do checkout' },
+  { kind: 'confirmation', label: 'Confirmação do pedido', hint: 'A página de pedido concluído, se abrir sem compra' },
+];
+
+export const validateImplementationSchema = z.object({
+  container_id: containerId,
+  pages: z
+    .array(z.object({ kind: z.enum(['home', 'category', 'product', 'cart', 'checkout', 'confirmation']), url: z.string() }))
+    .min(1, 'Informe ao menos a página inicial.'),
 });
+
+export const verifyPublicationSchema = z.object({ container_id: containerId });
 
 export const importHelpSchema = z.object({
   kind: z.string().min(1, 'Escolha o tipo de problema.'),
