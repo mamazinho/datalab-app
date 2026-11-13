@@ -107,7 +107,10 @@ export const NextSteps = ({ result, publicIds, onClose, onRegenerate, regenerati
             <GuideSteps steps={result.guide.publish_steps} label="Passos para publicar" />
           </section>
           <PublicationCheck ids={publicIds} containerId={result.site.gtm_containers[0] ?? ''} />
-          <button className={styles.trackinSecondaryButton} type="button" onClick={() => setStage('import')}>Voltar</button>
+          <div className={styles.trackinActions}>
+            <button className={styles.trackinSecondaryButton} type="button" onClick={() => setStage('import')}>Voltar</button>
+            <button className={styles.trackinSecondaryButton} type="button" onClick={onClose}>Fechar instruções</button>
+          </div>
         </>
       )}
     </Modal>

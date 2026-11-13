@@ -268,6 +268,21 @@ describe('<TrackinMaster />', () => {
     expect(checked).toEqual({ container_id: 'GTM-ABC1234', ids: { ga4_measurement_id: 'G-ABC123XYZ9' } });
   });
 
+  it('closes the instructions from the publishing step and reopens them from the results', async () => {
+    const user = userEvent.setup({ delay: null });
+    renderWithProviders(<TrackinMaster />);
+    await analyze(user);
+    await buildWithGa4(user);
+
+    await user.click(await screen.findByRole('button', { name: 'Avançar' }));
+    const popup = await screen.findByRole('dialog', { name: 'Publicar' });
+    await user.click(within(popup).getByRole('button', { name: 'Fechar instruções' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: /próximos passos/i }));
+    expect(await screen.findByRole('dialog', { name: 'Importar e testar' })).toBeInTheDocument();
+  });
+
   it('answers an import problem and regenerates the container when the json was refused', async () => {
     let builds = 0;
     server.use(
