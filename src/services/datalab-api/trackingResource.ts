@@ -136,8 +136,8 @@ export interface IBuildResult {
   server?: IContainerFile | null;
   merge?: IMergeResult | null;
   tag_map: ITagMapResult;
-  datalayer: { events: IDataLayerEvent[]; markdown: string; csv: string };
-  requirements: { datalayer: IDataLayerEvent[]; accesses: string[] };
+  datalayer: { events: IDataLayerEvent[]; names: Record<string, string>; markdown: string; csv: string };
+  requirements: { datalayer: IDataLayerEvent[]; datalayer_note: string; accesses: string[] };
   guide: { import_steps: IGuideStep[]; publish_steps: IGuideStep[] };
   document: { file: string; content_base64: string };
 }

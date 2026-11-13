@@ -25,7 +25,9 @@ Nada foi feito no `main` de nenhum deles.
 - Anti-robô: aviso com o texto combinado, nunca diagnóstico a partir da página de desafio; o preenchimento manual segue.
 - Server-side: fluxo inalterado. Exceção decidida pelo Rafa: sem server-side, o GA4 Config perde o `server_container_url` (antes apontava para o sGTM de exemplo e os dados do GA4 se perdiam). O sGTM URL só é pedido com server-side.
 - Sem navegador headless nesta fase; "Validar implementação" visível e desativado ("em breve").
-- Documento do cliente em PDF, Montserrat + Bebas Neue, só o logo da Go Trackin' (sem logo do cliente).
+- Documento do cliente em PDF, no padrão visual dos decks da Datalab: Montserrat + Bebas Neue, amarelo #FBBC04, capa dividida com o ícone do notebook, só o logo da Datalab (sem logo do cliente). Nada de nome de cliente real em documentação, teste ou exemplo: só placeholders.
+- Eventos de e-commerce: sempre `GT_<evento GA4>` (GT_view_item, GT_add_to_cart, GT_purchase...), enviados pelo site além do que ele já envia; o container escuta só os `GT_`. Vale para os eventos de e-commerce do GA4 (view_item_list, select_item, view_item, add_to_wishlist, add_to_cart, remove_from_cart, view_cart, begin_checkout, add_shipping_info, add_payment_info, purchase, view_promotion, select_promotion). login, sign_up, generate_lead e page_view não mudam. O mapa único é `rules/events.json`; o build reescreve os triggers do master a partir dele. As tags seguem enviando os nomes padrão do GA4, então o server não muda.
+- Histórico de gerações (item 11): avisos para todas as pessoas com acesso à organização que gerou o container; aviso também dentro da aba; histórico por 2 anos, um registro por empresa e site (uma geração nova substitui a anterior); o formulário avisa antes de gerar; descadastro pelo botão do próprio e-mail.
 - Limites (rígido): leituras (scan + conferência de publicação) 10/h por usuário e 30/dia por empresa; gerações 5/h por usuário e 20/dia por empresa, contando só build entregue. Valores em `settings` do datalab-api.
 - Nenhum e-mail sai para clientes sem aprovação do Rafa.
 
@@ -62,15 +64,16 @@ Nada foi feito no `main` de nenhum deles.
 1. Rafa aplicar o patch do datalab-commons, publicar a tag `v0.8.0`, subir a dependência nas duas APIs e remover `TRACKING_BODY_URLS`.
 2. Rafa mandar as cores oficiais (hex) e o logo; trocar em `document/brand.py` e `document/assets/logo.png`.
 3. Rafa capturar os 16 prints de `guide/LISTA_DE_PRINTS.md`.
-4. Item 11 (histórico de gerações e aviso de atualização): proposta abaixo, aguardando respostas.
+4. Agendar `make purge-tracking-history` (diário) no ambiente de produção.
+5. Ao aprovar uma versão nova do padrão: subir `rules/standard.json` no core-api e rodar `make notify-tracking-updates VERSION=... TOOLS=... SUMMARY="..."` (prévia) e depois com `CONFIRM=1` (envia).
 
-## Item 11 — proposta (não implementada)
+## Item 11 — histórico e avisos (implementado)
 
-Tabela `tracking_generations` no datalab-api, uma linha por build entregue: `id`, `company_id`, `user_id`, `site_host` (só o domínio), `tools` (lista), `server_side`, `standard_version`, `created_at`. Sem IDs, sem export do cliente, sem URL de preview. Gravada pelo `TrackingService.build_containers` depois da resposta do motor.
-
-Aviso de atualização: o `standard.json` ganha, por versão, a lista de ferramentas afetadas. Quando o Rafa aprova uma versão nova, um comando (`make notify-tracking-update`, rodado à mão) cruza as gerações com versão anterior e ferramenta afetada e envia o e-mail pelo serviço que já existe no datalab-api. O e-mail não leva dado do container; o link aponta só para o app.
-
-Perguntas em aberto: quem recebe (quem gerou ou os donos da empresa), se o aviso aparece também na aba, por quanto tempo guardar o histórico, e como fica o consentimento e o descadastro desses e-mails.
+- `trackinggeneration` (datalab-api): empresa, usuário, domínio do site, ferramentas, server-side, versão do padrão e data. Sem IDs, sem export, sem URL de preview. Uma linha por empresa e site; `make purge-tracking-history` apaga o que passa de 2 anos.
+- `trackingstandardrelease`: a aprovação do Rafa (versão, ferramentas afetadas, resumo), gravada pelo `make notify-tracking-updates`. Sem `CONFIRM=1` é só prévia; a mesma versão nunca é enviada duas vezes.
+- Destinatários: membros ativos da empresa, menos quem se descadastrou (`trackingupdateoptout`). O e-mail não leva dado do container; links só para o app, com o cabeçalho List-Unsubscribe.
+- `GET /v1/tracking/updates/` alimenta o aviso na aba; `POST /v1/tracking/updates/unsubscribe/` é público e recebe o token assinado do e-mail. A página `/descadastrar-avisos` do app pede um clique de confirmação (leitores de e-mail abrem os links sozinhos).
+- Migração testada num Postgres 16 local (`alembic upgrade head` e `alembic check` sem diferenças); adapters exercitados contra o banco real.
 
 ## O que não foi testado
 
@@ -81,4 +84,5 @@ Perguntas em aberto: quem recebe (quem gerou ou os donos da empresa), se o aviso
 - A conferência do gtm.js não foi feita contra um container publicado de verdade.
 - O PDF foi conferido visualmente só como imagem gerada aqui; não foi impresso nem aberto em leitores diferentes.
 - Os limites por processo não foram testados com várias instâncias.
-- As cores do PDF são provisórias (o Google Slides não estava acessível nesta sessão).
+- O envio real de e-mail (SMTP) dos avisos não foi testado; só com o serviço de e-mail substituído nos testes.
+- O evento `trinioEmailIdentification` do master é de um fornecedor e ficou com o nome original (renomear quebraria o gatilho).

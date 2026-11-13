@@ -313,7 +313,7 @@ export const buildContainerFile = (overrides: Partial<IContainerFile> = {}): ICo
   ...overrides,
 });
 
-const purchaseEvent = { event: 'custom_purchase', when: 'Na confirmação do pedido.', required: ['ecommerce.value'], tags: 2 };
+const purchaseEvent = { event: 'GT_purchase', when: 'Na confirmação do pedido.', required: ['ecommerce.value'], tags: 2 };
 
 export const buildBuildResult = (overrides: Partial<IBuildResult> = {}): IBuildResult => ({
   standard_version: '1.0.0',
@@ -322,8 +322,12 @@ export const buildBuildResult = (overrides: Partial<IBuildResult> = {}): IBuildR
   server: null,
   merge: null,
   tag_map: { tags: 10, attributes: 8, markdown: '# Mapa de Tags\n', tags_csv: '', attributes_csv: '' },
-  datalayer: { events: [purchaseEvent], markdown: '# Mapa de dataLayer\n', csv: '' },
-  requirements: { datalayer: [purchaseEvent], accesses: ['Permissão de Publicar no contêiner web do GTM.'] },
+  datalayer: { events: [purchaseEvent], names: { purchase: 'GT_purchase' }, markdown: '# Mapa de dataLayer\n', csv: '' },
+  requirements: {
+    datalayer: [purchaseEvent],
+    datalayer_note: 'Os eventos de e-commerce do padrão Go Trackin\' são enviados com o prefixo GT_.',
+    accesses: ['Permissão de Publicar no contêiner web do GTM.'],
+  },
   guide: {
     import_steps: [
       { number: 1, title: 'Acesse o Google Tag Manager', text: 'Entre em tagmanager.google.com.', print: '01-acessar-gtm.png', caption: 'Tela inicial.' },

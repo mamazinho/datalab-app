@@ -208,7 +208,8 @@ describe('<TrackinMaster />', () => {
     const popup = await screen.findByRole('dialog', { name: 'Importar e testar' });
     expect(within(popup).getByRole('button', { name: 'Baixar GoTrackin_Web.json' })).toBeInTheDocument();
     expect(within(popup).getByRole('button', { name: 'Baixar GoTrackin_Documentacao.pdf' })).toBeInTheDocument();
-    expect(within(popup).getByText('custom_purchase')).toBeInTheDocument();
+    expect(within(popup).getByText('GT_purchase')).toBeInTheDocument();
+    expect(within(popup).getByText(/prefixo GT_/)).toBeInTheDocument();
     expect(within(popup).getByText('Permissão de Publicar no contêiner web do GTM.')).toBeInTheDocument();
     expect(within(popup).getByText('Acesse o Google Tag Manager')).toBeInTheDocument();
     expect(within(popup).getByText(/Não publique ainda/)).toBeInTheDocument();

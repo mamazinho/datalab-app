@@ -41,6 +41,7 @@ const ImportStage = ({ result }: { result: IBuildResult }) => {
       <section className={styles.trackinModalSection} aria-label="Requisitos">
         <h4>Requisitos</h4>
         <p className={styles.trackinMuted}>dataLayers a implementar no código-fonte do site:</p>
+        <p>{result.requirements.datalayer_note}</p>
         <ul className={styles.trackinList}>
           {result.requirements.datalayer.map((event) => (
             <li key={event.event}>
