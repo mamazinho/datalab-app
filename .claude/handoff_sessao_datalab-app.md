@@ -6,8 +6,8 @@ Estado do Trackin' Master nos quatro repositórios, para quem continuar o trabal
 
 | Repositório | Branch | Último commit | Estado |
 |---|---|---|---|
-| datalab-api | `feat/trackin-master` | `e59f9bc` | enviada |
-| datalab-core-api | `feat/trackin-master` | `3a953ce` | enviada |
+| datalab-api | `feat/trackin-master` | `77b9839` | enviada |
+| datalab-core-api | `feat/trackin-master` | `27619a8` | enviada |
 | datalab-app | `feat/trackin-master` | o deste arquivo | enviada |
 | datalab-commons | `feat/censor-tracking-bodies` | `a3d8853` | **só local**: a conta conectada não tem push em `mamazinho/datalab-commons`; o patch foi entregue ao Rafa |
 
@@ -38,9 +38,7 @@ Nada foi feito no `main` de nenhum deles.
 
 ## Documento do cliente (PDF)
 
-Definido e aplicado, a partir dos decks da Datalab: Montserrat e Bebas Neue, amarelo `#FBBC04` com cinzas `#9E9E9E`/`#434343`/`#999999` e texto `#1C1C1C`, capa dividida com o ícone do notebook, cabeçalho "Documentação de tagueamento | seção" e o logo da Datalab (`engine/document/assets/logo.png`). Tudo em `engine/document/brand.py`.
-
-**Logo (decidido pelo Rafa):** o PDF leva o logo da **Go Trackin'**. Enquanto o Rafa não envia os arquivos, fica o da Datalab. Quando chegarem (PNG com fundo transparente ou SVG, e os hex se as cores mudarem), a troca é só em `brand.py` e `assets/logo.png`.
+Montserrat e Bebas Neue, amarelo `#FBBC04` com cinzas `#9E9E9E`/`#434343`/`#999999` e texto `#1C1C1C` (as cores da Datalab, que a Go Trackin' usa também), capa dividida com o ícone do notebook, cabeçalho "Documentação de tagueamento | seção" e o **logo da Go Trackin'** (`engine/document/assets/logo.png`, enviado pelo Rafa e recortado), com "Go Trackin'" no título da capa, no rodapé e nos metadados do PDF. Tudo em `engine/document/brand.py`.
 
 ## Formatos de ID não confirmados (para o Rafa conferir com contas reais)
 
@@ -58,12 +56,11 @@ Nenhuma dessas fontes foi conferida nesta sessão contra uma conta real. Confirm
 ## Próximos passos
 
 1. Rafa: aplicar o patch do datalab-commons, publicar a tag `v0.8.0`, subir a dependência nas duas APIs e remover `TRACKING_BODY_URLS` do `app_builder.py` da datalab-api (a core-api já não precisa da exclusão: nenhuma rota dela recebe o export do cliente).
-2. Rafa: enviar os arquivos do logo da Go Trackin' (e as cores, se mudarem) para substituir o da Datalab no PDF.
-3. Rafa: confirmar os formatos da tabela acima.
-4. Rafa: capturar os 16 prints de `engine/guide/LISTA_DE_PRINTS.md` (datalab-api).
-5. Math (infraestrutura): a imagem da core-api agora instala o Chromium (`playwright install --with-deps --only-shell chromium` no Dockerfile), o que aumenta a imagem em algumas centenas de MB; cada validação roda até dois Chromium ao mesmo tempo (algumas centenas de MB de memória cada). Rever a memória da task da core-api no ECS.
-6. Math (infraestrutura): criar a rotina diária `purge-tracking-usage` na AWS. O passo a passo está no README da datalab-api: registrar a task definition a partir de `deploy/ecs/purge-tracking-usage.task-definition.json`, criar a role do EventBridge Scheduler, rodar `scripts/schedule-purge-tracking-usage.sh` e dar à role do GitHub Actions permissão de registrar a família. A release já atualiza a imagem da task quando a família existir.
-7. Ao aprovar uma versão nova do padrão: subir `engine/rules/standard.json` (e o CHANGELOG nele).
+2. Rafa: confirmar os formatos da tabela acima.
+3. Prints do guia (16, lista em `engine/guide/LISTA_DE_PRINTS.md` da datalab-api): capturar no computador do Rafa, num contêiner de teste, assim que ele estiver ligado a uma sessão pelo Remote Control.
+4. Math (infraestrutura): a imagem da core-api agora instala o Chromium (`playwright install --with-deps --only-shell chromium` no Dockerfile), o que aumenta a imagem em algumas centenas de MB; cada validação roda até dois Chromium ao mesmo tempo (algumas centenas de MB de memória cada). Rever a memória da task da core-api no ECS.
+5. Math (infraestrutura): criar a rotina diária `purge-tracking-usage` na AWS. O passo a passo está no README da datalab-api: registrar a task definition a partir de `deploy/ecs/purge-tracking-usage.task-definition.json`, criar a role do EventBridge Scheduler, rodar `scripts/schedule-purge-tracking-usage.sh` e dar à role do GitHub Actions permissão de registrar a família. A release já atualiza a imagem da task quando a família existir.
+6. Ao aprovar uma versão nova do padrão: subir `engine/rules/standard.json` (e o CHANGELOG nele).
 
 ## O que não foi testado
 
