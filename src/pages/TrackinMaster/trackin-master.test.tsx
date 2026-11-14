@@ -56,6 +56,10 @@ const missingIdsResponse = () =>
     { status: 400 },
   );
 
+const debugLink = (qaPage: string, containerId = 'GTM-ABC1234') =>
+  `https://tagassistant.google.com/#/?id=${containerId}&url=${encodeURIComponent(`${qaPage}?gtm_debug=1`)}` +
+  '&source=TAG_MANAGER&canonical_id=248240911&gtm_auth=kOboj7gLiZMAQMYkiZnZuQ&gtm_preview=env-202';
+
 describe('<TrackinMaster />', () => {
   it('asks for the site before showing the rest of the form', () => {
     renderWithProviders(<TrackinMaster />);
@@ -227,7 +231,7 @@ describe('<TrackinMaster />', () => {
     });
   });
 
-  it('validates the implementation on the pages given and shows each check', async () => {
+  it('explains how to get the debug links and validates each qa page with them', async () => {
     let sent: IImplementationRequest | null = null;
     server.use(
       http.post(api('tracking/validate/'), async ({ request }) => {
@@ -241,7 +245,7 @@ describe('<TrackinMaster />', () => {
               ...buildImplementationResult().pages[0],
               kind: 'product',
               label: 'Produto',
-              url: 'https://www.lojaexemplo.com.br/camiseta/p',
+              url: 'https://qa.lojaexemplo.com.br/camiseta/p',
               events: [{ event: 'GT_view_item', status: 'incomplete', missing_fields: ['ecommerce.value'], note: null }],
               tags: [{ key: 'ga4_measurement_id', label: 'GA4 | Measurement ID', fired: false }],
             },
@@ -256,9 +260,12 @@ describe('<TrackinMaster />', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Validar implementação' }));
     const popup = await screen.findByRole('dialog', { name: 'Validar implementação' });
-    expect(within(popup).getByRole('textbox', { name: 'Página inicial *' })).toHaveValue('https://www.lojaexemplo.com.br');
-    await user.type(within(popup).getByRole('textbox', { name: 'Código do contêiner publicado' }), 'GTM-ABC1234');
-    await user.type(within(popup).getByRole('textbox', { name: 'Produto' }), 'https://www.lojaexemplo.com.br/camiseta/p');
+    const howTo = within(popup).getByRole('region', { name: 'Como gerar os links' });
+    expect(within(howTo).getByText(/workspace onde você importou o JSON/)).toBeInTheDocument();
+    expect(within(howTo).getByText(/três pontinhos no canto superior direito/)).toBeInTheDocument();
+    expect(within(howTo).getByText(/Shareable debug link/)).toBeInTheDocument();
+    await user.type(within(popup).getByRole('textbox', { name: 'Página inicial *' }), debugLink('https://qa.lojaexemplo.com.br/'));
+    await user.type(within(popup).getByRole('textbox', { name: 'Produto' }), debugLink('https://qa.lojaexemplo.com.br/camiseta/p'));
     await user.click(within(popup).getByRole('button', { name: 'Validar' }));
 
     const report = await within(popup).findByRole('status', { name: 'Resultado da validação' });
@@ -268,13 +275,68 @@ describe('<TrackinMaster />', () => {
     expect(within(report).getByText(/não aceita o banner de cookies/)).toBeInTheDocument();
     expect(within(report).getByText('GT_add_to_cart')).toBeInTheDocument();
     expect(sent).toEqual({
-      container_id: 'GTM-ABC1234',
       ids: { ga4_measurement_id: 'G-ABC123XYZ9' },
       pages: [
-        { kind: 'home', url: 'https://www.lojaexemplo.com.br' },
-        { kind: 'product', url: 'https://www.lojaexemplo.com.br/camiseta/p' },
+        { kind: 'home', preview_link: debugLink('https://qa.lojaexemplo.com.br/') },
+        { kind: 'product', preview_link: debugLink('https://qa.lojaexemplo.com.br/camiseta/p') },
       ],
     });
+  });
+
+  it('refuses a page that is not a shareable debug link before calling the api', async () => {
+    let called = false;
+    server.use(
+      http.post(api('tracking/validate/'), () => {
+        called = true;
+        return HttpResponse.json(buildImplementationResult());
+      }),
+    );
+    const user = userEvent.setup({ delay: null });
+    renderWithProviders(<TrackinMaster />);
+    await analyze(user);
+    await buildWithGa4(user);
+
+    await user.click(await screen.findByRole('button', { name: 'Validar implementação' }));
+    const popup = await screen.findByRole('dialog', { name: 'Validar implementação' });
+    await user.type(within(popup).getByRole('textbox', { name: 'Página inicial *' }), 'https://www.lojaexemplo.com.br/');
+    await user.click(within(popup).getByRole('button', { name: 'Validar' }));
+
+    expect(await within(popup).findByRole('alert')).toHaveTextContent('Página inicial: cole o "Shareable debug link"');
+    expect(called).toBe(false);
+  });
+
+  it('points the refused link at its page field', async () => {
+    server.use(
+      http.post(api('tracking/validate/'), () =>
+        HttpResponse.json(
+          buildApiError({
+            status: 400,
+            error: 'InvalidPreviewLinksFriendlyException',
+            friendly_message: 'Use, em cada página, o link de depuração compartilhável.',
+            detail: {
+              invalid_links: [
+                { kind: 'product', label: 'Produto', message: 'Este link é de outro contêiner ou de outra workspace.' },
+              ],
+            },
+          }),
+          { status: 400 },
+        ),
+      ),
+    );
+    const user = userEvent.setup({ delay: null });
+    renderWithProviders(<TrackinMaster />);
+    await analyze(user);
+    await buildWithGa4(user);
+
+    await user.click(await screen.findByRole('button', { name: 'Validar implementação' }));
+    const popup = await screen.findByRole('dialog', { name: 'Validar implementação' });
+    await user.type(within(popup).getByRole('textbox', { name: 'Página inicial *' }), debugLink('https://qa.lojaexemplo.com.br/'));
+    await user.type(within(popup).getByRole('textbox', { name: 'Produto' }), debugLink('https://qa.lojaexemplo.com.br/p', 'GTM-OUTRO12'));
+    await user.click(within(popup).getByRole('button', { name: 'Validar' }));
+
+    const product = within(popup).getByRole('textbox', { name: 'Produto' });
+    await waitFor(() => expect(product).toHaveAccessibleDescription('Este link é de outro contêiner ou de outra workspace.'));
+    expect(product).toHaveAttribute('aria-invalid', 'true');
   });
 
   it('tells why a page could not be validated', async () => {
@@ -300,7 +362,7 @@ describe('<TrackinMaster />', () => {
     await user.click(await screen.findByRole('button', { name: 'Avançar' }));
     await user.click(within(await screen.findByRole('dialog', { name: 'Publicar' })).getByRole('button', { name: 'Validar implementação' }));
     const popup = await screen.findByRole('dialog', { name: 'Validar implementação' });
-    await user.type(within(popup).getByRole('textbox', { name: 'Código do contêiner publicado' }), 'GTM-ABC1234');
+    await user.type(within(popup).getByRole('textbox', { name: 'Página inicial *' }), debugLink('https://qa.lojaexemplo.com.br/'));
     await user.click(within(popup).getByRole('button', { name: 'Validar' }));
 
     expect(await within(popup).findByText(/bloqueou o navegador do teste/)).toBeInTheDocument();
