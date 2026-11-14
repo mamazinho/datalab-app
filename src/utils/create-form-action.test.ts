@@ -59,6 +59,17 @@ describe('createFormAction', () => {
     expect(state).toMatchObject({ success: false, error: 'E-mail ou senha inválidos.', traceId: 'trace-1' });
   });
 
+  it('keeps the detail of the failure for forms that point each problem at its field', async () => {
+    const detail = { missing_ids: [{ key: 'meta_pixel_id' }] };
+    const action = createFormAction(loginSchema, async () => {
+      throw new ApiError(buildApiError({ detail }));
+    });
+
+    const state = await action(INITIAL_ACTION_STATE, validForm);
+
+    expect(state.errorDetail).toEqual(detail);
+  });
+
   it('uses mapFormData when the input is not a plain Object.fromEntries', async () => {
     const handler = vi.fn().mockResolvedValue(undefined);
     const action = createFormAction(z.object({ tags: z.array(z.string()) }), handler, {

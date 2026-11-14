@@ -122,3 +122,10 @@ export const availableProviderAssetsQuery = (companyId: UUID7, integration: Inte
     staleTime: 0,
     refetchOnMount: 'always',
   });
+
+// Tools, expected IDs and consent options come from the tracking engine, so the form never drifts from its rules
+export const trackingRulesQuery = queryOptions({
+  queryKey: ['tracking-rules'],
+  queryFn: () => DatalabAPI.TrackingResource.getRules(),
+  staleTime: Infinity,
+});
