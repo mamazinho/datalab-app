@@ -361,6 +361,8 @@
   border: 1px solid var(--color-border);
   border-radius: 0.7rem;
   padding: 0.55rem 0.7rem;
+  background: var(--color-surface);
+  box-shadow: 0 2px 6px var(--color-shadow);
 
   & + &,
   .mainContent + & {
@@ -389,7 +391,8 @@
 
 .fileCardMeta {
   margin-top: 0.15rem;
-  font-size: calc(0.72rem * var(--font-scale));
+  font-size: calc(0.74rem * var(--font-scale));
+  font-weight: 700;
   color: var(--color-text-secondary);
 }
 

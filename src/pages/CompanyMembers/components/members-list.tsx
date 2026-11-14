@@ -5,7 +5,7 @@ import { ActionTable, TableAction, TableActions, TableHeaders, TableRow } from '
 import { useCompanyContext } from '../../../contexts/company';
 import { useConfirm, type IConfirmOptions } from '../../../contexts/confirm';
 import { DatalabAPI } from '../../../services/datalab-api';
-import { currentMembershipQuery, meQuery, membersQuery } from '../../../queries';
+import { currentMembershipQuery, meQuery, membersQueryKey } from '../../../queries';
 import type { ICompanyMembership } from '../../../services/datalab-api/membershipsResource';
 import { MEMBERSHIP_ROUTE_PERMISSIONS } from '../../../utils/route-permissions';
 import { MemberPermissionsModal } from './member-permissions-modal';
@@ -13,11 +13,12 @@ import { useRowActions } from '../../../hooks/use-row-actions';
 
 interface IMembersListProps {
   members: ICompanyMembership[];
+  includeInactive: boolean;
 }
 
 const nameOf = (member: ICompanyMembership) => member.user?.name ?? 'este membro';
 
-export const MembersList = ({ members }: IMembersListProps) => {
+export const MembersList = ({ members, includeInactive }: IMembersListProps) => {
   const queryClient = useQueryClient();
   const confirm = useConfirm();
   const { currentCompany, isOwner, hasPermissionByRoute } = useCompanyContext();
@@ -27,10 +28,10 @@ export const MembersList = ({ members }: IMembersListProps) => {
     MEMBERSHIP_ROUTE_PERMISSIONS.listMemberRoutePermissions,
     MEMBERSHIP_ROUTE_PERMISSIONS.listMemberProviderPermissions,
   ].every((route) => hasPermissionByRoute(route));
-  const canRemove = hasPermissionByRoute(MEMBERSHIP_ROUTE_PERMISSIONS.remove);
+  const canUpdateStatus = hasPermissionByRoute(MEMBERSHIP_ROUTE_PERMISSIONS.updateStatus);
   const [selectedMember, setSelectedMember] = useState<ICompanyMembership | null>(null);
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
-  const { rows, isBusy, run } = useRowActions(membersQuery.queryKey, members);
+  const { rows, isBusy, run } = useRowActions(membersQueryKey, members);
 
   const runMemberAction = async (
     member: ICompanyMembership,
@@ -46,9 +47,19 @@ export const MembersList = ({ members }: IMembersListProps) => {
     runMemberAction(
       member,
       { title: 'Remover membro', message: `Remover ${nameOf(member)} da empresa?`, confirmLabel: 'Remover' },
-      () => DatalabAPI.MembershipsResource.removeMember(member.id),
+      () => DatalabAPI.MembershipsResource.updateMemberStatus(member.id, 'inactive'),
       'Membro removido.',
-      null,
+      // With ex-members on screen the row stays, now as inactive
+      includeInactive ? { ...member, status: 'inactive' } : null,
+    );
+
+  const reactivateMember = (member: ICompanyMembership) =>
+    runMemberAction(
+      member,
+      { title: 'Reativar membro', message: `Reativar ${nameOf(member)} na empresa?`, confirmLabel: 'Reativar' },
+      () => DatalabAPI.MembershipsResource.updateMemberStatus(member.id, 'active'),
+      'Membro reativado.',
+      { ...member, status: 'active' },
     );
 
   const transferOwnership = (member: ICompanyMembership) =>
@@ -64,7 +75,7 @@ export const MembersList = ({ members }: IMembersListProps) => {
         void queryClient.invalidateQueries({ queryKey: meQuery.queryKey });
         if (currentCompany) void queryClient.invalidateQueries({ queryKey: currentMembershipQuery(currentCompany.id).queryKey });
       },
-      `${nameOf(member)} agora é o owner da empresa.`,
+      `${nameOf(member)} agora é o proprietário da empresa.`,
     );
 
   if (rows.length === 0) {
@@ -78,34 +89,40 @@ export const MembersList = ({ members }: IMembersListProps) => {
           <th>Nome</th>
           <th>E-mail</th>
           <th>Papel</th>
+          <th>Status</th>
         </TableHeaders>
 
         {rows.map((member) => (
           <TableRow key={member.id}>
             <td>{member.user?.name ?? '—'}</td>
-            <td>
-              {member.user?.email ?? '—'}
-              <span className={styles.membersTableCellSecondary}>Status: {member.status}</span>
-            </td>
+            <td>{member.user?.email ?? '—'}</td>
             <td>
               <span className={styles.roleBadge} data-owner={member.membership_role === 'owner'}>
-                {member.membership_role === 'owner' ? 'Owner' : 'Membro'}
+                {member.membership_role === 'owner' ? 'Proprietário' : 'Membro'}
               </span>
             </td>
+            <td>{member.status === 'active' ? 'Ativo' : 'Inativo'}</td>
             <td>
-              {member.membership_role !== 'owner' && (canEditPermissions || canRemove) && (
+              {member.membership_role !== 'owner' && member.status === 'inactive' && canUpdateStatus && (
+                <TableActions>
+                  <TableAction disabled={isBusy(member.id)} onClick={() => void reactivateMember(member)}>
+                    Reativar membro
+                  </TableAction>
+                </TableActions>
+              )}
+              {member.membership_role !== 'owner' && member.status === 'active' && (canEditPermissions || canUpdateStatus) && (
                 <TableActions>
                   {canEditPermissions && (
                     <TableAction onClick={() => { setSelectedMember(member); setIsPermissionsOpen(true); }}>
                       Editar permissões
                     </TableAction>
                   )}
-                  {isOwner && member.status === 'active' && (
+                  {isOwner && (
                     <TableAction disabled={isBusy(member.id)} onClick={() => void transferOwnership(member)}>
                       Transferir posse
                     </TableAction>
                   )}
-                  {canRemove && (
+                  {canUpdateStatus && (
                     <TableAction disabled={isBusy(member.id)} onClick={() => void removeMember(member)}>
                       Remover membro
                     </TableAction>

@@ -25,6 +25,7 @@ export interface IIntegrationStatus {
   connected: boolean;
   missing_scopes: string[];
   token_expires_at: string | null;
+  token_expired: boolean;
   connected_account_email: string | null;
 }
 

@@ -10,7 +10,7 @@ const streamErrorMessage = (content: IApiError | undefined): string =>
 
 export interface IThreadEntry {
   author: ThreadAuthor;
-  agentKey: string | null;
+  agentName: string;
   content: string;
 }
 
@@ -36,7 +36,7 @@ export interface IThreadBoxItem {
   kind: "thread_box";
   id: string;
   threadId: string;
-  agentKey: string | null;
+  agentName: string;
   entries: IThreadEntry[];
 }
 
@@ -72,6 +72,10 @@ export type TimelineItem =
 
 const CANCELLED_MESSAGE = "Resposta interrompida.";
 
+// Threads saved before the name came with the event only have the key
+const agentName = (event: Extract<IChatStreamEvent, { type: "agent_event" }>): string =>
+  event.agent_name ?? (event.agent_key ? event.agent_key.replace(/_/g, " ") : "Especialista");
+
 let itemIdCounter = 0;
 const nextItemId = (prefix: string): string => `${prefix}-${++itemIdCounter}`;
 
@@ -94,7 +98,7 @@ const appendThreadEntry = (
         kind: "thread_box",
         id: nextItemId("thread"),
         threadId,
-        agentKey: entry.agentKey,
+        agentName: entry.agentName,
         entries: [entry],
       },
     ];
@@ -104,7 +108,6 @@ const appendThreadEntry = (
     item === box
       ? {
           ...box,
-          agentKey: box.agentKey ?? entry.agentKey,
           entries: [...box.entries, entry],
         }
       : item,
@@ -209,7 +212,7 @@ export const applyChatEvent = (
     case "agent_event":
       return appendThreadEntry(closeStreamingBubble(items), event.thread_id, {
         author: event.author,
-        agentKey: event.agent_key,
+        agentName: agentName(event),
         content: event.content,
       });
 

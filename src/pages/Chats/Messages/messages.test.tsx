@@ -298,6 +298,7 @@ describe('<ChatMessages />', () => {
           thread_id: 't1',
           author: 'specialist',
           agent_key: 'ga4',
+          agent_name: 'Google Analytics',
           content: 'Consultando o GA4...',
         },
         { type: 'text_delta', channel: 'main', content: 'Pronto!' },
@@ -307,6 +308,7 @@ describe('<ChatMessages />', () => {
 
       await sendPrompt(user, 'Qual foi a receita?');
 
+      expect(await screen.findByText('Agentes conversando — Google Analytics (1)')).toBeInTheDocument();
       expect(await screen.findByText('Consultando o GA4...')).toBeInTheDocument();
       expect(await screen.findByText('Pronto!')).toBeInTheDocument();
     });

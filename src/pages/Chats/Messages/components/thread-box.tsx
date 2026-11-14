@@ -6,23 +6,19 @@ interface ThreadBoxProps {
     item: IThreadBoxItem;
 }
 
-// The chat does not load the agents list, so the agent_key is made readable here
-const formatAgentKey = (agentKey: string | null): string =>
-    agentKey ? agentKey.replace(/_/g, ' ') : 'Especialista';
-
 export const ThreadBox = ({ item }: ThreadBoxProps) => (
     <div className={styles.threadRow}>
         <details className={styles.threadDetails}>
             <summary className={styles.threadSummary}>
-                Agentes conversando — {formatAgentKey(item.agentKey)} ({item.entries.length})
+                Agentes conversando — {item.agentName} ({item.entries.length})
             </summary>
             <div className={styles.threadList}>
                 {item.entries.map((entry, index) => (
                     <div className={styles.threadItem} key={`${item.threadId}-${index}`}>
                         <div className={styles.threadItemMeta}>
                             {entry.author === 'supervisor'
-                                ? `Supervisor → ${formatAgentKey(entry.agentKey)}`
-                                : `${formatAgentKey(entry.agentKey)} → Supervisor`}
+                                ? `Supervisor → ${entry.agentName}`
+                                : `${entry.agentName} → Supervisor`}
                         </div>
                         <div className={styles.threadItemContent}>
                             <Markdown>{entry.content}</Markdown>

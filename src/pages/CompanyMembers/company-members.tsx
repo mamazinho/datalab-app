@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { QueryBoundary } from '../../components/Tools/query-boundary';
 import { PermissionGate } from '../../components/Tools/permission-gate';
 import { MEMBERSHIP_ROUTE_PERMISSIONS, type IRoutePermissionRef } from '../../utils/route-permissions';
+import { Toggle } from '../../components/UI/Inputs/Toggle';
 import { StateTabs, type IStateTabItem } from '../../components/UI/Tabs';
 import { useCompanyContext } from '../../contexts/company';
 import { useMembers } from '../../hooks/use-members';
@@ -18,10 +19,10 @@ const MEMBERS_TABS: (IStateTabItem<MembersTabValue> & { route: IRoutePermissionR
   { label: 'Convites', value: 'invites', route: MEMBERSHIP_ROUTE_PERMISSIONS.listInvites },
 ];
 
-const MembersTab = () => {
-  const { data: members } = useMembers();
+const MembersTab = ({ includeInactive }: { includeInactive: boolean }) => {
+  const { data: members } = useMembers(includeInactive);
 
-  return <MembersList members={members} />;
+  return <MembersList members={members} includeInactive={includeInactive} />;
 };
 
 const InvitesTab = () => {
@@ -35,6 +36,7 @@ export const CompanyMembers = () => {
   const tabs = MEMBERS_TABS.filter((tab) => hasPermissionByRoute(tab.route));
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState<MembersTabValue>('members');
+  const [includeInactive, setIncludeInactive] = useState(false);
   // Permissions may arrive after the first render, so the visible tab is derived, not stored
   const activeTab = tabs.find((tab) => tab.value === selectedTab)?.value ?? tabs[0]?.value;
 
@@ -58,8 +60,18 @@ export const CompanyMembers = () => {
         <>
           <StateTabs items={tabs} value={activeTab} onChange={setSelectedTab} />
 
+          {activeTab === 'members' && (
+            <div className={styles.membersFilter}>
+              <Toggle
+                label="Mostrar ex-membros"
+                checked={includeInactive}
+                onChange={(event) => setIncludeInactive(event.target.checked)}
+              />
+            </div>
+          )}
+
           <QueryBoundary>
-            {activeTab === 'members' ? <MembersTab /> : <InvitesTab />}
+            {activeTab === 'members' ? <MembersTab includeInactive={includeInactive} /> : <InvitesTab />}
           </QueryBoundary>
         </>
       )}

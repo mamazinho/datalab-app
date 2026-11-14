@@ -9,7 +9,7 @@ export type IChatStreamEvent =
   | { type: 'text'; content: string; created_at?: string }
   | { type: 'text_delta'; content: string }
   | { type: 'text_replace'; content: string }
-  | { type: 'agent_event'; thread_id: string; author: 'supervisor' | 'specialist'; agent_key: string | null; content: string }
+  | { type: 'agent_event'; thread_id: string; author: 'supervisor' | 'specialist'; agent_key: string | null; agent_name?: string | null; content: string }
   | { type: 'clarification'; question: string; options?: string[]; tool_call_id: string }
   | { type: 'file'; content?: string; files?: IChatFileRef[]; created_at?: string }
   | { type: 'cancelled' }

@@ -67,10 +67,13 @@ export const currentMembershipQuery = (companyId: UUID7) =>
     queryFn: () => DatalabAPI.MembershipsResource.getCurrentMembership(),
   });
 
-export const membersQuery = queryOptions({
-  queryKey: ['members'],
-  queryFn: () => DatalabAPI.MembershipsResource.listMembers(),
-});
+export const membersQueryKey = ['members'] as const;
+
+export const membersQuery = (includeInactive: boolean) =>
+  queryOptions({
+    queryKey: [...membersQueryKey, { includeInactive }],
+    queryFn: () => DatalabAPI.MembershipsResource.listMembers({ status: includeInactive ? undefined : 'active' }),
+  });
 
 export const invitesQuery = queryOptions({
   queryKey: ['invites'],

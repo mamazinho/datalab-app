@@ -27,6 +27,7 @@ const buildIntegration = (overrides: Partial<IIntegrationStatus> = {}): IIntegra
   connected: false,
   missing_scopes: [],
   token_expires_at: null,
+  token_expired: false,
   connected_account_email: null,
   ...overrides,
 });
@@ -120,13 +121,21 @@ describe('<Integrations />', () => {
       expect(screen.getByRole('button', { name: 'Reconectar' })).toBeInTheDocument();
     });
 
-    it('warns about an expired token', async () => {
-      givenIntegrations([
-        buildIntegration({ connected: true, token_expires_at: '2020-01-01T00:00:00Z' }),
-      ]);
+    it('warns when the token can no longer be renewed', async () => {
+      givenIntegrations([buildIntegration({ connected: true, token_expired: true })]);
       renderIntegrations();
 
       expect(await screen.findByText('Token expirado')).toBeInTheDocument();
+    });
+
+    it('stays connected while the access token renews itself', async () => {
+      givenIntegrations([
+        buildIntegration({ connected: true, token_expires_at: '2020-01-01T00:00:00Z', token_expired: false }),
+      ]);
+      renderIntegrations();
+
+      expect(await screen.findByText('Conectado')).toBeInTheDocument();
+      expect(screen.queryByText('Token expirado')).not.toBeInTheDocument();
     });
 
     it('asks for the missing scopes when the grant is partial', async () => {

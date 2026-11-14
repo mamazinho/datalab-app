@@ -42,10 +42,9 @@
   &:hover { opacity: 0.88; }
 }
 
-.membersTableCellSecondary {
-  font-size: calc(0.78rem * var(--font-scale));
-  color: var(--color-text-secondary);
-  display: block;
+.membersFilter {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .membersEmpty {

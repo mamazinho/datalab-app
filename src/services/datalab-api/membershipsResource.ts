@@ -3,6 +3,7 @@ import type { UUID7 } from "../../types/ids";
 import type { Provider } from "../../types/integrations";
 import type { ICompany } from "./companiesResource";
 import type {
+  CompanyMembershipStatus,
   IMembershipRoutePermission,
   IMembershipProviderPermission,
   IProviderPermission,
@@ -42,19 +43,28 @@ export interface ICreateInviteRequest extends IPermissionSelection {
   emails: string[];
 }
 
+export interface ICreatedInvites {
+  invites: IUserInvite[];
+  already_members: string[];
+  already_invited: string[];
+}
+
 export const MembershipsResource = {
   async getCurrentMembership(): Promise<ICurrentMembership> {
     const response = await axiosCompanyInstance.get("memberships/current/");
     return response.data as ICurrentMembership;
   },
 
-  async listMembers(): Promise<ICompanyMembership[]> {
-    const response = await axiosCompanyInstance.get("memberships/members/");
+  // Without a status the API returns active and inactive members alike
+  async listMembers({ status }: { status?: CompanyMembershipStatus } = {}): Promise<ICompanyMembership[]> {
+    const response = await axiosCompanyInstance.get("memberships/members/", { params: { status } });
     return response.data as ICompanyMembership[];
   },
 
-  async removeMember(membershipId: UUID7): Promise<void> {
-    await axiosCompanyInstance.delete(`memberships/members/${membershipId}/`);
+  // Removing a member only inactivates the membership, so there is no DELETE
+  async updateMemberStatus(membershipId: UUID7, status: CompanyMembershipStatus): Promise<ICompanyMembership> {
+    const response = await axiosCompanyInstance.patch(`memberships/members/${membershipId}/`, { status });
+    return response.data as ICompanyMembership;
   },
 
   async transferOwnership(newOwnerMembershipId: UUID7): Promise<ICompanyMembership> {
@@ -105,9 +115,9 @@ export const MembershipsResource = {
     return response.data as IUserInvite;
   },
 
-  async upsertInvite(payload: ICreateInviteRequest): Promise<IUserInvite[]> {
+  async upsertInvite(payload: ICreateInviteRequest): Promise<ICreatedInvites> {
     const response = await axiosCompanyInstance.put("memberships/invites/", payload);
-    return response.data as IUserInvite[];
+    return response.data as ICreatedInvites;
   },
 
   async deleteInvite(inviteId: UUID7): Promise<void> {

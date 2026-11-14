@@ -49,8 +49,82 @@ describe('<CompanyMembers />', () => {
 
       expect(await screen.findByText('Ana Souza')).toBeInTheDocument();
       expect(screen.getByText('bruno@datalab.com')).toBeInTheDocument();
-      expect(screen.getByText('Owner')).toBeInTheDocument();
+      expect(screen.getByText('Proprietário')).toBeInTheDocument();
       expect(screen.getByText('Membro')).toBeInTheDocument();
+    });
+
+    it('shows the status in its own column, in Portuguese', async () => {
+      server.use(
+        http.get(api('memberships/members/'), () =>
+          HttpResponse.json([
+            buildMember({ id: uuid(5), status: 'active' }),
+            buildMember({ id: uuid(6), status: 'inactive', user: { id: uuid(7), name: 'Carla Dias', email: 'carla@datalab.com' } }),
+          ]),
+        ),
+      );
+      renderMembers();
+
+      expect(await screen.findByRole('columnheader', { name: 'Status' })).toBeInTheDocument();
+      expect(screen.getByText('Ativo')).toBeInTheDocument();
+      expect(screen.getByText('Inativo')).toBeInTheDocument();
+    });
+
+    it('asks only for active members until ex-members are shown', async () => {
+      const user = userEvent.setup();
+      const statusParams: (string | null)[] = [];
+      server.use(
+        http.get(api('memberships/members/'), ({ request }) => {
+          statusParams.push(new URL(request.url).searchParams.get('status'));
+          return HttpResponse.json([]);
+        }),
+      );
+      renderMembers();
+
+      await screen.findByText('Nenhum membro encontrado.');
+      await user.click(screen.getByRole('switch', { name: 'Mostrar ex-membros' }));
+
+      await waitFor(() => expect(statusParams).toEqual(['active', null]));
+    });
+
+    it('offers only the reactivation on an ex-member', async () => {
+      const user = userEvent.setup();
+      server.use(
+        http.get(api('memberships/members/'), () => HttpResponse.json([buildMember({ status: 'inactive' })])),
+      );
+      renderMembers();
+
+      await user.click(await screen.findByRole('switch', { name: 'Mostrar ex-membros' }));
+      await openRowMenu(user);
+
+      expect(screen.getByRole('menuitem', { name: 'Reativar membro' })).toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'Remover membro' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('menuitem', { name: 'Editar permissões' })).not.toBeInTheDocument();
+    });
+
+    it('reactivates an ex-member after the confirmation', async () => {
+      const user = userEvent.setup();
+      let reactivatedId: string | undefined;
+      let reactivatedBody: unknown;
+      server.use(
+        http.get(api('memberships/members/'), () =>
+          HttpResponse.json([buildMember({ id: uuid(5), status: 'inactive' })]),
+        ),
+        http.patch(api('memberships/members/:membershipId/'), async ({ params, request }) => {
+          reactivatedId = params.membershipId as string;
+          reactivatedBody = await request.json();
+          return HttpResponse.json(buildMember({ id: uuid(5) }));
+        }),
+      );
+      renderMembers();
+
+      await user.click(await screen.findByRole('switch', { name: 'Mostrar ex-membros' }));
+      await openRowMenu(user);
+      await user.click(screen.getByRole('menuitem', { name: 'Reativar membro' }));
+      await answerConfirmation(user, 'Reativar membro', 'Reativar');
+
+      expect(await screen.findByText('Membro reativado.')).toBeInTheDocument();
+      expect(reactivatedId).toBe(uuid(5));
+      expect(reactivatedBody).toEqual({ status: 'active' });
     });
 
     it('shows an empty state when the company has no members', async () => {
@@ -67,18 +141,20 @@ describe('<CompanyMembers />', () => {
       );
       renderMembers();
 
-      await screen.findByText('Owner');
+      await screen.findByText('Proprietário');
       expect(screen.queryByRole('button', { name: 'Abrir menu de ações' })).not.toBeInTheDocument();
     });
 
     it('removes a member after the confirmation', async () => {
       const user = userEvent.setup();
       let removedId: string | undefined;
+      let removedBody: unknown;
       server.use(
         http.get(api('memberships/members/'), () => HttpResponse.json([buildMember({ id: uuid(5) })])),
-        http.delete(api('memberships/members/:membershipId'), ({ params }) => {
+        http.patch(api('memberships/members/:membershipId/'), async ({ params, request }) => {
           removedId = params.membershipId as string;
-          return new HttpResponse(null, { status: 204 });
+          removedBody = await request.json();
+          return HttpResponse.json(buildMember({ id: uuid(5), status: 'inactive' }));
         }),
       );
       renderMembers();
@@ -89,6 +165,7 @@ describe('<CompanyMembers />', () => {
 
       expect(await screen.findByText('Membro removido.')).toBeInTheDocument();
       expect(removedId).toBe(uuid(5));
+      expect(removedBody).toEqual({ status: 'inactive' });
     });
 
     it('keeps the member when the confirmation is dismissed', async () => {
@@ -96,9 +173,9 @@ describe('<CompanyMembers />', () => {
       let called = false;
       server.use(
         http.get(api('memberships/members/'), () => HttpResponse.json([buildMember()])),
-        http.delete(api('memberships/members/:membershipId'), () => {
+        http.patch(api('memberships/members/:membershipId/'), () => {
           called = true;
-          return new HttpResponse(null, { status: 204 });
+          return HttpResponse.json(buildMember({ status: 'inactive' }));
         }),
       );
       renderMembers();
@@ -115,7 +192,7 @@ describe('<CompanyMembers />', () => {
       const user = userEvent.setup();
       server.use(
         http.get(api('memberships/members/'), () => HttpResponse.json([buildMember()])),
-        http.delete(api('memberships/members/:membershipId'), () =>
+        http.patch(api('memberships/members/:membershipId/'), () =>
           apiErrorResponse(400, 'Membro possui pendências.'),
         ),
       );
@@ -146,7 +223,7 @@ describe('<CompanyMembers />', () => {
       await user.click(await screen.findByRole('menuitem', { name: 'Transferir posse' }));
       await answerConfirmation(user, 'Transferir posse', 'Transferir');
 
-      expect(await screen.findByText('Bruno Lima agora é o owner da empresa.')).toBeInTheDocument();
+      expect(await screen.findByText('Bruno Lima agora é o proprietário da empresa.')).toBeInTheDocument();
       expect(body).toEqual({ new_owner_membership_id: uuid(5) });
     });
 
@@ -159,25 +236,12 @@ describe('<CompanyMembers />', () => {
               membership_role: 'member',
               route_permissions: [
                 buildRoutePermission({ method: 'GET', path: '/v1/memberships/members/' }),
-                buildRoutePermission({ method: 'DELETE', path: '/v1/memberships/members/{membership_id}/' }),
+                buildRoutePermission({ method: 'PATCH', path: '/v1/memberships/members/{membership_id}/' }),
               ],
             }),
           ),
         ),
         http.get(api('memberships/members/'), () => HttpResponse.json([buildMember()])),
-      );
-      renderMembers();
-
-      await openRowMenu(user);
-
-      expect(await screen.findByRole('menuitem', { name: 'Remover membro' })).toBeInTheDocument();
-      expect(screen.queryByRole('menuitem', { name: 'Transferir posse' })).not.toBeInTheDocument();
-    });
-
-    it('does not offer the company to a member who was removed', async () => {
-      const user = userEvent.setup();
-      server.use(
-        http.get(api('memberships/members/'), () => HttpResponse.json([buildMember({ status: 'inactive' })])),
       );
       renderMembers();
 
@@ -253,7 +317,11 @@ describe('<CompanyMembers />', () => {
       server.use(
         http.put(api('memberships/invites/'), async ({ request }) => {
           body = await request.json();
-          return HttpResponse.json([buildInvite()]);
+          return HttpResponse.json({
+            invites: [buildInvite({ email: 'um@acme.com' }), buildInvite({ email: 'dois@acme.com' })],
+            already_members: [],
+            already_invited: [],
+          });
         }),
       );
       await openModal(user);
@@ -278,7 +346,7 @@ describe('<CompanyMembers />', () => {
       server.use(
         http.put(api('memberships/invites/'), async ({ request }) => {
           body = await request.json();
-          return HttpResponse.json([buildInvite()]);
+          return HttpResponse.json({ invites: [buildInvite()], already_members: [], already_invited: [] });
         }),
       );
       await openModal(user);
@@ -290,13 +358,62 @@ describe('<CompanyMembers />', () => {
       expect(await screen.findByText('Convite enviado com sucesso!')).toBeInTheDocument();
     });
 
+    it('sends the other invites and warns apart about members and pending invites', async () => {
+      const user = userEvent.setup();
+      server.use(
+        http.put(api('memberships/invites/'), () =>
+          HttpResponse.json({
+            invites: [buildInvite({ email: 'novo@acme.com' })],
+            already_members: ['membro@acme.com'],
+            already_invited: ['convidado@acme.com'],
+          }),
+        ),
+      );
+      await openModal(user);
+
+      await user.type(screen.getByPlaceholderText(/membro@empresa\.com/), 'membro@acme.com convidado@acme.com novo@acme.com');
+      await user.click(screen.getByRole('button', { name: 'Enviar convites' }));
+
+      expect(await screen.findByText('Convite enviado com sucesso!')).toBeInTheDocument();
+      expect(
+        screen.getByText('membro@acme.com já é membro da empresa e não recebeu um novo convite.'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('convidado@acme.com já tem um convite pendente e não recebeu um novo e-mail.'),
+      ).toBeInTheDocument();
+      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    });
+
+    it('warns in a toast and keeps every address and permission when the invite fails', async () => {
+      const user = userEvent.setup();
+      const listChats = buildRoutePermission({ id: uuid(10), method: 'GET', path: '/v1/chats/', tag: 'chat', description: 'Listagem de chats' });
+      const message = 'membro@acme.com já faz parte da empresa. Nenhum convite foi enviado.';
+      server.use(
+        http.get(api('memberships/route-permissions/'), () => HttpResponse.json([listChats])),
+        http.put(api('memberships/invites/'), () =>
+          apiErrorResponse(409, message, 'AlreadyCompanyMemberFriendlyException'),
+        ),
+      );
+      await openModal(user);
+
+      await user.type(screen.getByPlaceholderText(/membro@empresa\.com/), 'membro@acme.com novo@acme.com ');
+      await user.click(await screen.findByRole('checkbox', { name: /Listagem de chats/ }));
+      await user.click(screen.getByRole('button', { name: 'Enviar convites' }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(message);
+      const dialog = screen.getByRole('dialog');
+      expect(within(dialog).getByText('membro@acme.com')).toBeInTheDocument();
+      expect(within(dialog).getByText('novo@acme.com')).toBeInTheDocument();
+      expect(within(dialog).getByRole('checkbox', { name: /Listagem de chats/ })).toBeChecked();
+    });
+
     it('rejects a malformed address before sending anything', async () => {
       const user = userEvent.setup();
       let called = false;
       server.use(
         http.put(api('memberships/invites/'), () => {
           called = true;
-          return HttpResponse.json([]);
+          return HttpResponse.json({ invites: [], already_members: [], already_invited: [] });
         }),
       );
       await openModal(user);
@@ -313,7 +430,7 @@ describe('<CompanyMembers />', () => {
       server.use(
         http.put(api('memberships/invites/'), () => {
           called = true;
-          return HttpResponse.json([]);
+          return HttpResponse.json({ invites: [], already_members: [], already_invited: [] });
         }),
       );
       await openModal(user);
@@ -375,7 +492,7 @@ describe('<CompanyMembers />', () => {
       renderAsMemberWith([
         ['GET', '/v1/memberships/members/'],
         ['PUT', '/v1/memberships/invites/'],
-        ['DELETE', '/v1/memberships/members/{membership_id}/'],
+        ['PATCH', '/v1/memberships/members/{membership_id}/'],
       ]);
 
       expect(await screen.findByRole('button', { name: '+ Convidar membros' })).toBeInTheDocument();
@@ -389,7 +506,7 @@ describe('<CompanyMembers />', () => {
       renderAsMemberWith([
         ['GET', '/v1/memberships/members/'],
         ['PUT', '/v1/memberships/members/{membership_id}/permissions/'],
-        ['DELETE', '/v1/memberships/members/{membership_id}/'],
+        ['PATCH', '/v1/memberships/members/{membership_id}/'],
       ]);
 
       await openRowMenu(user);
