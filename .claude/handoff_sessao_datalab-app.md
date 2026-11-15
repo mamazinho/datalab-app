@@ -13,6 +13,16 @@ Estado do Trackin' Master nos quatro repositórios, para quem continuar o trabal
 
 Nada foi feito no `main` de nenhum deles.
 
+## Próxima versão (branches `feat/trackin-master-v2`, a partir de `feat/trackin-master`)
+
+- **Detecção:** o gtm.js é lido tag a tag (conversão do Google Ads sem o `AW-`, modelo do Meta Pixel, HTML personalizado com aspas escapadas) e a página inicial é aberta no Chromium aceitando o banner: ferramentas vistas pelas requisições, o que disparou antes do aceite, banner pelo fornecedor (requisição, objeto global, HTML) ou por um aviso de cookies na tela, e o `consent default` no dataLayer. Padrões em `engine/rules/detection.json`.
+- **Mapa do site:** começa sozinho depois da análise, em segundo plano (o usuário espera na tela). robots.txt (respeitado), sitemaps e links; uma página de cada tipo (inicial, categoria, produto, carrinho, checkout, thank you, login, cadastro, minha conta, blog, sobre, FAQ, contato), com os caminhos padrão da plataforma para o que não está linkado. Conta como uma leitura no limite.
+- **Container sob medida:** um evento sai só quando todas as páginas de que ele precisa estão confirmadas ausentes (nada do site apontou para elas e o caminho padrão deu 404 ou voltou à página inicial); página que existe e não abriu mantém tudo. `seller_code` sai quando o checkout foi lido e não pede o dado. O mapa de dataLayer pede só os dados de cliente que o site coleta e diz qual id vai em item_id. Cada mudança aparece no resultado, no mapa e no PDF.
+- **PDF:** seção "Como o site aparece hoje" com os prints do funil, tirados na geração e não guardados.
+- **Guia:** prints do GTM (desfocados) para exportar, importar, visualizar e compartilhar; Overwrite × Merge explicados, com a recomendação: Overwrite para GTM novo; Merge > Overwrite conflicting quando o site já tem GTM (com o arquivo de mescla se o container foi anexado). Workspace nova "Go Trackin'". Faltam os prints 01, 02, 13 a 17.
+- **Limpeza dos limites sem ECS:** o próprio registro de um uso apaga o que passou de um dia; saíram o comando, a task do ECS, o script e o passo da release.
+- **Migração de junção** (`b8d4e2f1a937`): a branch da v1 tinha ficado com duas cabeças do alembic depois de trazer o `main`; a correção foi também para o PR aberto.
+
 ## Arquitetura
 
 - **datalab-api** (`apps/tracking`): toda a regra. `engine/` tem as regras (`engine/rules/*.json`), os masters do GTM, o builder, a mescla, a validação, os mapas de tags, atributos e dataLayer, a análise do site, a ajuda de importação, o guia, o PDF e o agente (ainda sem rota). O `services.py` orquestra o engine; os limites de uso ficam no Postgres (`limits.py`, tabela `trackingusageevent`).
@@ -63,6 +73,8 @@ Nenhuma dessas fontes foi conferida nesta sessão contra uma conta real. Confirm
 6. Ao aprovar uma versão nova do padrão: subir `engine/rules/standard.json` (e o CHANGELOG nele).
 
 ## O que não foi testado
+
+- **v2 contra sites reais:** detecção, banner, mapa do site e prints foram testados com páginas locais no Chromium e respostas de exemplo; o proxy desta sessão bloqueia sites externos e o googletagmanager.com, então nenhum gtm.js real nem site de cliente foi lido. Os adapters do mapa do site não rodaram contra o Postgres (a migração sim: upgrade, check e downgrade).
 
 - **Ponta a ponta com navegador e banco:** a tela não foi aberta num navegador (só testes com jsdom), e as rotas da datalab-api não rodaram com login real e Postgres juntos. A ida datalab-api → core-api foi exercitada com as duas aplicações reais em execução local (scan, build com PDF e conferência de publicação), mas aqui o DNS de sites externos não resolve, então a leitura de um site real não foi vista.
 - **Validação de implementação:** o Chromium foi testado contra páginas locais (captura do dataLayer, das requisições, o bloqueio de rede interna e o gtm.js pedido com os parâmetros do ambiente de visualização), e as regras com respostas de exemplo. Não foi testado com um link de depuração real nem com uma página de QA de verdade (o carregamento da workspace pelo `gtm_auth`/`gtm_preview` segue o mecanismo de ambientes do GTM, mas não foi visto funcionando contra o Google), e o build da imagem Docker com o Chromium não foi feito aqui.
