@@ -142,6 +142,7 @@ export interface IBuildRequest {
   term_accepted: boolean;
   ids: Record<string, string>;
   client_export: string | null;
+  site_map_id: string | null;
 }
 
 // An accepted id whose format is only inferred: shown for a human to check before publishing
@@ -165,6 +166,7 @@ export interface IBuildResult {
   requirements: { datalayer: IDataLayerEvent[]; datalayer_note: string; accesses: string[] };
   guide: { import_steps: IGuideStep[]; publish_steps: IGuideStep[] };
   document: { file: string; content_base64: string };
+  site_notes: string[];
 }
 
 // The build refusals carry, in the error detail, what is wrong with each id

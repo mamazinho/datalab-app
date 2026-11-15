@@ -66,6 +66,16 @@ export const BuildResults = ({ result, onShowNextSteps }: IBuildResultsProps) =>
         </button>
       </div>
       <IdWarnings warnings={result.id_warnings} />
+      {result.site_notes.length > 0 && (
+        <section className={styles.trackinCard} data-state="ok" aria-label="Adaptado ao site">
+          <div className={styles.trackinCardHead}>
+            <h3 className={styles.trackinCardTitle}>Adaptado ao site</h3>
+          </div>
+          <ul className={styles.trackinList}>
+            {result.site_notes.map((note) => <li key={note}>{note}</li>)}
+          </ul>
+        </section>
+      )}
       <section className={styles.trackinCard} data-state="ok" aria-label="Documentação do cliente">
         <div className={styles.trackinCardHead}>
           <h3 className={styles.trackinCardTitle}>Documentação Go Trackin' (padrão v{result.standard_version})</h3>

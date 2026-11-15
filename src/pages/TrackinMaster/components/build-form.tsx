@@ -1,10 +1,12 @@
 import modal from '../../../styles/modal-form.module.css';
 import styles from '../trackin-master.module.css';
+import { useQuery } from '@tanstack/react-query';
 import { useActionState, useState } from 'react';
 import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 import { Toggle } from '../../../components/UI/Inputs/Toggle';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { useTrackingRules } from '../../../hooks/use-tracking-rules';
+import { siteMapQuery } from '../../../queries';
 import { GuideSteps } from './guide-steps';
 import type { ISiteAnalysis } from '../../../services/datalab-api/trackingResource';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
@@ -14,11 +16,18 @@ import { idLabel, idProblemsFrom, idRulesFor } from '../tool-ids';
 
 interface IBuildFormProps {
   site: ISiteAnalysis;
+  siteMapId: string | null;
   onBuilt: (built: IBuilt) => void;
 }
 
+// The container follows the site map only once it is done; while it runs the build waits for it
+const useSiteMapReady = (siteMapId: string | null) => {
+  const { data } = useQuery({ ...siteMapQuery(siteMapId ?? ''), enabled: siteMapId !== null });
+  return siteMapId === null || (data !== undefined && data.status !== 'running');
+};
+
 // Mounted with key={site.url}: a new analysis restarts the defaults it suggested
-export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
+export const BuildForm = ({ site, siteMapId, onBuilt }: IBuildFormProps) => {
   const { data: rules } = useTrackingRules();
   const [clientName, setClientName] = useState(site.host.replace(/^www\./, ''));
   const [banner, setBanner] = useState('opt_in');
@@ -26,7 +35,11 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
   const [termAccepted, setTermAccepted] = useState(false);
   const [ids, setIds] = useState<Record<string, string>>(site.suggested_ids);
   const [clientExport, setClientExport] = useState<File | null>(null);
-  const [formState, formAction] = useActionState(createBuildContainersAction(site, clientExport), INITIAL_ACTION_STATE);
+  const siteMapReady = useSiteMapReady(siteMapId);
+  const [formState, formAction] = useActionState(
+    createBuildContainersAction(site, clientExport, siteMapId),
+    INITIAL_ACTION_STATE,
+  );
   const [tools, setTools] = useState(() => rules.tools.map((t) => t.key).filter((key) => site.detected_tools.includes(key)));
   // An unreachable site says nothing about the banner, so the default stays "has one"
   const [hasCmp, setHasCmp] = useState(!site.reachable || site.cmp !== null);
@@ -164,7 +177,14 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
 
         {formState.error && !formState.success && <p className={modal.error} role="alert">{formState.error}</p>}
 
-        <SubmitButton className={modal.submit} pendingLabel="Gerando...">Gerar containers</SubmitButton>
+        {!siteMapReady && (
+          <p className={modal.hint} role="status">
+            Aguarde o mapa do site terminar: o container sai sob medida para as páginas que o site tem.
+          </p>
+        )}
+        <SubmitButton className={modal.submit} pendingLabel="Gerando..." disabled={!siteMapReady}>
+          Gerar containers
+        </SubmitButton>
       </FormFieldset>
     </form>
   );

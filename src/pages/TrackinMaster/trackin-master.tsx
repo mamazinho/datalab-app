@@ -90,7 +90,7 @@ export const TrackinMaster = () => {
           <SiteDiagnosis site={site} />
           {siteMapJob && <SiteMap key={siteMapJob} jobId={siteMapJob} />}
           <QueryBoundary>
-            <BuildForm key={site.url} site={site} onBuilt={handleBuilt} />
+            <BuildForm key={site.url} site={site} siteMapId={siteMapJob} onBuilt={handleBuilt} />
           </QueryBoundary>
         </>
       )}

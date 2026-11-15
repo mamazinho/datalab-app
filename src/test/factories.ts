@@ -355,6 +355,7 @@ export const buildBuildResult = (overrides: Partial<IBuildResult> = {}): IBuildR
     publish_steps: [{ number: 2, title: 'Publique', text: 'Clique em Publicar.', print: null, caption: null }],
   },
   document: { file: 'GoTrackin_Documentacao.pdf', content_base64: 'JVBERi0xLjQ=' },
+  site_notes: [],
   ...overrides,
 });
 

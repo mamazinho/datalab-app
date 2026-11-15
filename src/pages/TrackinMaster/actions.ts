@@ -41,7 +41,7 @@ const mapBuildFormData = (formData: FormData, exportFile: File | null) => ({
     client_export: exportFile && exportFile.size > 0 ? exportFile : undefined,
 });
 
-export const createBuildContainersAction = (site: ISiteAnalysis, exportFile: File | null) =>
+export const createBuildContainersAction = (site: ISiteAnalysis, exportFile: File | null, siteMapId: string | null) =>
   createFormAction(
     buildContainersSchema,
     async ({ banner, mode, client_export, ...data }): Promise<IBuilt> => {
@@ -51,6 +51,7 @@ export const createBuildContainersAction = (site: ISiteAnalysis, exportFile: Fil
         site,
         consent: { banner, mode },
         client_export: client_export ? await client_export.text() : null,
+        site_map_id: siteMapId,
       };
       return { request, result: await DatalabAPI.TrackingResource.build(request) };
     },

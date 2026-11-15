@@ -187,6 +187,37 @@ describe('<TrackinMaster />', () => {
     expect(await within(siteMap).findByRole('alert', {}, { timeout: 5000 })).toHaveTextContent('parou de responder');
   });
 
+  it('waits for the site map and builds the container for the pages the site has', async () => {
+    let sent: IBuildRequest | null = null;
+    let release: () => void = () => {};
+    const mapDone = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    server.use(
+      http.get(api('tracking/site-map/:jobId/'), async () => {
+        await mapDone;
+        return HttpResponse.json(buildSiteMapJob());
+      }),
+      http.post(api('tracking/build/'), async ({ request }) => {
+        sent = (await request.json()) as IBuildRequest;
+        return HttpResponse.json(buildBuildResult({ site_notes: ['GT_view_item não entrou: o site não tem produto.'] }));
+      }),
+    );
+    const user = userEvent.setup({ delay: null });
+    renderWithProviders(<TrackinMaster />);
+    await analyze(user);
+
+    expect(await screen.findByText(/Aguarde o mapa do site terminar/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Gerar containers' })).toBeDisabled();
+    release();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Gerar containers' })).toBeEnabled());
+    await buildWithGa4(user);
+
+    const adapted = await screen.findByRole('region', { name: 'Adaptado ao site' });
+    expect(within(adapted).getByText('GT_view_item não entrou: o site não tem produto.')).toBeInTheDocument();
+    expect(sent).toMatchObject({ site_map_id: buildSiteMapJob().id });
+  });
+
   it('asks the server-side ids only when server-side is on', async () => {
     const user = userEvent.setup({ delay: null });
     renderWithProviders(<TrackinMaster />);
