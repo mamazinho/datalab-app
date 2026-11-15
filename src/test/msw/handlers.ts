@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { buildAgent, buildApiError, buildBuildResult, buildChat, buildImplementationResult, buildImportHelp, buildPublicationResult, buildChatUsageReport, buildCompany, buildCurrentMembership, buildInvite, buildMcpServer, buildMember, buildMcpServerTestResult, buildModelProvider, buildSiteAnalysis, buildTrackingRules, buildUser, uuid } from '../factories';
+import { buildAgent, buildApiError, buildBuildResult, buildChat, buildImplementationResult, buildImportHelp, buildSiteMapJob, buildPublicationResult, buildChatUsageReport, buildCompany, buildCurrentMembership, buildInvite, buildMcpServer, buildMember, buildMcpServerTestResult, buildModelProvider, buildSiteAnalysis, buildTrackingRules, buildUser, uuid } from '../factories';
 
 const BASE_URL = import.meta.env.VITE_DATALAB_API_URL;
 
@@ -153,6 +153,12 @@ export const handlers = [
     const { site_url } = (await request.json()) as { site_url: string };
     return HttpResponse.json(buildSiteAnalysis({ url: site_url }));
   }),
+
+  http.post(api('tracking/site-map/'), () =>
+    HttpResponse.json(buildSiteMapJob({ status: 'running', site_map: null }), { status: 202 }),
+  ),
+
+  http.get(api('tracking/site-map/:jobId/'), () => HttpResponse.json(buildSiteMapJob())),
 
   http.post(api('tracking/build/'), () => HttpResponse.json(buildBuildResult())),
 

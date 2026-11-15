@@ -9,6 +9,7 @@ import {
   buildImplementationResult,
   buildImportHelp,
   buildPublicationResult,
+  buildSiteMapJob,
   buildSiteAnalysis,
   buildTrackingIdRule,
   buildTrackingRules,
@@ -141,6 +142,49 @@ describe('<TrackinMaster />', () => {
       'src',
       expect.stringMatching(/\/tracking\/guide\/prints\/e1-admin-exportar\.png$/),
     );
+  });
+
+  it('maps the site in the background after the analysis and shows what each page revealed', async () => {
+    let started: unknown = null;
+    server.use(
+      http.post(api('tracking/site-map/'), async ({ request }) => {
+        started = await request.json();
+        return HttpResponse.json(buildSiteMapJob({ status: 'running', site_map: null }), { status: 202 });
+      }),
+    );
+    const user = userEvent.setup({ delay: null });
+    renderWithProviders(<TrackinMaster />);
+    await analyze(user);
+
+    const siteMap = await screen.findByRole('region', { name: 'Mapa do site' });
+    expect(await within(siteMap).findByRole('list', { name: 'Páginas encontradas' })).toHaveTextContent(
+      'Página inicial: https://www.lojaexemplo.com.br/',
+    );
+    expect(within(siteMap).getByText('id da variante (sku)')).toBeInTheDocument();
+    expect(within(siteMap).getByText('E-mail')).toBeInTheDocument();
+    expect(within(siteMap).getByText('Cupom de desconto')).toBeInTheDocument();
+    expect(started).toEqual({ site_url: 'https://www.lojaexemplo.com.br' });
+  });
+
+  it('shows the progress while the site map runs and the reason when it fails', async () => {
+    let polls = 0;
+    server.use(
+      http.get(api('tracking/site-map/:jobId/'), () => {
+        polls += 1;
+        return HttpResponse.json(
+          polls === 1
+            ? buildSiteMapJob({ status: 'running', site_map: null, progress: { stage: 'Abrindo as páginas', pages_done: 3, pages_total: 9 } })
+            : buildSiteMapJob({ status: 'failed', site_map: null, error: 'O mapeamento parou de responder. Tente de novo.' }),
+        );
+      }),
+    );
+    const user = userEvent.setup({ delay: null });
+    renderWithProviders(<TrackinMaster />);
+    await analyze(user);
+
+    const siteMap = await screen.findByRole('region', { name: 'Mapa do site' });
+    expect(await within(siteMap).findByText(/Abrindo as páginas \(3 de 9 páginas\)/)).toBeInTheDocument();
+    expect(await within(siteMap).findByRole('alert', {}, { timeout: 5000 })).toHaveTextContent('parou de responder');
   });
 
   it('asks the server-side ids only when server-side is on', async () => {

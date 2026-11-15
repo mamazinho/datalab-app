@@ -28,6 +28,8 @@ import type {
   IImportHelp,
   IPublicationResult,
   IImplementationResult,
+  ISiteMap,
+  ISiteMapJob,
   ISiteAnalysis,
   ITrackingIdRule,
   ITrackingRules,
@@ -382,6 +384,44 @@ export const buildImplementationResult = (overrides: Partial<IImplementationResu
   ],
   manual_events: ['GT_add_to_cart'],
   notes: [],
+  ...overrides,
+});
+
+export const buildSiteMap = (overrides: Partial<ISiteMap> = {}): ISiteMap => ({
+  pages: [
+    {
+      kind: 'home',
+      label: 'Página inicial',
+      url: 'https://www.lojaexemplo.com.br/',
+      source: 'link',
+      opened: true,
+      problem: null,
+      title: 'Loja Exemplo',
+      native_events: [],
+      product_ids: [],
+      user_fields: [],
+      checkout_fields: [],
+      product_list: true,
+    },
+  ],
+  kinds_found: ['home'],
+  missing: [],
+  product_identifier: 'sku',
+  user_fields: ['email'],
+  checkout_fields: ['coupon'],
+  has_product_lists: true,
+  field_labels: { email: 'E-mail', coupon: 'Cupom de desconto' },
+  ...overrides,
+});
+
+export const buildSiteMapJob = (overrides: Partial<ISiteMapJob> = {}): ISiteMapJob => ({
+  id: uuid(90),
+  site_url: 'https://www.lojaexemplo.com.br',
+  status: 'done',
+  progress: { stage: 'Abrindo as páginas', pages_done: 1, pages_total: 1 },
+  site_map: buildSiteMap(),
+  error: null,
+  created_at: '2026-11-15T12:00:00Z',
   ...overrides,
 });
 

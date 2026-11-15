@@ -10,6 +10,7 @@ import { BuildForm } from './components/build-form';
 import { BuildResults } from './components/build-results';
 import { NextSteps } from './components/next-steps';
 import { SiteDiagnosis } from './components/site-diagnosis';
+import { SiteMap } from './components/site-map';
 import { SiteStep } from './components/site-step';
 import { publicIds } from './tool-ids';
 
@@ -49,10 +50,20 @@ export const TrackinMaster = () => {
   const [site, setSite] = useState<ISiteAnalysis | null>(null);
   const [built, setBuilt] = useState<IBuilt | null>(null);
   const [generation, setGeneration] = useState(0);
+  const [siteMapJob, setSiteMapJob] = useState<string | null>(null);
 
-  const handleAnalyzed = (analysis: ISiteAnalysis) => {
+  // The site map takes minutes, so it starts as soon as the site is analyzed and runs while the form is filled
+  const handleAnalyzed = async (analysis: ISiteAnalysis) => {
     setSite(analysis);
     setBuilt(null);
+    setSiteMapJob(null);
+    if (!analysis.reachable) return;
+    try {
+      const job = await DatalabAPI.TrackingResource.startSiteMap(analysis.url);
+      setSiteMapJob(job.id);
+    } catch (error) {
+      toastRequestError(error);
+    }
   };
 
   // The build answers with the site it used, so the diagnosis on screen is always the one in the files
@@ -77,6 +88,7 @@ export const TrackinMaster = () => {
       {site && (
         <>
           <SiteDiagnosis site={site} />
+          {siteMapJob && <SiteMap key={siteMapJob} jobId={siteMapJob} />}
           <QueryBoundary>
             <BuildForm key={site.url} site={site} onBuilt={handleBuilt} />
           </QueryBoundary>

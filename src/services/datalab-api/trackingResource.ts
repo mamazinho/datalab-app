@@ -238,6 +238,42 @@ export interface IImplementationResult {
   notes: string[];
 }
 
+export interface ISiteMapPage {
+  kind: string;
+  label: string;
+  url: string;
+  source: string;
+  opened: boolean;
+  problem: string | null;
+  title: string;
+  native_events: string[];
+  product_ids: string[];
+  user_fields: string[];
+  checkout_fields: string[];
+  product_list: boolean;
+}
+
+export interface ISiteMap {
+  pages: ISiteMapPage[];
+  kinds_found: string[];
+  missing: string[];
+  product_identifier: 'sku' | 'id' | 'both' | null;
+  user_fields: string[];
+  checkout_fields: string[];
+  has_product_lists: boolean;
+  field_labels: Record<string, string>;
+}
+
+export interface ISiteMapJob {
+  id: string;
+  site_url: string;
+  status: 'running' | 'done' | 'failed';
+  progress: { stage?: string; pages_done?: number; pages_total?: number };
+  site_map: ISiteMap | null;
+  error: string | null;
+  created_at: string;
+}
+
 export interface IImportHelpRequest {
   kind: string;
   message: string;
@@ -277,6 +313,14 @@ export const TrackingResource = {
     // Every page opens in a real browser on the server: up to six pages take a couple of minutes
     const response = await axiosCompanyInstance.post('tracking/validate/', payload, { timeout: 200_000 });
     return response.data as IImplementationResult;
+  },
+  async startSiteMap(siteUrl: string): Promise<ISiteMapJob> {
+    const response = await axiosCompanyInstance.post('tracking/site-map/', { site_url: siteUrl });
+    return response.data as ISiteMapJob;
+  },
+  async getSiteMap(jobId: string): Promise<ISiteMapJob> {
+    const response = await axiosCompanyInstance.get(`tracking/site-map/${jobId}/`);
+    return response.data as ISiteMapJob;
   },
   async importHelp(payload: IImportHelpRequest): Promise<IImportHelp> {
     const response = await axiosCompanyInstance.post('tracking/import-help/', payload);

@@ -129,3 +129,12 @@ export const trackingRulesQuery = queryOptions({
   queryFn: () => DatalabAPI.TrackingResource.getRules(),
   staleTime: Infinity,
 });
+
+// The crawl runs in the background for minutes: poll while it runs, then the job never changes again
+export const siteMapQuery = (jobId: string) =>
+  queryOptions({
+    queryKey: ['tracking-site-map', jobId],
+    queryFn: () => DatalabAPI.TrackingResource.getSiteMap(jobId),
+    refetchInterval: (query) => (query.state.data?.status === 'running' ? 3000 : false),
+    staleTime: Infinity,
+  });
