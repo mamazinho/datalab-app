@@ -5,6 +5,7 @@ import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 import { Toggle } from '../../../components/UI/Inputs/Toggle';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import { useTrackingRules } from '../../../hooks/use-tracking-rules';
+import { GuideSteps } from './guide-steps';
 import type { ISiteAnalysis } from '../../../services/datalab-api/trackingResource';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { createBuildContainersAction, type IBuilt } from '../actions';
@@ -153,6 +154,12 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
             </p>
             {clientExport && <p className={modal.hint}>Anexado: {clientExport.name}</p>}
           </div>
+          {rules.export_steps.length > 0 && (
+            <details className={styles.trackinDetails}>
+              <summary>Como exportar o container atual do GTM</summary>
+              <GuideSteps steps={rules.export_steps} label="Passos para exportar o container" />
+            </details>
+          )}
         </section>
 
         {formState.error && !formState.success && <p className={modal.error} role="alert">{formState.error}</p>}

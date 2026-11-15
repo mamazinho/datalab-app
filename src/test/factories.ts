@@ -279,6 +279,15 @@ export const buildTrackingRules = (overrides: Partial<ITrackingRules> = {}): ITr
     { key: 'json_rejected', label: 'O GTM recusou o arquivo JSON' },
   ],
   standard_version: '1.0.0',
+  export_steps: [
+    {
+      number: 1,
+      title: 'Abra o Admin do contêiner',
+      text: 'Clique em Admin (Administrador) e em Export Container (Exportar contêiner).',
+      print: 'e1-admin-exportar.png',
+      caption: 'Admin do contêiner com Export Container destacado.',
+    },
+  ],
   ...overrides,
 });
 

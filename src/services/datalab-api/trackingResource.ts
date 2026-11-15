@@ -34,6 +34,7 @@ export interface ITrackingRules {
   modes: ConsentMode[];
   import_problems: IImportProblemKind[];
   standard_version: string;
+  export_steps: IGuideStep[];
 }
 
 export interface IHardcodedWarning {
@@ -250,6 +251,10 @@ export interface IImportHelp {
   regenerate: boolean;
   matched_known_error: boolean;
 }
+
+// The guide prints are open on purpose: an <img> cannot send the Bearer, and they are the same blurred screens for all
+export const guidePrintUrl = (name: string) =>
+  `${String(import.meta.env.VITE_DATALAB_API_URL).replace(/\/$/, '')}/tracking/guide/prints/${encodeURIComponent(name)}`;
 
 export const TrackingResource = {
   async getRules(): Promise<ITrackingRules> {

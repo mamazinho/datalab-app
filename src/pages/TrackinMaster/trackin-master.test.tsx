@@ -128,6 +128,21 @@ describe('<TrackinMaster />', () => {
     expect(within(diagnosis).getByText('Nenhuma ferramenta encontrada.')).toBeInTheDocument();
   });
 
+  it('shows how to export the current container with the screenshots', async () => {
+    const user = userEvent.setup({ delay: null });
+    renderWithProviders(<TrackinMaster />);
+    await analyze(user);
+
+    await user.click(await screen.findByText('Como exportar o container atual do GTM'));
+
+    const steps = screen.getByRole('list', { name: 'Passos para exportar o container' });
+    expect(within(steps).getByText('Abra o Admin do contêiner')).toBeInTheDocument();
+    expect(within(steps).getByRole('img', { name: 'Admin do contêiner com Export Container destacado.' })).toHaveAttribute(
+      'src',
+      expect.stringMatching(/\/tracking\/guide\/prints\/e1-admin-exportar\.png$/),
+    );
+  });
+
   it('asks the server-side ids only when server-side is on', async () => {
     const user = userEvent.setup({ delay: null });
     renderWithProviders(<TrackinMaster />);
