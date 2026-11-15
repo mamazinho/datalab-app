@@ -304,6 +304,12 @@ export const buildSiteAnalysis = (overrides: Partial<ISiteAnalysis> = {}): ISite
   suggested_ids: { cookie_domain: '.lojaexemplo.com.br' },
   considerations: ['Cookie domain do container: .lojaexemplo.com.br.'],
   hardcoded_warnings: [],
+  browsed: true,
+  fired: {},
+  fired_before_consent: {},
+  consent_accepted: false,
+  consent_default: false,
+  tools_seen: [],
   diagnosis_markdown: '# Diagnóstico do site\n',
   ...overrides,
 });

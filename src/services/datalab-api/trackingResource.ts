@@ -45,6 +45,13 @@ export interface IHardcodedWarning {
   where: string[];
 }
 
+export interface IToolSeen {
+  tool: string;
+  label: string;
+  ids: string[];
+  where: string[];
+}
+
 export interface ISiteAnalysis {
   url: string;
   final_url: string | null;
@@ -68,6 +75,12 @@ export interface ISiteAnalysis {
   considerations: string[];
   hardcoded_warnings: IHardcodedWarning[];
   diagnosis_markdown: string;
+  browsed: boolean;
+  fired: Record<string, string[]>;
+  fired_before_consent: Record<string, string[]>;
+  consent_accepted: boolean;
+  consent_default: boolean;
+  tools_seen: IToolSeen[];
 }
 
 export interface IValidationIssue {

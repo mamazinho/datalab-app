@@ -34,6 +34,24 @@ export const SiteDiagnosis = ({ site }: { site: ISiteAnalysis }) => {
       </div>
       {site.blocked && <AntiBotAlert protection={site.protection} />}
       <HardcodedWarnings warnings={site.hardcoded_warnings} />
+      {site.reachable && (
+        <section aria-label="Ferramentas encontradas">
+          <p className={styles.trackinMuted}>
+            Ferramentas encontradas{site.browsed ? '' : ' (sem abrir no navegador: pode faltar o que entra por JavaScript)'}
+          </p>
+          {site.tools_seen.length > 0 ? (
+            <ul className={styles.trackinList}>
+              {site.tools_seen.map((tool) => (
+                <li key={tool.tool}>
+                  <strong>{tool.label}</strong> ({tool.ids.join(', ')}): {tool.where.join(', ')}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>Nenhuma ferramenta encontrada.</p>
+          )}
+        </section>
+      )}
       <dl className={styles.trackinFacts}>
         {facts.map(([label, value]) => (
           <div key={label}>

@@ -93,6 +93,41 @@ describe('<TrackinMaster />', () => {
     expect(screen.getByText(/anexe o export para mesclar/)).toBeInTheDocument();
   });
 
+  it('shows each tool found and where it was seen', async () => {
+    server.use(
+      http.post(api('tracking/scan/'), () =>
+        HttpResponse.json(
+          buildSiteAnalysis({
+            detected_tools: ['meta_ads'],
+            tools_seen: [
+              { tool: 'meta_ads', label: 'Meta Ads', ids: ['1234567890123456'], where: ['código do site', 'disparando no navegador'] },
+            ],
+          }),
+        ),
+      ),
+    );
+    const user = userEvent.setup({ delay: null });
+    renderWithProviders(<TrackinMaster />);
+
+    const diagnosis = await analyze(user);
+
+    const tools = within(diagnosis).getByRole('region', { name: 'Ferramentas encontradas' });
+    expect(within(tools).getByRole('listitem')).toHaveTextContent(
+      'Meta Ads (1234567890123456): código do site, disparando no navegador',
+    );
+  });
+
+  it('warns that tools loaded by javascript may be missing when the page was not opened in a browser', async () => {
+    server.use(http.post(api('tracking/scan/'), () => HttpResponse.json(buildSiteAnalysis({ browsed: false }))));
+    const user = userEvent.setup({ delay: null });
+    renderWithProviders(<TrackinMaster />);
+
+    const diagnosis = await analyze(user);
+
+    expect(within(diagnosis).getByText(/sem abrir no navegador/)).toBeInTheDocument();
+    expect(within(diagnosis).getByText('Nenhuma ferramenta encontrada.')).toBeInTheDocument();
+  });
+
   it('asks the server-side ids only when server-side is on', async () => {
     const user = userEvent.setup({ delay: null });
     renderWithProviders(<TrackinMaster />);
