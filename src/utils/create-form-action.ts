@@ -39,10 +39,11 @@ export function createFormAction<TSchema extends z.ZodType, TData>(
         timestamp: Date.now(),
       };
     } catch (error: unknown) {
-      const { friendly_message, traceId } = ApiError.from(error);
+      const { friendly_message, traceId, detail } = ApiError.from(error);
       return {
         success: false,
         error: friendly_message,
+        errorDetail: detail,
         traceId,
         timestamp: Date.now(),
       };

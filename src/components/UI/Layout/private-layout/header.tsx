@@ -6,7 +6,7 @@ import { useLocation } from "react-router-dom";
 import { useAuthContext } from "../../../../contexts/auth";
 import { useMe } from "../../../../hooks/use-me";
 import { useCompanyContext } from "../../../../contexts/company";
-import { COMPANY_PATH, INTEGRATIONS_PATH, MANAGEMENT_BASE_PATH, MEMBERS_PATH } from "../../../../routes/paths";
+import { COMPANY_PATH, INTEGRATIONS_PATH, MANAGEMENT_BASE_PATH, MEMBERS_PATH, TRACKIN_MASTER_PATH } from "../../../../routes/paths";
 import { COMPANY_ROUTE_PERMISSIONS } from "../../../../utils/route-permissions";
 import { RouteTabs, type IRouteTabItem } from "../../Tabs";
 import { CompanyDropdown } from "../../CompanyDropdown/company-dropdown";
@@ -38,6 +38,7 @@ export const Header = () => {
     const menuPages: IRouteTabItem[] = [
         { label: 'Página inicial', to: '/' },
         ...(canSeeIaSection ? [{ label: 'IA', to: '/ia' }] : []),
+        { label: "Trackin' Master", to: TRACKIN_MASTER_PATH },
         { label: 'Cursos', to: '/cursos' },
         { label: 'Gerenciamento', to: managementHref, match: MANAGEMENT_BASE_PATH },
     ];

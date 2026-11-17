@@ -7,6 +7,7 @@ import { AgentsResource } from "./agentsResource";
 import { CompaniesResource } from "./companiesResource";
 import { MembershipsResource } from "./membershipsResource";
 import { McpServersResource } from "./mcpServersResource";
+import { TrackingResource } from "./trackingResource";
 
 export const DatalabAPI = {
   ChatsResource,
@@ -18,4 +19,5 @@ export const DatalabAPI = {
   CompaniesResource,
   MembershipsResource,
   McpServersResource,
+  TrackingResource,
 };

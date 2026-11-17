@@ -14,12 +14,13 @@ import { CompanyManagement } from "../pages/CompanyManagement";
 import { ManagementLayout } from "../pages/Management";
 import { Integrations } from "../pages/Integrations";
 import { NotFound } from "../pages/NotFound";
+import { TrackinMaster } from "../pages/TrackinMaster";
 import { IaLayout } from "../pages/Ia";
 import { Agents } from "../pages/Ia/Agents";
 import { McpServers } from "../pages/Ia/McpServers";
 import { Usage } from "../pages/Ia/Usage";
 import { PrivateRoutes, PublicRoutes, OnboardingRoute, PermissionRoute, RoutePermissionRoute, IaIndexRedirect, RedirectLegacyChatMessages } from "./wrappers";
-import { COMPANY_PATH, INTEGRATION_CALLBACK_PATH, INTEGRATIONS_PATH, MEMBERS_PATH } from "./paths";
+import { COMPANY_PATH, INTEGRATION_CALLBACK_PATH, INTEGRATIONS_PATH, MEMBERS_PATH, TRACKIN_MASTER_PATH } from "./paths";
 import { CHAT_ROUTE_PERMISSIONS, COMPANY_ROUTE_PERMISSIONS, MCP_SERVER_ROUTE_PERMISSIONS } from "../utils/route-permissions";
 
 export const routes = createBrowserRouter([
@@ -130,6 +131,10 @@ export const routes = createBrowserRouter([
             {
                 path: "/perfil/editar",
                 element: <EditProfile />,
+            },
+            {
+                path: TRACKIN_MASTER_PATH,
+                element: <TrackinMaster />,
             },
             {
                 element: <ManagementLayout />,

@@ -2,6 +2,8 @@ export interface ActionState<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
+  // The `detail` of the API error contract, for forms that point each problem at its field
+  errorDetail?: unknown;
   traceId?: string;
   timestamp: number;
 }

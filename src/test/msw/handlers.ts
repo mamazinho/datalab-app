@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { buildAgent, buildApiError, buildChat, buildChatUsageReport, buildCompany, buildCurrentMembership, buildInvite, buildMcpServer, buildMember, buildMcpServerTestResult, buildModelProvider, buildUser, uuid } from '../factories';
+import { buildAgent, buildApiError, buildBuildResult, buildChat, buildImplementationResult, buildImportHelp, buildPublicationResult, buildChatUsageReport, buildCompany, buildCurrentMembership, buildInvite, buildMcpServer, buildMember, buildMcpServerTestResult, buildModelProvider, buildSiteAnalysis, buildTrackingRules, buildUser, uuid } from '../factories';
 
 const BASE_URL = import.meta.env.VITE_DATALAB_API_URL;
 
@@ -146,4 +146,19 @@ export const handlers = [
   http.post(api('chats/:chatId/run/messages/'), () => new HttpResponse(null, { status: 202 })),
 
   http.post(api('chats/:chatId/run/cancel/'), () => new HttpResponse(null, { status: 204 })),
+
+  http.get(api('tracking/rules/'), () => HttpResponse.json(buildTrackingRules())),
+
+  http.post(api('tracking/scan/'), async ({ request }) => {
+    const { site_url } = (await request.json()) as { site_url: string };
+    return HttpResponse.json(buildSiteAnalysis({ url: site_url }));
+  }),
+
+  http.post(api('tracking/build/'), () => HttpResponse.json(buildBuildResult())),
+
+  http.post(api('tracking/verify/'), () => HttpResponse.json(buildPublicationResult())),
+
+  http.post(api('tracking/validate/'), () => HttpResponse.json(buildImplementationResult())),
+
+  http.post(api('tracking/import-help/'), () => HttpResponse.json(buildImportHelp())),
 ];
