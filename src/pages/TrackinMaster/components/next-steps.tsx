@@ -1,16 +1,103 @@
-import modal from '../../../styles/modal-form.module.css';
+import designSystemStyles from '../../../styles/design-system.module.css';
 import styles from '../trackin-master.module.css';
 import { useState } from 'react';
+import { Callout } from '../../../components/UI/Callout';
+import { Card } from '../../../components/UI/Card';
 import { Modal } from '../../../components/UI/Modal/modal';
-import type { IBuildResult } from '../../../services/datalab-api/trackingResource';
+import { Step } from '../../../components/UI/Steps/step';
+import { StepsController } from '../../../components/UI/Steps/steps-controller';
+import type { IBuildResult, IGuideStep } from '../../../services/datalab-api/trackingResource';
 import { downloadContainer, downloadDocument } from '../downloads';
-import { GuideSteps } from './guide-steps';
-import { IdWarnings } from './id-warnings';
 import { ImplementationCheck } from './implementation-check';
 import { ImportProblem } from './import-problem';
 import { PublicationCheck } from './publication-check';
 
-type Stage = 'import' | 'problem' | 'publish' | 'validate';
+const guideList = (steps: IGuideStep[], label: string) => (
+  <ol className={designSystemStyles.list} aria-label={label} start={steps[0]?.number}>
+    {steps.map((step) => (
+      <li key={step.number}>
+        <strong>{step.title}</strong>
+        <p className={designSystemStyles.muted}>{step.text}</p>
+      </li>
+    ))}
+  </ol>
+);
+
+interface IImportStageProps {
+  result: IBuildResult;
+  onRegenerate: () => void;
+  regenerating: boolean;
+}
+
+const ImportStage = ({ result, onRegenerate, regenerating }: IImportStageProps) => {
+  const [askingForHelp, setAskingForHelp] = useState(false);
+  const importFile = result.merge ?? result.web;
+
+  if (askingForHelp) {
+    return (
+      <section className={styles.trackinStack} aria-label="Tive um problema ao importar">
+        <h3 className={designSystemStyles.sectionTitle}>Tive um problema ao importar</h3>
+        <ImportProblem onRegenerate={onRegenerate} regenerating={regenerating} />
+        <button className={designSystemStyles.actionButton} type="button" onClick={() => setAskingForHelp(false)}>
+          Voltar ao passo a passo
+        </button>
+      </section>
+    );
+  }
+
+  return (
+    <section className={styles.trackinStack} aria-label="Importar e testar">
+      <h3 className={designSystemStyles.sectionTitle}>Importar e testar</h3>
+      {result.id_warnings.length > 0 && (
+        <Callout title="Confira estes IDs antes de publicar: o formato deles ainda não foi confirmado." label="IDs com formato não confirmado">
+          <ul className={designSystemStyles.list}>
+            {result.id_warnings.map((warning) => (
+              <li key={warning.key}>{warning.label}: formato esperado {warning.format}.</li>
+            ))}
+          </ul>
+        </Callout>
+      )}
+      <Card title="Arquivos">
+        <div className={styles.trackinRow}>
+          <button className={designSystemStyles.actionButton} type="button" onClick={() => downloadContainer(importFile)}>
+            Baixar {importFile.file}
+          </button>
+          {result.server && (
+            <button className={designSystemStyles.actionButton} type="button" onClick={() => downloadContainer(result.server!)}>
+              Baixar {result.server.file}
+            </button>
+          )}
+          <button className={designSystemStyles.actionButton} type="button" onClick={() => downloadDocument(result)}>
+            Baixar {result.document.file}
+          </button>
+        </div>
+      </Card>
+      <Card title="Requisitos">
+        <p className={designSystemStyles.muted}>dataLayers a implementar no código-fonte do site:</p>
+        <p>{result.requirements.datalayer_note}</p>
+        <ul className={designSystemStyles.list}>
+          {result.requirements.datalayer.map((event) => (
+            <li key={event.event}>
+              <strong>{event.event}</strong>: {event.when}
+              {event.required.length > 0 && ` Obrigatórios: ${event.required.join(', ')}.`}
+            </li>
+          ))}
+        </ul>
+        <p className={designSystemStyles.muted}>Acessos necessários:</p>
+        <ul className={designSystemStyles.list}>
+          {result.requirements.accesses.map((access) => <li key={access}>{access}</li>)}
+        </ul>
+      </Card>
+      {guideList(result.guide.import_steps, 'Passos para importar e testar')}
+      <Callout title="Não publique ainda">
+        <p>Valide a implementação no próximo passo e publique só depois que os dataLayers estiverem no ar.</p>
+      </Callout>
+      <button className={designSystemStyles.actionButton} type="button" onClick={() => setAskingForHelp(true)}>
+        Tive um problema ao importar
+      </button>
+    </section>
+  );
+};
 
 interface INextStepsProps {
   result: IBuildResult;
@@ -20,111 +107,28 @@ interface INextStepsProps {
   regenerating: boolean;
 }
 
-const ImportStage = ({ result }: { result: IBuildResult }) => {
-  const importFile = result.merge ?? result.web;
-  return (
-    <>
-      <IdWarnings warnings={result.id_warnings} />
-      <section className={styles.trackinModalSection} aria-label="Arquivos para baixar">
-        <h4>Arquivos</h4>
-        <div className={styles.trackinActions}>
-          <button className={styles.trackinSecondaryButton} type="button" onClick={() => downloadContainer(importFile)}>
-            Baixar {importFile.file}
-          </button>
-          {result.server && (
-            <button className={styles.trackinSecondaryButton} type="button" onClick={() => downloadContainer(result.server!)}>
-              Baixar {result.server.file}
-            </button>
-          )}
-          <button className={styles.trackinSecondaryButton} type="button" onClick={() => downloadDocument(result)}>
-            Baixar {result.document.file}
-          </button>
-        </div>
-      </section>
-      <section className={styles.trackinModalSection} aria-label="Requisitos">
-        <h4>Requisitos</h4>
-        <p className={styles.trackinMuted}>dataLayers a implementar no código-fonte do site:</p>
-        <p>{result.requirements.datalayer_note}</p>
-        <ul className={styles.trackinList}>
-          {result.requirements.datalayer.map((event) => (
-            <li key={event.event}>
-              <strong>{event.event}</strong>: {event.when}
-              {event.required.length > 0 && ` Obrigatórios: ${event.required.join(', ')}.`}
-            </li>
-          ))}
-        </ul>
-        <p className={styles.trackinMuted}>Acessos necessários:</p>
-        <ul className={styles.trackinList}>
-          {result.requirements.accesses.map((access) => <li key={access}>{access}</li>)}
-        </ul>
-      </section>
-      <section className={styles.trackinModalSection} aria-label="Importar e testar">
-        <h4>Importar e testar</h4>
-        <GuideSteps steps={result.guide.import_steps} label="Passos para importar e testar" />
-      </section>
-      <p className={styles.trackinWarning} role="note">
-        Não publique ainda: publique só depois que os dataLayers estiverem no ar e os testes no modo Visualizar passarem.
-      </p>
-    </>
-  );
-};
-
-export const NextSteps = ({ result, publicIds, onClose, onRegenerate, regenerating }: INextStepsProps) => {
-  const [stage, setStage] = useState<Stage>('import');
-  const [validateFrom, setValidateFrom] = useState<Stage>('import');
-  const titles: Record<Stage, string> = {
-    import: 'Importar e testar',
-    problem: 'Tive um problema ao importar',
-    publish: 'Publicar',
-    validate: 'Validar implementação',
-  };
-  const containerId = result.site.gtm_containers[0] ?? '';
-  const validateButton = (from: Stage) => (
-    <button className={styles.trackinSecondaryButton} type="button"
-      onClick={() => { setValidateFrom(from); setStage('validate'); }}>
-      Validar implementação
-    </button>
-  );
-
-  return (
-    <Modal isOpen onClose={onClose} title={titles[stage]}>
-      {stage === 'import' && (
-        <>
-          <ImportStage result={result} />
-          <div className={styles.trackinActions}>
-            {validateButton('import')}
-            <button className={styles.trackinSecondaryButton} type="button" onClick={() => setStage('problem')}>
-              Tive um problema ao importar
-            </button>
-            <button className={modal.submit} type="button" onClick={() => setStage('publish')}>Avançar</button>
-          </div>
-        </>
-      )}
-      {stage === 'problem' && (
-        <>
-          <ImportProblem onRegenerate={onRegenerate} regenerating={regenerating} />
-          <button className={styles.trackinSecondaryButton} type="button" onClick={() => setStage('import')}>Voltar</button>
-        </>
-      )}
-      {stage === 'publish' && (
-        <>
-          <section className={styles.trackinModalSection} aria-label="Publicar">
-            <GuideSteps steps={result.guide.publish_steps} label="Passos para publicar" />
-          </section>
-          <PublicationCheck ids={publicIds} containerId={containerId} />
-          <div className={styles.trackinActions}>
-            <button className={styles.trackinSecondaryButton} type="button" onClick={() => setStage('import')}>Voltar</button>
-            {validateButton('publish')}
-            <button className={styles.trackinSecondaryButton} type="button" onClick={onClose}>Fechar instruções</button>
-          </div>
-        </>
-      )}
-      {stage === 'validate' && (
-        <>
+export const NextSteps = ({ result, publicIds, onClose, onRegenerate, regenerating }: INextStepsProps) => (
+  <Modal isOpen onClose={onClose} title="Próximos passos">
+    <StepsController>
+      <Step canGoForward>
+        <ImportStage result={result} onRegenerate={onRegenerate} regenerating={regenerating} />
+      </Step>
+      <Step canGoBack canGoForward>
+        <section className={styles.trackinStack} aria-label="Validar implementação">
+          <h3 className={designSystemStyles.sectionTitle}>Validar implementação</h3>
           <ImplementationCheck ids={publicIds} />
-          <button className={styles.trackinSecondaryButton} type="button" onClick={() => setStage(validateFrom)}>Voltar</button>
-        </>
-      )}
-    </Modal>
-  );
-};
+        </section>
+      </Step>
+      <Step canGoBack>
+        <section className={styles.trackinStack} aria-label="Publicar">
+          <h3 className={designSystemStyles.sectionTitle}>Publicar</h3>
+          {guideList(result.guide.publish_steps, 'Passos para publicar')}
+          <PublicationCheck ids={publicIds} containerId={result.site.gtm_containers[0] ?? ''} />
+          <button className={designSystemStyles.actionButton} type="button" onClick={onClose}>
+            Fechar instruções
+          </button>
+        </section>
+      </Step>
+    </StepsController>
+  </Modal>
+);

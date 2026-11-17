@@ -48,6 +48,7 @@ export const MCP_SERVER_ROUTE_PERMISSIONS = {
 
 export const CHAT_ROUTE_PERMISSIONS = {
   list: { method: 'GET', path: 'chats/' },
+  create: { method: 'POST', path: 'chats/' },
   usageReport: { method: 'GET', path: 'chats/usage/' },
   update: { method: 'PATCH', path: 'chats/{chat_id}/' },
   remove: { method: 'DELETE', path: 'chats/{chat_id}/' },

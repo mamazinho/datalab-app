@@ -1,6 +1,9 @@
+import designSystemStyles from '../../../styles/design-system.module.css';
 import modal from '../../../styles/modal-form.module.css';
 import styles from '../trackin-master.module.css';
 import { useActionState } from 'react';
+import { Callout } from '../../../components/UI/Callout';
+import { Card } from '../../../components/UI/Card';
 import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 import type {
   IEventCheck,
@@ -24,13 +27,14 @@ const eventText = (event: IEventCheck) => {
 };
 
 const PageResult = ({ page }: { page: IPageCheck }) => (
-  <section className={styles.trackinModalSection} aria-label={page.label}>
-    <h4>{page.label}</h4>
-    <p className={styles.trackinMuted}>{page.final_url ?? page.url}</p>
+  <Card title={page.label}>
+    <p className={designSystemStyles.muted}>{page.final_url ?? page.url}</p>
     {!page.opened ? (
-      <p className={styles.trackinWarning}>{page.problem}</p>
+      <Callout>
+        <p>{page.problem}</p>
+      </Callout>
     ) : (
-      <ul className={styles.trackinList}>
+      <ul className={designSystemStyles.list}>
         <li data-state={page.container_loaded ? 'ok' : 'error'}>
           {page.container_loaded ? 'Contêiner carregou.' : 'Contêiner não carregou.'}
         </li>
@@ -44,27 +48,28 @@ const PageResult = ({ page }: { page: IPageCheck }) => (
         ))}
       </ul>
     )}
-  </section>
+  </Card>
 );
 
 const Report = ({ result }: { result: IImplementationResult }) => (
-  <div role="status" aria-label="Resultado da validação">
-    <p className={result.ok ? undefined : styles.trackinWarning}>
-      {result.ok
-        ? 'Tudo certo nas páginas de QA: os dataLayers chegam completos e as tags da workspace disparam. Pode publicar.'
-        : 'Encontramos pendências: veja cada página abaixo.'}
-    </p>
-    {result.notes.map((note) => <p key={note} className={styles.trackinMuted}>{note}</p>)}
+  <div className={styles.trackinStack} role="status" aria-label="Resultado da validação">
+    {result.ok ? (
+      <p>Tudo certo nas páginas de QA: os dataLayers chegam completos e as tags da workspace disparam. Pode publicar.</p>
+    ) : (
+      <Callout>
+        <p>Encontramos pendências: veja cada página abaixo.</p>
+      </Callout>
+    )}
+    {result.notes.map((note) => <p key={note} className={designSystemStyles.muted}>{note}</p>)}
     {result.pages.map((page) => <PageResult key={page.kind} page={page} />)}
     {result.manual_events.length > 0 && (
-      <section className={styles.trackinModalSection} aria-label="Conferir no modo Visualizar">
-        <h4>Conferir no modo Visualizar</h4>
-        <p className={styles.trackinMuted}>
+      <Card title="Conferir no modo Visualizar">
+        <p className={designSystemStyles.muted}>
           Estes eventos dependem de uma ação na página (clicar, adicionar ao carrinho, entrar) e não aparecem só
           abrindo a página. Confira no modo Visualizar do GTM:
         </p>
         <p>{result.manual_events.join(', ')}</p>
-      </section>
+      </Card>
     )}
   </div>
 );
@@ -77,23 +82,23 @@ const linkProblemsFrom = (detail: unknown): Partial<Record<PageKind, string>> =>
 };
 
 const HowToGetTheLinks = () => (
-  <section className={styles.trackinModalSection} aria-label="Como gerar os links">
-    <h4>Último teste antes de publicar</h4>
-    <p className={styles.trackinMuted}>
+  <Card title="Último teste antes de publicar">
+    <p className={designSystemStyles.muted}>
       Teste nas páginas de QA do site, com os dataLayers do padrão Go Trackin' já implementados e ainda fora de
       produção. Para cada página:
     </p>
-    <ol className={styles.trackinList}>
+    <ol className={designSystemStyles.list}>
       <li>No GTM, abra a workspace onde você importou o JSON desta geração e clique em Visualizar.</li>
       <li>Informe a URL da página de QA (página inicial, produto, carrinho, thank you page...) e conecte.</li>
       <li>No Tag Assistant, clique nos três pontinhos no canto superior direito e em Share.</li>
       <li>Copie o "Shareable debug link" e cole no campo da página abaixo.</li>
     </ol>
-    <p className={styles.trackinMuted}>
+    <p className={designSystemStyles.muted}>
       Só aceitamos esse link: ele abre a página de QA com a workspace ainda não publicada. Abrimos cada página num
-      navegador de verdade, que não aceita o banner de cookies, e cada página conta como uma leitura no limite de uso.
+      navegador de verdade, como um visitante que já aceitou o banner de cookies, e cada página conta como uma leitura
+      no limite de uso.
     </p>
-  </section>
+  </Card>
 );
 
 export const ImplementationCheck = ({ ids }: IImplementationCheckProps) => {
@@ -101,7 +106,7 @@ export const ImplementationCheck = ({ ids }: IImplementationCheckProps) => {
   const linkProblems = state.success ? {} : linkProblemsFrom(state.errorDetail);
 
   return (
-    <>
+    <div className={styles.trackinStack}>
       <HowToGetTheLinks />
       <form action={formAction} onReset={(event) => event.preventDefault()} aria-label="Validar implementação">
         <FormFieldset className={modal.fieldset}>
@@ -124,6 +129,6 @@ export const ImplementationCheck = ({ ids }: IImplementationCheckProps) => {
         {state.error && !state.success && <p className={modal.error} role="alert">{state.error}</p>}
       </form>
       {state.success && state.data && <Report result={state.data} />}
-    </>
+    </div>
   );
 };

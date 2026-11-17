@@ -283,6 +283,7 @@ export const buildTrackingRules = (overrides: Partial<ITrackingRules> = {}): ITr
 });
 
 export const buildSiteAnalysis = (overrides: Partial<ISiteAnalysis> = {}): ISiteAnalysis => ({
+  scan_id: uuid(90),
   url: 'https://www.lojaexemplo.com.br',
   final_url: 'https://www.lojaexemplo.com.br/',
   host: 'www.lojaexemplo.com.br',

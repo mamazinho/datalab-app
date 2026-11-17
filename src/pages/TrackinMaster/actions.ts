@@ -48,7 +48,7 @@ export const createBuildContainersAction = (site: ISiteAnalysis, exportFile: Fil
       const request: IBuildRequest = {
         ...data,
         site_url: site.url,
-        site,
+        scan_id: site.scan_id,
         consent: { banner, mode },
         client_export: client_export ? await client_export.text() : null,
       };

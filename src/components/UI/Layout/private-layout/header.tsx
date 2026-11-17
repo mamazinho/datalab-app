@@ -27,6 +27,7 @@ export const Header = () => {
 
     const canSeeIaSection = hasPermissionByTag(['chat', 'agents']);
     const canManageMembers = hasPermissionByTag('memberships');
+    const canSeeTrackMaster = hasPermissionByTag('tracking');
     // Always reachable: every member needs the integrations tab to connect their own account
     const managementHref = canManageMembers
         ? MEMBERS_PATH
@@ -38,7 +39,7 @@ export const Header = () => {
     const menuPages: IRouteTabItem[] = [
         { label: 'Página inicial', to: '/' },
         ...(canSeeIaSection ? [{ label: 'IA', to: '/ia' }] : []),
-        { label: "Trackin' Master", to: TRACKIN_MASTER_PATH },
+        ...(canSeeTrackMaster ? [{ label: "Trackin' Master", to: TRACKIN_MASTER_PATH }] : []),
         { label: 'Cursos', to: '/cursos' },
         { label: 'Gerenciamento', to: managementHref, match: MANAGEMENT_BASE_PATH },
     ];

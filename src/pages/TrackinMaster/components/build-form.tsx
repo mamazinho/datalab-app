@@ -1,6 +1,8 @@
+import designSystemStyles from '../../../styles/design-system.module.css';
 import modal from '../../../styles/modal-form.module.css';
 import styles from '../trackin-master.module.css';
 import { useActionState, useState } from 'react';
+import { Card } from '../../../components/UI/Card';
 import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 import { Toggle } from '../../../components/UI/Inputs/Toggle';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
@@ -44,10 +46,9 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
 
   return (
     // React resets the form after every action; a refused build has to keep the ids, the consent and the file
-    <form className={styles.trackinForm} action={formAction} onReset={(e) => e.preventDefault()} aria-label="Gerar containers">
+    <form className={styles.trackinStack} action={formAction} onReset={(e) => e.preventDefault()} aria-label="Gerar containers">
       <FormFieldset className={modal.fieldset}>
-        <section className={styles.trackinSection}>
-          <h2 className={styles.trackinSectionTitle}>2. Cenário</h2>
+        <Card title="2. Cenário">
           <div className={modal.field}>
             <label className={modal.label} htmlFor="trackin-client">Nome do cliente</label>
             <input className={modal.input} id="trackin-client" name="client_name" type="text"
@@ -61,16 +62,15 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
                   checked={tools.includes(tool.key)}
                   onChange={(e) => toggleTool(tool.key, e.target.checked)} />
                 {tool.label}
-                {site.detected_tools.includes(tool.key) && <span className={styles.trackinBadge}>no site</span>}
+                {site.detected_tools.includes(tool.key) && <span className={designSystemStyles.badge}>no site</span>}
               </label>
             ))}
           </fieldset>
           <Toggle label="O cliente tem (ou quer) server-side" name="server_side" checked={serverSide}
             onChange={(e) => setServerSide(e.target.checked)} />
-        </section>
+        </Card>
 
-        <section className={styles.trackinSection}>
-          <h2 className={styles.trackinSectionTitle}>3. Consentimento</h2>
+        <Card title="3. Consentimento">
           <div className={styles.trackinGrid}>
             <div className={modal.field}>
               <label className={modal.label} htmlFor="trackin-banner">Modelo do banner</label>
@@ -96,10 +96,9 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
               Declaro que fui informado de que o site não tem gestão de consentimento e assumo a responsabilidade.
             </label>
           )}
-        </section>
+        </Card>
 
-        <section className={styles.trackinSection}>
-          <h2 className={styles.trackinSectionTitle}>4. IDs</h2>
+        <Card title="4. IDs">
           <p className={modal.hint}>
             Os IDs obrigatórios das ferramentas escolhidas precisam estar todos preenchidos: sem eles o container não é
             gerado. Nenhum ID é inventado ou completado. IDs encontrados no site já vêm preenchidos; confirme se são da
@@ -115,7 +114,7 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
                 <div key={rule.key} className={modal.field}>
                   <label className={modal.label} htmlFor={`trackin-id-${rule.key}`}>
                     {idLabel(rule)}{rule.optional ? ' (opcional)' : ' *'}
-                    {suggested && <span className={styles.trackinBadge}>encontrado no site</span>}
+                    {suggested && <> <span className={designSystemStyles.badge}>encontrado no site</span></>}
                   </label>
                   <input className={modal.input}
                     id={`trackin-id-${rule.key}`}
@@ -128,7 +127,7 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
                     aria-invalid={problem ? true : undefined}
                     aria-describedby={problem ? `${errorId} ${hintId}` : hintId}
                   />
-                  {problem && <p className={styles.trackinFieldError} id={errorId}>{problem}</p>}
+                  {problem && <p className={modal.error} id={errorId}>{problem}</p>}
                   <p className={modal.hint} id={hintId}>
                     Formato: {rule.format}.{!rule.confirmed && ' Formato ainda não confirmado: confira antes de publicar.'}{' '}
                     Onde encontrar: {rule.where}
@@ -137,10 +136,9 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
               );
             })}
           </div>
-        </section>
+        </Card>
 
-        <section className={styles.trackinSection}>
-          <h2 className={styles.trackinSectionTitle}>5. GTM atual do cliente</h2>
+        <Card title="5. GTM atual do cliente">
           <div className={modal.field}>
             <label className={modal.label} htmlFor="trackin-export">Export do contêiner web (.json)</label>
             <input id="trackin-export" type="file" accept=".json,application/json"
@@ -153,7 +151,7 @@ export const BuildForm = ({ site, onBuilt }: IBuildFormProps) => {
             </p>
             {clientExport && <p className={modal.hint}>Anexado: {clientExport.name}</p>}
           </div>
-        </section>
+        </Card>
 
         {formState.error && !formState.success && <p className={modal.error} role="alert">{formState.error}</p>}
 

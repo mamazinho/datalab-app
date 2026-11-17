@@ -1,6 +1,7 @@
 import modal from '../../../styles/modal-form.module.css';
 import styles from '../trackin-master.module.css';
 import { useActionState } from 'react';
+import { Card } from '../../../components/UI/Card';
 import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 import { useActionFeedback } from '../../../hooks/use-action-feedback';
 import type { ISiteAnalysis } from '../../../services/datalab-api/trackingResource';
@@ -22,8 +23,8 @@ export const SiteStep = ({ onAnalyzed }: ISiteStepProps) => {
   });
 
   return (
-    <form className={styles.trackinSection} action={formAction} aria-label="Site a ser tagueado">
-      <h2 className={styles.trackinSectionTitle}>1. Site a ser tagueado</h2>
+    <form action={formAction} aria-label="Site a ser tagueado">
+      <Card title="1. Site a ser tagueado">
       <FormFieldset className={modal.fieldset}>
         <div className={modal.field}>
           <label className={modal.label} htmlFor="trackin-site-url">URL do site *</label>
@@ -48,6 +49,7 @@ export const SiteStep = ({ onAnalyzed }: ISiteStepProps) => {
         </div>
       </FormFieldset>
       {formState.error && !formState.success && <p className={modal.error} role="alert">{formState.error}</p>}
+      </Card>
     </form>
   );
 };

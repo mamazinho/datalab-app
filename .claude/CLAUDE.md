@@ -70,6 +70,9 @@ project-root/
 - Contexto: `<XContext value={...}>` e `use(XContext)`; `ref` chega como prop, sem `forwardRef`
 - Markdown na tela: `Markdown` de `components/UI/Markdown`, que já renderiza tabela GFM; nunca `ReactMarkdown` direto
 - Formulário: action com `createFormAction` + `useActionState`; os campos vão num `FormFieldset` e o envio num `SubmitButton pendingLabel="..."` (`components/UI/Forms`), que leem o pending do `<form>` com `useFormStatus` — não repasse `isPending` por prop
+- Aviso ou destaque com título: `Callout`; cartão com título, ações e estado na borda: `Card` (`components/UI`). Badge: a classe `badge` do `design-system`, com `data-state` ok/erro
+- Do `design-system` também: `pageContainer`, `pageTitle` e `pageSubtitle` para o topo da página, `sectionTitle`, `muted` para texto secundário, `actionButton` para o botão de ação pequeno e `list` para lista, com `data-state` ok/erro no item quando é conferência. O CSS da página fica só com o layout dela
+- Produto com permissão própria: a rota fica dentro de `<PermissionRoute tag="..." />` e o item do menu aparece por `hasPermissionByTag`
 - Ação de linha (excluir, arquivar, ativar): `useRowActions(queryKey, rows)` — pending pela transição, `busyId` da linha, `optimistic` com a linha nova (ou `null` para tirá-la da lista) enquanto a request roda
 
 ---

@@ -1,9 +1,10 @@
+import designSystemStyles from '../../../styles/design-system.module.css';
 import styles from '../trackin-master.module.css';
 import type { ReactNode } from 'react';
+import { Card } from '../../../components/UI/Card';
 import { Collapsible } from '../../../components/UI/Collapsible';
 import type { IBuildResult, IContainerFile } from '../../../services/datalab-api/trackingResource';
 import { downloadContainer, downloadDocument, downloadText } from '../downloads';
-import { IdWarnings } from './id-warnings';
 
 interface IContainerCardProps {
   title: string;
@@ -17,35 +18,37 @@ const ContainerCard = ({ title, container, children }: IContainerCardProps) => {
   const warnings = issues.filter((issue) => issue.severity === 'warning');
 
   return (
-    <section className={styles.trackinCard} data-state={ok ? 'ok' : 'error'} aria-label={title}>
-      <div className={styles.trackinCardHead}>
-        <h3 className={styles.trackinCardTitle}>{title}</h3>
-        <button className={styles.trackinSecondaryButton} type="button" onClick={() => downloadContainer(container)}>
+    <Card
+      title={title}
+      state={ok ? 'ok' : 'error'}
+      actions={
+        <button className={designSystemStyles.actionButton} type="button" onClick={() => downloadContainer(container)}>
           Baixar {container.file}
         </button>
-      </div>
-      <p className={styles.trackinTags}>
-        <span className={styles.trackinBadge} data-state={ok ? 'ok' : 'error'}>
+      }
+    >
+      <p className={styles.trackinRow}>
+        <span className={designSystemStyles.badge} data-state={ok ? 'ok' : 'error'}>
           {ok ? 'validação ok' : `${errors.length} erro(s)`}
         </span>
         {Object.entries(counts).map(([kind, total]) => (
-          <span key={kind} className={styles.trackinBadge}>{total} {kind}</span>
+          <span key={kind} className={designSystemStyles.badge}>{total} {kind}</span>
         ))}
       </p>
       {errors.length > 0 && (
-        <ul className={styles.trackinList} data-state="error">
+        <ul className={designSystemStyles.list} data-state="error">
           {errors.map((issue, index) => <li key={index}>{issue.item ? `${issue.item} — ` : ''}{issue.message}</li>)}
         </ul>
       )}
       {warnings.length > 0 && (
         <Collapsible label={`${warnings.length} aviso(s)`}>
-          <ul className={styles.trackinList}>
+          <ul className={designSystemStyles.list}>
             {warnings.map((issue, index) => <li key={index}>{issue.item ? `${issue.item} — ` : ''}{issue.message}</li>)}
           </ul>
         </Collapsible>
       )}
       {children}
-    </section>
+    </Card>
   );
 };
 
@@ -58,32 +61,33 @@ export const BuildResults = ({ result, onShowNextSteps }: IBuildResultsProps) =>
   const { web, server, merge, tag_map: tagMap, datalayer } = result;
 
   return (
-    <div className={styles.trackinResults} aria-live="polite">
-      <div className={styles.trackinCardHead}>
-        <h2 className={styles.trackinSectionTitle}>Resultado</h2>
-        <button className={styles.trackinSecondaryButton} type="button" onClick={onShowNextSteps}>
+    <div className={styles.trackinStack} aria-live="polite">
+      <div className={styles.trackinHead}>
+        <h2 className={designSystemStyles.sectionTitle}>Resultado</h2>
+        <button className={designSystemStyles.actionButton} type="button" onClick={onShowNextSteps}>
           Ver próximos passos
         </button>
       </div>
-      <IdWarnings warnings={result.id_warnings} />
-      <section className={styles.trackinCard} data-state="ok" aria-label="Documentação do cliente">
-        <div className={styles.trackinCardHead}>
-          <h3 className={styles.trackinCardTitle}>Documentação Go Trackin' (padrão v{result.standard_version})</h3>
-          <button className={styles.trackinSecondaryButton} type="button" onClick={() => downloadDocument(result)}>
+      <Card
+        title={`Documentação Go Trackin' (padrão v${result.standard_version})`}
+        state="ok"
+        actions={
+          <button className={designSystemStyles.actionButton} type="button" onClick={() => downloadDocument(result)}>
             Baixar {result.document.file}
           </button>
-        </div>
-        <p className={styles.trackinMuted}>
+        }
+      >
+        <p className={designSystemStyles.muted}>
           Diagnóstico, avisos, requisitos, Mapa de Tags, Mapa de Atributos, Mapa de dataLayer, importação, publicação e
           responsabilidades num documento só.
         </p>
-      </section>
+      </Card>
       {merge ? (
         <ContainerCard title="Mescla com o GTM do cliente" container={merge}>
-          <p className={styles.trackinMuted}>Importar com: {merge.import_option}</p>
-          <p className={styles.trackinTags}>
+          <p className={designSystemStyles.muted}>Importar com: {merge.import_option}</p>
+          <p className={styles.trackinRow}>
             {Object.entries(merge.findings).map(([action, total]) => (
-              <span key={action} className={styles.trackinBadge}>{action}: {total}</span>
+              <span key={action} className={designSystemStyles.badge}>{action}: {total}</span>
             ))}
           </p>
         </ContainerCard>
@@ -91,22 +95,19 @@ export const BuildResults = ({ result, onShowNextSteps }: IBuildResultsProps) =>
         <ContainerCard title="Container web" container={web} />
       )}
       {server && <ContainerCard title="Container server-side" container={server} />}
-      <section className={styles.trackinCard} data-state="ok" aria-label="Planilhas dos mapas">
-        <div className={styles.trackinCardHead}>
-          <h3 className={styles.trackinCardTitle}>Planilhas dos mapas</h3>
-        </div>
-        <p className={styles.trackinMuted}>
+      <Card title="Planilhas dos mapas" state="ok">
+        <p className={designSystemStyles.muted}>
           {tagMap.tags} tags, {tagMap.attributes} variáveis e {datalayer.events.length} eventos de dataLayer mapeados.
         </p>
-        <div className={styles.trackinActions}>
-          <button className={styles.trackinSecondaryButton} type="button"
+        <div className={styles.trackinRow}>
+          <button className={designSystemStyles.actionButton} type="button"
             onClick={() => downloadText('Mapa_de_Tags.csv', tagMap.tags_csv, 'text/csv;charset=utf-8')}>Tags (.csv)</button>
-          <button className={styles.trackinSecondaryButton} type="button"
+          <button className={designSystemStyles.actionButton} type="button"
             onClick={() => downloadText('Mapa_de_Atributos.csv', tagMap.attributes_csv, 'text/csv;charset=utf-8')}>Atributos (.csv)</button>
-          <button className={styles.trackinSecondaryButton} type="button"
+          <button className={designSystemStyles.actionButton} type="button"
             onClick={() => downloadText('Mapa_de_dataLayer.csv', datalayer.csv, 'text/csv;charset=utf-8')}>dataLayer (.csv)</button>
         </div>
-      </section>
+      </Card>
     </div>
   );
 };

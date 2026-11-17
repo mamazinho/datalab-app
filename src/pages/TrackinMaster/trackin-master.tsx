@@ -1,3 +1,4 @@
+import designSystemStyles from '../../styles/design-system.module.css';
 import styles from './trackin-master.module.css';
 import { useState, useTransition } from 'react';
 import { toastRequestError } from '../../components/Feedback/ErrorToast';
@@ -5,6 +6,7 @@ import { QueryBoundary } from '../../components/Tools/query-boundary';
 import { useTrackingRules } from '../../hooks/use-tracking-rules';
 import { DatalabAPI } from '../../services/datalab-api';
 import type { ISiteAnalysis } from '../../services/datalab-api/trackingResource';
+import { cx } from '../../utils/class-names';
 import type { IBuilt } from './actions';
 import { BuildForm } from './components/build-form';
 import { BuildResults } from './components/build-results';
@@ -63,10 +65,10 @@ export const TrackinMaster = () => {
   };
 
   return (
-    <div className={styles.trackinPageContainer}>
+    <div className={cx(designSystemStyles.pageContainer, styles.trackinPage)}>
       <div>
-        <h1 className={styles.trackinPageTitle}>Trackin' Master</h1>
-        <p className={styles.trackinPageSubtitle}>
+        <h1 className={designSystemStyles.pageTitle}>Trackin' Master</h1>
+        <p className={designSystemStyles.pageSubtitle}>
           Tagueamento plug-and-play: informe o site, revise o que encontramos e baixe os containers do GTM com a
           documentação.
         </p>

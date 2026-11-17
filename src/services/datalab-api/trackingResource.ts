@@ -46,6 +46,8 @@ export interface IHardcodedWarning {
 }
 
 export interface ISiteAnalysis {
+  // The reading kept by the API: the build reuses it instead of reading the site again
+  scan_id: string | null;
   url: string;
   final_url: string | null;
   host: string;
@@ -119,7 +121,7 @@ export interface IGuideStep {
 
 export interface IBuildRequest {
   site_url: string;
-  site: ISiteAnalysis | null;
+  scan_id: string | null;
   client_name: string;
   tools: string[];
   server_side: boolean;

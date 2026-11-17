@@ -6,13 +6,17 @@ import { server } from '../../test/msw/server';
 import {
   buildApiError,
   buildBuildResult,
+  buildChat,
+  buildCompany,
   buildImplementationResult,
   buildImportHelp,
   buildPublicationResult,
   buildSiteAnalysis,
   buildTrackingIdRule,
   buildTrackingRules,
+  uuid,
 } from '../../test/factories';
+import type { ICreateChat } from '../../services/datalab-api/chatsResource';
 import type { IBuildRequest, IImplementationRequest, IPublicationRequest } from '../../services/datalab-api/trackingResource';
 import { TrackinMaster } from './trackin-master';
 
@@ -55,6 +59,14 @@ const missingIdsResponse = () =>
     }),
     { status: 400 },
   );
+
+const nextSteps = () => screen.findByRole('dialog', { name: 'Próximos passos' });
+
+const openValidation = async (user: User) => {
+  const popup = await nextSteps();
+  await user.click(within(popup).getByRole('button', { name: 'Avançar' }));
+  return within(popup).getByRole('region', { name: 'Validar implementação' });
+};
 
 const debugLink = (qaPage: string, containerId = 'GTM-ABC1234') =>
   `https://tagassistant.google.com/#/?id=${containerId}&url=${encodeURIComponent(`${qaPage}?gtm_debug=1`)}` +
@@ -156,9 +168,8 @@ describe('<TrackinMaster />', () => {
     const user = userEvent.setup({ delay: null });
     renderWithProviders(<TrackinMaster />);
 
-    await analyze(user);
+    const warnings = await analyze(user);
 
-    const warnings = screen.getByRole('region', { name: 'Tags instaladas direto no código' });
     expect(within(warnings).getByText(/Meta Ads instalado direto no código do site/)).toBeInTheDocument();
     expect(within(warnings).getByText('ID encontrado: 1234567890123456')).toBeInTheDocument();
     expect(within(warnings).getByText('A Meta conta as conversões duas vezes.')).toBeInTheDocument();
@@ -197,7 +208,7 @@ describe('<TrackinMaster />', () => {
     expect(screen.getByRole('combobox', { name: 'Modelo do banner' })).toHaveValue('opt_out');
   });
 
-  it('sends the analyzed site with the choices and opens the import popup', async () => {
+  it('sends the scan of the site with the choices and opens the import step', async () => {
     let sent: IBuildRequest | null = null;
     server.use(
       http.post(api('tracking/build/'), async ({ request }) => {
@@ -211,7 +222,7 @@ describe('<TrackinMaster />', () => {
 
     await buildWithGa4(user);
 
-    const popup = await screen.findByRole('dialog', { name: 'Importar e testar' });
+    const popup = within(await nextSteps()).getByRole('region', { name: 'Importar e testar' });
     expect(within(popup).getByRole('button', { name: 'Baixar GoTrackin_Web.json' })).toBeInTheDocument();
     expect(within(popup).getByRole('button', { name: 'Baixar GoTrackin_Documentacao.pdf' })).toBeInTheDocument();
     expect(within(popup).getByText('GT_purchase')).toBeInTheDocument();
@@ -222,7 +233,7 @@ describe('<TrackinMaster />', () => {
     await waitFor(() => expect(sent).not.toBeNull());
     expect(sent).toMatchObject({
       site_url: 'https://www.lojaexemplo.com.br',
-      site: { platform: 'VTEX' },
+      scan_id: buildSiteAnalysis().scan_id,
       tools: ['ga4'],
       has_cmp: true,
       consent: { banner: 'opt_in', mode: 'advanced' },
@@ -238,7 +249,7 @@ describe('<TrackinMaster />', () => {
         sent = (await request.json()) as IImplementationRequest;
         return HttpResponse.json(buildImplementationResult({
           ok: false,
-          notes: ['O navegador do teste não aceita o banner de cookies.'],
+          notes: ['O teste abre as páginas como um visitante que já aceitou o banner de cookies.'],
           pages: [
             buildImplementationResult().pages[0],
             {
@@ -258,9 +269,8 @@ describe('<TrackinMaster />', () => {
     await analyze(user);
     await buildWithGa4(user);
 
-    await user.click(await screen.findByRole('button', { name: 'Validar implementação' }));
-    const popup = await screen.findByRole('dialog', { name: 'Validar implementação' });
-    const howTo = within(popup).getByRole('region', { name: 'Como gerar os links' });
+    const popup = await openValidation(user);
+    const howTo = within(popup).getByRole('region', { name: 'Último teste antes de publicar' });
     expect(within(howTo).getByText(/workspace onde você importou o JSON/)).toBeInTheDocument();
     expect(within(howTo).getByText(/três pontinhos no canto superior direito/)).toBeInTheDocument();
     expect(within(howTo).getByText(/Shareable debug link/)).toBeInTheDocument();
@@ -272,7 +282,7 @@ describe('<TrackinMaster />', () => {
     expect(within(report).getByText(/Encontramos pendências/)).toBeInTheDocument();
     expect(within(report).getByText('GT_view_item: enviado, mas faltam ecommerce.value.')).toBeInTheDocument();
     expect(within(report).getByText('GA4 | Measurement ID: não disparou')).toBeInTheDocument();
-    expect(within(report).getByText(/não aceita o banner de cookies/)).toBeInTheDocument();
+    expect(within(report).getByText(/já aceitou o banner de cookies/)).toBeInTheDocument();
     expect(within(report).getByText('GT_add_to_cart')).toBeInTheDocument();
     expect(sent).toEqual({
       ids: { ga4_measurement_id: 'G-ABC123XYZ9' },
@@ -296,8 +306,7 @@ describe('<TrackinMaster />', () => {
     await analyze(user);
     await buildWithGa4(user);
 
-    await user.click(await screen.findByRole('button', { name: 'Validar implementação' }));
-    const popup = await screen.findByRole('dialog', { name: 'Validar implementação' });
+    const popup = await openValidation(user);
     await user.type(within(popup).getByRole('textbox', { name: 'Página inicial *' }), 'https://www.lojaexemplo.com.br/');
     await user.click(within(popup).getByRole('button', { name: 'Validar' }));
 
@@ -328,8 +337,7 @@ describe('<TrackinMaster />', () => {
     await analyze(user);
     await buildWithGa4(user);
 
-    await user.click(await screen.findByRole('button', { name: 'Validar implementação' }));
-    const popup = await screen.findByRole('dialog', { name: 'Validar implementação' });
+    const popup = await openValidation(user);
     await user.type(within(popup).getByRole('textbox', { name: 'Página inicial *' }), debugLink('https://qa.lojaexemplo.com.br/'));
     await user.type(within(popup).getByRole('textbox', { name: 'Produto' }), debugLink('https://qa.lojaexemplo.com.br/p', 'GTM-OUTRO12'));
     await user.click(within(popup).getByRole('button', { name: 'Validar' }));
@@ -359,18 +367,16 @@ describe('<TrackinMaster />', () => {
     await analyze(user);
     await buildWithGa4(user);
 
-    await user.click(await screen.findByRole('button', { name: 'Avançar' }));
-    await user.click(within(await screen.findByRole('dialog', { name: 'Publicar' })).getByRole('button', { name: 'Validar implementação' }));
-    const popup = await screen.findByRole('dialog', { name: 'Validar implementação' });
+    const popup = await openValidation(user);
     await user.type(within(popup).getByRole('textbox', { name: 'Página inicial *' }), debugLink('https://qa.lojaexemplo.com.br/'));
     await user.click(within(popup).getByRole('button', { name: 'Validar' }));
 
     expect(await within(popup).findByText(/bloqueou o navegador do teste/)).toBeInTheDocument();
-    await user.click(within(popup).getByRole('button', { name: 'Voltar' }));
-    expect(await screen.findByRole('dialog', { name: 'Publicar' })).toBeInTheDocument();
+    await user.click(within(await nextSteps()).getByRole('button', { name: 'Voltar' }));
+    expect(within(await nextSteps()).getByRole('region', { name: 'Importar e testar' })).toBeInTheDocument();
   });
 
-  it('moves on to publishing and checks whether the container is live', async () => {
+  it('moves on to publishing after the validation and checks whether the container is live', async () => {
     let checked: IPublicationRequest | null = null;
     server.use(
       http.post(api('tracking/scan/'), () => HttpResponse.json(buildSiteAnalysis({ gtm_containers: ['GTM-ABC1234'] }))),
@@ -390,8 +396,9 @@ describe('<TrackinMaster />', () => {
     await analyze(user);
     await buildWithGa4(user);
 
-    await user.click(await screen.findByRole('button', { name: 'Avançar' }));
-    const popup = await screen.findByRole('dialog', { name: 'Publicar' });
+    await openValidation(user);
+    await user.click(within(await nextSteps()).getByRole('button', { name: 'Avançar' }));
+    const popup = within(await nextSteps()).getByRole('region', { name: 'Publicar' });
     expect(within(popup).getByText('Publique')).toBeInTheDocument();
     expect(within(popup).getByRole('textbox', { name: 'Código do contêiner publicado' })).toHaveValue('GTM-ABC1234');
     await user.click(within(popup).getByRole('button', { name: 'Avançar' }));
@@ -406,13 +413,14 @@ describe('<TrackinMaster />', () => {
     await analyze(user);
     await buildWithGa4(user);
 
-    await user.click(await screen.findByRole('button', { name: 'Avançar' }));
-    const popup = await screen.findByRole('dialog', { name: 'Publicar' });
+    await openValidation(user);
+    await user.click(within(await nextSteps()).getByRole('button', { name: 'Avançar' }));
+    const popup = within(await nextSteps()).getByRole('region', { name: 'Publicar' });
     await user.click(within(popup).getByRole('button', { name: 'Fechar instruções' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     await user.click(screen.getByRole('button', { name: /próximos passos/i }));
-    expect(await screen.findByRole('dialog', { name: 'Importar e testar' })).toBeInTheDocument();
+    expect(within(await nextSteps()).getByRole('region', { name: 'Importar e testar' })).toBeInTheDocument();
   });
 
   it('answers an import problem and regenerates the container when the json was refused', async () => {
@@ -429,18 +437,55 @@ describe('<TrackinMaster />', () => {
     await analyze(user);
     await buildWithGa4(user);
 
-    await user.click(await screen.findByRole('button', { name: 'Tive um problema ao importar' }));
-    const popup = await screen.findByRole('dialog', { name: 'Tive um problema ao importar' });
+    await user.click(within(await nextSteps()).getByRole('button', { name: 'Tive um problema ao importar' }));
+    const popup = within(await nextSteps()).getByRole('region', { name: 'Tive um problema ao importar' });
     await user.selectOptions(within(popup).getByRole('combobox', { name: 'O que aconteceu?' }), 'json_rejected');
     await user.type(within(popup).getByRole('textbox', { name: 'Mensagem do GTM' }), 'Invalid exportFormatVersion');
     await user.click(within(popup).getByRole('button', { name: 'Ver o que fazer' }));
 
-    const answer = await within(popup).findByRole('region', { name: 'Diagnóstico do problema' });
+    const answer = await within(popup).findByRole('region', { name: 'O GTM recusou o arquivo JSON' });
     expect(within(answer).getByText('O arquivo chegou ao GTM corrompido.')).toBeInTheDocument();
     await user.click(within(answer).getByRole('button', { name: 'Gerar o container de novo' }));
 
     await waitFor(() => expect(builds).toBe(2));
-    expect(await screen.findByRole('dialog', { name: 'Importar e testar' })).toBeInTheDocument();
+    expect(within(await nextSteps()).getByRole('region', { name: 'Importar e testar' })).toBeInTheDocument();
+  });
+
+  it('opens a conversation with the assessor that is deleted when the instructions close', async () => {
+    let created: ICreateChat | null = null;
+    let deleted: string | null = null;
+    server.use(
+      http.post(api('tracking/import-help/'), () => HttpResponse.json(buildImportHelp())),
+      http.post(api('chats/'), async ({ request }) => {
+        created = (await request.json()) as ICreateChat;
+        return HttpResponse.json(buildChat({ id: uuid(77) }), { status: 201 });
+      }),
+      http.delete(api('chats/:chatId/'), ({ params }) => {
+        deleted = String(params.chatId);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const user = userEvent.setup({ delay: null });
+    renderWithProviders(<TrackinMaster />, { companies: [buildCompany({ id: uuid(1) })] });
+    await analyze(user);
+    await buildWithGa4(user);
+
+    await user.click(within(await nextSteps()).getByRole('button', { name: 'Tive um problema ao importar' }));
+    const popup = within(await nextSteps()).getByRole('region', { name: 'Tive um problema ao importar' });
+    await user.selectOptions(within(popup).getByRole('combobox', { name: 'O que aconteceu?' }), 'json_rejected');
+    await user.type(within(popup).getByRole('textbox', { name: 'Mensagem do GTM' }), 'Invalid exportFormatVersion');
+    await user.click(within(popup).getByRole('button', { name: 'Ver o que fazer' }));
+    await user.click(await within(popup).findByRole('button', { name: 'Ainda não resolveu? Falar com o assessor' }));
+
+    const advisor = await within(popup).findByRole('region', { name: 'Conversa com o assessor' });
+    expect(await within(advisor).findByRole('textbox')).toHaveDisplayValue(
+      /O GTM mostrou: "Invalid exportFormatVersion"\./,
+    );
+    expect(created).toMatchObject({ supervisor: 'trackin_master', is_private: true });
+
+    await user.keyboard('{Escape}');
+
+    await waitFor(() => expect(deleted).toBe(uuid(77)));
   });
 
   it('refuses to build without a tool', async () => {
@@ -514,7 +559,7 @@ describe('<TrackinMaster />', () => {
 
     await buildWithGa4(user);
 
-    const popup = await screen.findByRole('dialog', { name: 'Importar e testar' });
+    const popup = await nextSteps();
     expect(within(popup).getByRole('note', { name: 'IDs com formato não confirmado' })).toHaveTextContent('Dito | API Key');
   });
 });

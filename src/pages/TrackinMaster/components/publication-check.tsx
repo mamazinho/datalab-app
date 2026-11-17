@@ -1,6 +1,8 @@
+import designSystemStyles from '../../../styles/design-system.module.css';
 import modal from '../../../styles/modal-form.module.css';
 import styles from '../trackin-master.module.css';
 import { useActionState } from 'react';
+import { Callout } from '../../../components/UI/Callout';
 import { FormFieldset, SubmitButton } from '../../../components/UI/Forms';
 import { INITIAL_ACTION_STATE } from '../../../types/actions';
 import { createVerifyPublicationAction } from '../actions';
@@ -26,21 +28,24 @@ export const PublicationCheck = ({ ids, containerId }: IPublicationCheckProps) =
       </FormFieldset>
       {state.error && !state.success && <p className={modal.error} role="alert">{state.error}</p>}
       {result && (
-        <div className={styles.trackinModalSection} role="status">
+        <div className={styles.trackinStack} role="status">
           {!result.published && (
-            <p className={styles.trackinWarning}>
-              O contêiner {result.container_id} ainda não tem versão publicada (o gtm.js público não respondeu).
-            </p>
+            <Callout>
+              <p>O contêiner {result.container_id} ainda não tem versão publicada (o gtm.js público não respondeu).</p>
+            </Callout>
           )}
           {result.published && result.missing.length === 0 && (
             <p>Tudo no ar: os IDs gerados já estão na versão publicada de {result.container_id}.</p>
           )}
           {result.published && result.missing.length > 0 && (
-            <p className={styles.trackinWarning}>
-              Publicado, mas faltam na versão no ar: {result.missing.join(', ')}. Confira se a versão certa foi publicada.
-            </p>
+            <Callout>
+              <p>
+                Publicado, mas faltam na versão no ar: {result.missing.join(', ')}. Confira se a versão certa foi
+                publicada.
+              </p>
+            </Callout>
           )}
-          <ul className={styles.trackinList}>
+          <ul className={designSystemStyles.list}>
             {result.ids.map((item) => (
               <li key={item.key}>{item.label}: {item.found ? 'encontrado' : 'não encontrado'}</li>
             ))}

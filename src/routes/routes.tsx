@@ -133,8 +133,13 @@ export const routes = createBrowserRouter([
                 element: <EditProfile />,
             },
             {
-                path: TRACKIN_MASTER_PATH,
-                element: <TrackinMaster />,
+                element: <PermissionRoute tag="tracking" />,
+                children: [
+                    {
+                        path: TRACKIN_MASTER_PATH,
+                        element: <TrackinMaster />,
+                    },
+                ],
             },
             {
                 element: <ManagementLayout />,

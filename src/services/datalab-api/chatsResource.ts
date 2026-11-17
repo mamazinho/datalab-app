@@ -24,9 +24,13 @@ export interface IRetrieveChat {
   updated_at: string;
 }
 
+export type ChatSupervisor = 'chat' | 'trackin_master';
+
 export interface ICreateChat {
   title: string;
   is_private: boolean;
+  // Who answers the chat; the API answers with the chat product's supervisor when it is absent
+  supervisor?: ChatSupervisor;
 }
 
 export type ChatUsageOrigin = 'supervisor' | 'specialist' | 'complexity_classifier' | 'presentation';
@@ -88,6 +92,11 @@ export const ChatsResource = {
 
   async deleteChat(chatId: UUID7): Promise<void> {
     await axiosCompanyInstance.delete(`chats/${chatId}/`);
+  },
+
+  // The page may be closing: keepalive lets the request outlive it, and the fetch adapter is the one that supports it
+  async deleteChatOnLeave(chatId: UUID7): Promise<void> {
+    await axiosCompanyInstance.delete(`chats/${chatId}/`, { adapter: 'fetch', fetchOptions: { keepalive: true } });
   },
 
   async getUsageReport(period: { start?: string; end?: string }): Promise<IChatUsageReport> {
